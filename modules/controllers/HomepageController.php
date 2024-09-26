@@ -3,6 +3,9 @@
 //namespace Home\Controllers;
 class HomepageController {
     protected $posts;
+    protected $sidebar;
+
+    protected $rightSidebar;
 
         public function __construct() {
             // Récupérer les posts avec leurs likes

@@ -9,18 +9,34 @@ class PostView {
 
     public function show() {
         ob_start();
-        ?>;
-
-        <h1>Les posts</h1>
+        ?>
         <?php foreach ($this->posts as $post) { ?>
-            <h3><?= $post->getContent() ?></h3>
-            <div><?= $post->getDate() ?></div> <?php
+            <div class="post">
+
+                    <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
+                    <div class="postInsideContainer">
+                        <div class="postNameDate">
+                            <div><?= $post->getId() ?></div>
+                            <div class="postDate"><?= $post->getDate() ?></div>
+                        </div>
+                        <div class="postContentTools">
+                            <div class="postContent"><?= $post->getContent() ?></div>
+                            <div class="postTools">
+                                <div class="postTool"><img class="postToolsImage" src="assets/response.svg" alt=""><?= $post->getResponses() ?></div>
+                                <div class="postTool"><img class="postToolsImage" src="assets/heart.svg" alt=""><?= $post->getLikes() ?></div>
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+
+            <?php
         }
         $postsHTML = ob_get_clean();
         return $postsHTML;
     }
 
     public function getContent() {
-        var_dump($this->posts);
+        //var_dump($this->posts);
     }
 }

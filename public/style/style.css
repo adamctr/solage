@@ -1,0 +1,253 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    padding:0;
+    margin:0;
+}
+
+h1, ul, a {
+    margin:0;
+    padding:0;
+    text-decoration: none;
+}
+
+.postContainer {
+    width:600px;
+    border-right:1px solid black;
+}
+
+.main {
+    display:flex;
+    justify-content: center;
+    align-self:center;
+}
+
+.post {
+    min-width:320px;
+    max-width:600px;
+    width:100%;
+    padding:10px 15px 0 15px;
+    border-top: 1px solid black;
+    display:flex;
+}
+
+.post:last-child {
+    border-bottom: 1px solid black;
+}
+
+.sidebars {
+    position:relative;
+}
+
+.sidebar {
+    position:relative;
+    min-width:300px;
+    height:100vh;
+}
+
+.sidebarFixed {
+    position:fixed;
+    min-width:300px;
+    height:100vh;
+    border:solid black 1px;
+    padding:10px 30px 30px 10px;
+}
+
+.sidebarMobile {
+    display:none;
+    position:fixed;
+    width:100%;
+    bottom:0;
+}
+
+.sidebarMobile>ul {
+    display:flex;
+}
+
+.sidebarMobile>ul>li {
+    flex:1;
+}
+
+.sidebarFixed>ul {
+    display:flex;
+    font-size:24px;
+    flex-direction: column;
+    width:100%;
+    height:100%;
+}
+
+.sidebarFixed>ul>li {
+    height:50px;
+    width:100%;
+}
+
+a {
+    color:black;
+}
+
+.sidebarIMG {
+    width:32px;
+    height:32px;
+    margin-right: 25px;
+}
+
+.menuLink {
+    display:flex;
+    align-items: center;
+    padding:10px 0;
+    width:fit-content;
+}
+
+.menuLink:first-child {
+    margin-bottom: 8px;
+}
+
+.postAvatarContainer {
+    padding-right:8px;
+}
+
+.postAvatar {
+    width:40px;
+    height:40px;
+    border-radius: 100%;
+}
+
+.postNameDate {
+    display:flex;
+    gap:12px;
+    margin-bottom: 4px;
+}
+
+.postDate {
+    color:grey;
+}
+
+.postContentTools {
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.postRight {
+    width:100%;
+    height:100%;
+}
+
+.postTools {
+    width:100%;
+    display:flex;
+    justify-content: space-evenly;
+}
+
+.postInsideContainer {
+    width:100%;
+    height:100%;
+}
+
+.postToolsImage {
+    width:16px;
+    height:16px
+}
+
+.rightSidebar {
+    max-width:220px;
+    height:100vh;
+    padding: 16px 16px;
+}
+
+.postTool {
+    height:34px;
+    width:34px;
+    border-radius:100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    gap:4px;
+}
+
+.postCreateTools {
+    padding:15px 0px;
+    width:100%;
+    height:55px;
+    display:flex;
+    justify-content: space-between;
+    border-top: 1px solid black;
+}
+
+.postToolsImage {
+    width:18px;
+    height:18px
+}
+
+.postCreateToolsImage {
+    width:24px;
+    height:24px
+}
+
+.postContent {
+    margin-bottom:16px;
+}
+
+.homepageTitle {
+    padding:22px 15px;
+}
+
+.sidebarMobile {
+    background-color:white;
+}
+
+.sidebarMobileContainer {
+    display:flex;
+    justify-content: space-around;
+}
+
+@media only screen and (max-width: 425px) {
+    .sidebarMobile {
+        display: block;
+    }
+
+}
+
+@media only screen and (max-width: 750px) {
+    .sidebarMobile {
+        display: block;
+    }
+    .sidebars {
+        display:none;
+    }
+
+}
+
+@media only screen and (max-width: 970px) {
+    .sidebarFixed {
+        min-width:initial;
+        width:65px;
+        padding: 4px;
+    }
+
+    .sidebarFixed>ul {
+        align-items: center;
+    }
+
+    .sidebarIMG {
+        margin-right: 0;
+    }
+
+    .sidebar {
+        min-width:initial;
+        width:65px;
+    }
+
+    .rightSidebar {
+        display:none;
+    }
+
+    .menuTxt {
+        display:none;
+    }
+
+}

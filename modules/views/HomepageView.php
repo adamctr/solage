@@ -1,6 +1,8 @@
 <?php
 class HomepageView {
     protected $posts;
+    protected $sidebar;
+    protected $rightSidebar;
 
     public function __construct($posts) {
         $this->posts = $posts;
@@ -11,7 +13,30 @@ class HomepageView {
         ob_start();
         ?>
 
-        <h1>Les posts</h1>
+        <h1 class="homepageTitle">Votre actualité</h1>
+        <div class="post">
+
+            <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
+            <div class="postInsideContainer">
+                <div class="postNameDate">
+                    <div class="">name</div>
+                    <div class="postDate">qzdqzd></div>
+                </div>
+                <div class="postContentTools">
+                    <div class="postContent">qzdqzd</div>
+                    <div class="postCreateTools">
+                        <div class="postCreateTool">
+                            <label for="file-input">
+                                <img src="assets/image.svg" class="postCreateToolsImage" alt="Cliquez pour télécharger">
+                            </label>
+                            <input id="file-input" type="file" style="display: none;" />
+                        </div>
+                        <button>Publier</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
         <?= $postView->show(); ?>
 
         <?php

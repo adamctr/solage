@@ -26,7 +26,6 @@ class Router {
                 //var_dump($routeArray);
                 $controller = $routeArray[0];
                 $functionController = $routeArray[1];
-                    var_dump($controller);
                 $instance = new $controller();
                 $instance->$functionController();
 
