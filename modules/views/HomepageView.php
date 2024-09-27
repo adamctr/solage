@@ -14,8 +14,8 @@ class HomepageView {
         ?>
 
         <h1 class="homepageTitle">Votre actualité</h1>
-        <div class="post">
 
+        <div class="post">
             <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
             <div class="postInsideContainer">
                 <div class="postNameDate">
@@ -23,7 +23,7 @@ class HomepageView {
                     <div class="postDate">qzdqzd></div>
                 </div>
                 <div class="postContentTools">
-                    <div class="postContent">qzdqzd</div>
+                    <input type="textarea" class="postCreateInput" placeholder="Que s'est-il passé ?">
                     <div class="postCreateTools">
                         <div class="postCreateTool">
                             <label for="file-input">

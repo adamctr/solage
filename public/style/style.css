@@ -1,10 +1,21 @@
 * {
     box-sizing: border-box;
 }
+html {
+    font-size:18px;
 
+}
 body {
     padding:0;
     margin:0;
+    font-size:18px;
+}
+
+input {
+    font-size:18px;
+    word-wrap: break-word; /* Force le texte à passer à la ligne si nécessaire */
+    overflow-wrap: break-word; /* Alternative pour forcer le texte à passer à la ligne */
+
 }
 
 h1, ul, a {
@@ -16,6 +27,10 @@ h1, ul, a {
 .postContainer {
     width:600px;
     border-right:1px solid black;
+}
+
+.postCreateInput {
+    padding:8px 16px;
 }
 
 .main {
@@ -52,7 +67,7 @@ h1, ul, a {
     min-width:300px;
     height:100vh;
     border:solid black 1px;
-    padding:10px 30px 30px 10px;
+    padding:35px 30px 30px 35px;
 }
 
 .sidebarMobile {
@@ -220,6 +235,10 @@ a {
         display:none;
     }
 
+    .postContainer {
+        border-right: none;
+    }
+
 }
 
 @media only screen and (max-width: 970px) {
@@ -243,6 +262,10 @@ a {
     }
 
     .rightSidebar {
+        display:none;
+    }
+
+    .magicButton {
         display:none;
     }
 

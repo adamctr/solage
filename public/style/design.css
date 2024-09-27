@@ -41,7 +41,7 @@
     --context-bg: hsl(0deg 0% 99%);
     --bg-container: hsl(0deg 0% 96%);
     --bg-button: hsl(179deg 7% 97%);
-    --color-button: hsl(359deg 1% 35%);
+    --color-button: black;
 
     --button-shadow-opacity: 0;
     --button-shadow-spread: 0;
@@ -84,7 +84,9 @@
 }
 
 .magicButton {
-    margin-top:16px;
+    margin-top:24px;
+    margin-right:auto;
+    margin-left:auto;
 
     & .container {
         width: 100%;
@@ -260,7 +262,7 @@
     --context-bg: hsl(0deg 0% 8%);
     --bg-container: hsl(0deg 0% 10%);
     --bg-button: var(--bg-container);
-    --color-button: hsl(0deg 0% 66%);
+    --color-button: black;
     --btn-border-color: rgb(255 255 255 / 5%);
     --btn-inner-shadow: 1;
     --btn-border-size: 1;

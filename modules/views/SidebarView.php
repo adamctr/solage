@@ -21,7 +21,7 @@ class SidebarView {
                                 <div>
                                     <button class="magicButtonBis">
                                         <div class="inner">
-                                            <span><strong>Nouveau post</strong></span>
+                                            <span>&nbsp+&nbsp</span><strong>Nouveau post</strong>
                                         </div>
                                     </button>
                                 </div>
