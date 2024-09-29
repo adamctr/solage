@@ -1,8 +1,11 @@
 <?php
 
-class Router {
+class Router
+{
     protected $routes = [];
-    public function addRoute($method, $path, $target) {
+
+    public function addRoute($method, $path, $target)
+    {
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
@@ -11,7 +14,8 @@ class Router {
 
     }
 
-    public function match() {
+    public function match()
+    {
         $uri = $_SERVER['REQUEST_URI'];
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($uri, PHP_URL_PATH);
@@ -23,7 +27,7 @@ class Router {
         }
 
         foreach ($this->routes as $route) {
-            $pathRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9_]+)', $route['path']);
+            $pathRegex = preg_replace('/{([a-zA-Z0-9]+)}/', '([a-zA-Z0-9_]+)', $route['path']);
             $pathRegex = '#^' . $pathRegex . '$#';
 
             if ($debug) {
@@ -32,27 +36,24 @@ class Router {
 
             if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
                 $routeArray = explode('#', $route['target']);
-                //var_dump($routeArray);
                 $controller = $routeArray[0];
                 $functionController = $routeArray[1];
 
-                if ($matches[1]) {
-                    var_dump($matches);
-                    $instance = new $controller($matches[1]);
-                    call_user_func_array([$instance, $functionController], $matches);
-                    return;
-                } else {
-                    $instance = new $controller();
-                    $instance->$functionController();
-                    return;
-                }
+
+                var_dump($matches);
+                // Extraire les arguments de l'URL (ex. : l'ID utilisateur) et les passer à la méthode du contrôleur
+                array_shift($matches); // On enlève le premier élément qui correspond à la route complète
+                $userId = $matches[0];
+                // Instancier le contrôleur
+                $instance = new $controller($userId);
+                call_user_func_array([$instance, $functionController], $matches);
+
+                return;
             }
+
         }
 
         http_response_code(404);
         echo "Not Found";
     }
-
 }
-
-
