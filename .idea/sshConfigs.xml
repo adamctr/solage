@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="ssh-fabiophp.alwaysdata.net" id="d2849b1b-1263-49ec-b112-e36b06ddcbc8" port="22" nameFormat="DESCRIPTIVE" username="fabiophp" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>
