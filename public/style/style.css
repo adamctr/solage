@@ -350,6 +350,22 @@ a {
 
 }
 
+.heart {
+    fill: var(--secondary);
+}
+
+.heart>path {
+    stroke: var(--primary);
+}
+
+.heart.active {
+    fill: var(--primary);
+}
+
+.heart.active>path {
+    stroke: var(--secondary);
+}
+
 .icon:hover {
     cursor:pointer;
 }

@@ -18,9 +18,6 @@ class LikeModel {
     }
 
     function create() {
-        if($this->likeAlreadyExist()) {
-            return false;
-        }
         try {
             $statement = $this->db->prepare('INSERT INTO likes (id, user, post, response, created_at) VALUES (:id, :user, :post, :response, :created_at)');
             $statement->bindValue(':id', $this->id);
@@ -29,23 +26,41 @@ class LikeModel {
             $statement->bindValue(':response', $this->response);
             $statement->bindValue(':created_at', $this->created_at);
             $statement->execute();
+
+            $this->id = $this->db->lastInsertId();
+            return $this->id;
+        } catch (PDOException $e) {
+            var_dump('Erreur lors de l\'insertion du like la base de données : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    function delete() {
+        try {
+            $statement = $this->db->prepare('DELETE FROM likes WHERE user = :user AND post = :post');
+            $statement->bindValue(':user', $this->user);
+            $statement->bindValue(':post', $this->post);
+            $statement->execute();
             return true;
         } catch (PDOException $e) {
-            var_dump('Erreur lors de l\'insertion dans la base de données : ' . $e->getMessage());
+            var_dump('Erreur lors de la supression des données dans la base de données : ' . $e->getMessage());
             return false;
         }
     }
 
     function likeAlreadyExist() {
         try {
-            $statement = $this->db->prepare('SELECT * FROM likes WHERE user = :user AND post = :post LIMIT 1;
-');
+            $statement = $this->db->prepare('SELECT * FROM likes WHERE user = :user AND post = :post LIMIT 1');
             $statement->bindValue(':user', $this->user);
             $statement->bindValue(':post', $this->post);
             $statement->execute();
-            var_dump($statement);
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!$result === false) {
+                return true;
+
+            } else return false;
         } catch (PDOException $e) {
-            var_dump('Erreur lors du check du like : ' . $e->getMessage());
+            //var_dump('Erreur lors du check du like : ' . $e->getMessage());
             return false;
         }
 

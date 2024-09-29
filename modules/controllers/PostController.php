@@ -1,6 +1,4 @@
 <?php
-require_once __DIR__ . '/../models/PostModel.php';
-
 class PostController {
     public function create() {
         header('Content-Type: application/json');
@@ -9,7 +7,7 @@ class PostController {
 
         // Validation des données
         if (!isset($data['user']) || !isset($data['content']) || empty(trim($data['content']))) {
-            echo json_encode(['success' => false, 'message' => 'Données invalides ou contenu vide']);
+            Utils::sendResponse(false, 'Données invalides ou contenu vide');
             return;
         }
 
@@ -19,23 +17,19 @@ class PostController {
             $date = date('Y-m-d H:i:s');
 
             $post = new PostModel(null, $user, $content, $date, null, null);
-            $result = $post->createPost();
-            if ($result) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => "Succès lors de la création du post",
-                    'post' => [
-                        'id' => null,
-                        'user' => $user,
-                        'content' => $content,
-                        'date' => $date,
-                    ]
+            $postId = $post->createPost(); // if post created, return postId
+            if ($postId) {
+                Utils::sendResponse(true, "Succès lors de la création du post", [
+                    'id' => $postId,
+                    'user' => $user,
+                    'content' => $content,
+                    'date' => $date,
                 ]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Erreur lors de la création du post']);
+                Utils::sendResponse(false, 'Erreur lors de la création du post');
             }
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erreur de traitement : ' . $e->getMessage()]);
+            Utils::sendResponse(false, 'Erreur de traitement : ' . $e->getMessage());
         }
     }
 }

@@ -47,9 +47,11 @@ class PostModel {
             $statement->bindValue(':content', $this->content);
             $statement->bindValue(':date', $this->date);
             $statement->execute();
-            return true;
+
+            $this->id = $this->db->lastInsertId();
+            return $this->id;
         } catch (PDOException $e) {
-            var_dump('Erreur lors de l\'insertion dans la base de données : ' . $e->getMessage());
+            var_dump('Erreur lors de l\'insertion du post dans la base de données : ' . $e->getMessage());
             return false;
         }
     }

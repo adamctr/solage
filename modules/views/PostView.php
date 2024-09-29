@@ -24,11 +24,10 @@ class PostView {
                             <div class="postTools">
                                 <div class="postTool response">
                                     <?php echo file_get_contents('assets/response.svg' ); ?>
-                                    <span class="menuTxt">Recherche</span></a>
-                                    <?= $post->getResponses() ?></div>
-                                <div class="postTool like">
-                                    <?php echo file_get_contents('assets/heart.svg' ); ?>
-                                    <?= $post->getLikes() ?></div>
+                                    <span class="menuTxt"></span></a>
+                                    <?= $post->getResponses() ?>
+                                </div>
+                                <?= PostToolHeartView::show($post, 1); ?>
                             </div>
                         </div>
                     </div>

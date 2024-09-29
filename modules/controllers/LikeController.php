@@ -1,43 +1,72 @@
 <?php
 
-class LikeController {
+class LikeController
+{
+    protected $like;
 
-    function create() {
+    /**
+     * Méthode pour gérer la création ou la suppression d'un like
+     */
+    function create()
+    {
         header('Content-Type: application/json');
 
         $data = json_decode(file_get_contents('php://input'), true);
-        var_dump($data);
 
+        // Vérification des données reçues
         if (!isset($data['post'])) {
-            echo json_encode(['success' => false, 'message' => 'ID du post non reçue']);
+            Utils::sendResponse(false, 'ID du post non reçue pour le like');
             return;
         }
 
-        try {
-            $id = null;
-            $user = 1; // SESSION_USER
-            $created_at = date('Y-m-d H:i:s');
-            $response = null;
-            $post = $data['post'];
+        $user = 1; // Exemples de valeurs fixes, à remplacer par SESSION_USER
+        $post = $data['post'];
 
-            $like = new LikeModel($id, $user, $post, $response, $created_at);
-            $result = $like->create();
-            if ($result) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => "Succès lors de la création du post",
-                    'post' => [
-                        'user' => $user,
-                        'post' => $post,
-                    ]
-                ]);
+        try {
+            // Création de l'objet LikeModel
+            $this->like = new LikeModel(null, $user, $post, null, date('Y-m-d H:i:s'));
+
+            if ($this->like->likeAlreadyExist()) {
+                $this->deleteLike();
             } else {
-                echo json_encode(['success' => false, 'message' => 'Erreur lors de la création du like']);
+                $this->createLike();
             }
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erreur de traitement : ' . $e->getMessage()]);
+            Utils::sendResponse(false, 'Erreur de traitement du like : ' . $e->getMessage());
         }
     }
 
+    /**
+     * Méthode pour créer un like
+     */
+    protected function createLike()
+    {
+        try {
+            $result = $this->like->create();
+            if ($result) {
+                Utils::sendResponse(true, 'Succès lors de la création du like', [
+                    'user' => $this->like->getUser(),
+                    'post' => $this->like->getPost(),
+                    'id' => $this->like->getId(),
+                ]);
+            } else {
+                Utils::sendResponse(false, 'Erreur lors de la création du like');
+            }
+        } catch (Exception $ex) {
+            Utils::sendResponse(false, 'Erreur : ' . $ex->getMessage());
+        }
+    }
 
+    /**
+     * Méthode pour supprimer un like
+     */
+    protected function deleteLike()
+    {
+        try {
+            $this->like->delete();
+            Utils::sendResponse(true, 'Like bien supprimé');
+        } catch (Exception $ex) {
+            Utils::sendResponse(false, 'Erreur : ' . $ex->getMessage());
+        }
+    }
 }
