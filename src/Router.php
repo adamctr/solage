@@ -15,22 +15,29 @@ class Router {
         $uri = $_SERVER['REQUEST_URI'];
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($uri, PHP_URL_PATH);
+        $debug = false;
+
+        if ($debug) {
+            echo "Requête URI: " . $requestUri . "<br>";
+            echo "Méthode: " . $requestMethod . "<br>";
+        }
 
         foreach ($this->routes as $route) {
             $pathRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9_]+)', $route['path']);
             $pathRegex = '#^' . $pathRegex . '$#';
 
-            if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
+            if ($debug) {
+                echo "Comparaison avec: " . $pathRegex . "<br>";
+            }
 
+            if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
                 $routeArray = explode('#', $route['target']);
                 //var_dump($routeArray);
                 $controller = $routeArray[0];
                 $functionController = $routeArray[1];
+
                 $instance = new $controller();
                 $instance->$functionController();
-
-                //array_shift($matches);
-                //call_user_func_array($route['target'], $matches);
                 return;
             }
         }
@@ -38,6 +45,7 @@ class Router {
         http_response_code(404);
         echo "Not Found";
     }
+
 }
 
 

@@ -15,7 +15,7 @@ class HomepageView {
 
         <h1 class="homepageTitle">Votre actualité</h1>
 
-        <div class="post">
+        <div class="post createPost">
             <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
             <div class="postInsideContainer">
                 <div class="postNameDate">
@@ -23,22 +23,23 @@ class HomepageView {
                     <div class="postDate">qzdqzd></div>
                 </div>
                 <div class="postContentTools">
-                    <input type="textarea" class="postCreateInput" placeholder="Que s'est-il passé ?">
+                    <span id="postContent" class="textarea, postCreateInput" role="textbox" contenteditable="true"></span>
                     <div class="postCreateTools">
                         <div class="postCreateTool">
                             <label for="file-input">
-                                <img src="assets/image.svg" class="postCreateToolsImage" alt="Cliquez pour télécharger">
+                                <?php echo file_get_contents('assets/image.svg' ); ?>
                             </label>
                             <input id="file-input" type="file" style="display: none;" />
                         </div>
-                        <button>Publier</button>
+                        <button id="postCreateButton" class="postCreateButton">Publier</button>
                     </div>
                 </div>
             </div>
 
         </div>
+        <div id="postList">
         <?= $postView->show(); ?>
-
+        </div>
         <?php
         (new LayoutView('La meilleure homepage', 'Ceci est la meilleure page', ob_get_clean()))->show();
     }

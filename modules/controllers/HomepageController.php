@@ -7,15 +7,16 @@ class HomepageController {
 
     protected $rightSidebar;
 
-        public function __construct() {
-            // Récupérer les posts avec leurs likes
-            $postModel = new PostModel();
-            $this->posts = $postModel->getPosts();
-        }
+    public function __construct() {
+        $postModel = PostModel::getPosts();
+        $this->posts = $postModel;
+    }
 
     public function execute() {
         $view = new HomepageView($this->posts);
         $view->show();
-
+    }
+    public function test() {
+        // qzdq
     }
 }

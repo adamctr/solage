@@ -1,3 +1,5 @@
-<svg width="25" height="23" viewBox="0 0 25 23" fill="#000000" xmlns="http://www.w3.org/2000/svg">
-<path d="M9.125 23V14.4219L0 0.40625H7.29688L14.8125 11.7344L22.2031 0.40625H24.8906L15.8125 14.4219V23H9.125ZM11.0156 21.2969H13.8594V13.625L6.29688 2.10938H3.20312L11.0156 14.0469V21.2969Z" fill="black"/>
-</svg>
+<div class="icon">
+    <svg width="24" class="sidebarIMG" height="24" viewBox="0 0 25 23" fill="#000000" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9.125 23V14.4219L0 0.40625H7.29688L14.8125 11.7344L22.2031 0.40625H24.8906L15.8125 14.4219V23H9.125ZM11.0156 21.2969H13.8594V13.625L6.29688 2.10938H3.20312L11.0156 14.0469V21.2969Z" fill="currentColor"/>
+    </svg>
+</div>

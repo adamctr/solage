@@ -8,11 +8,9 @@ class PostModel {
     protected $likes;
     protected $responses;
 
-    public function __construct() {
-        $this->db = DataBase::getConnection();
-    }
 
-    public function __constructWithData($id, $user, $content, $date, $likes, $responses) {
+    public function __construct($id, $user, $content, $date, $likes, $responses) {
+        $this->db = DataBase::getConnection();
         $this->id = $id;
         $this->user = $user;
         $this->content = $content;
@@ -22,8 +20,8 @@ class PostModel {
     }
 
     // Récupérer les posts avec le nombre de likes
-    public function getPosts(): array {
-        $statement = $this->db->query('
+    static public function getPosts(): array {
+        $statement = DataBase::getConnection()->query(query: '
             SELECT p.id, p.user, p.content, p.date, 
                    COUNT(DISTINCT l.post) AS likes, 
                    COUNT(DISTINCT r.id) AS responses
@@ -36,11 +34,24 @@ class PostModel {
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $post = new PostModel();
-            $post->__constructWithData($row->id, $row->user, $row->content, $row->date, $row->likes, $row->responses);
+            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->responses);
             $posts[] = $post;
         }
         return $posts;
+    }
+
+    public function createPost() {
+        try {
+            $statement = $this->db->prepare('INSERT INTO posts (user, content, date) VALUES (:user, :content, :date)');
+            $statement->bindValue(':user', $this->user);
+            $statement->bindValue(':content', $this->content);
+            $statement->bindValue(':date', $this->date);
+            $statement->execute();
+            return true;
+        } catch (PDOException $e) {
+            var_dump('Erreur lors de l\'insertion dans la base de données : ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function getId(): int {
