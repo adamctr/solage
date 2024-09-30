@@ -116,6 +116,7 @@ document.getElementById("file-input").addEventListener('submit', () => {
 
 document.addEventListener('click', function(event){
   let svgElement = event.target.closest(".postTool svg");
+
   let postId;
   if (svgElement) {
     let postElement = svgElement.closest(".post");
@@ -149,8 +150,15 @@ document.addEventListener('click', function(event){
         })
         .then(data => {
           if (data.success) {
+            const countLikes = svgElement.closest('.postTool').querySelector('.countLikes');
+            let currentLikes = parseInt(countLikes.textContent.trim());
+
             if (!svgElement.classList.contains('active')) {
               svgElement.classList.add('active')
+              countLikes.textContent = currentLikes + 1;
+            } else {
+              svgElement.classList.remove('active')
+              countLikes.textContent = currentLikes - 1;
             }
           } else {
             alert("Erreur lors de la création du post : " + data.message);
