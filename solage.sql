@@ -91,7 +91,7 @@ CREATE TABLE `responses` (
 
 INSERT INTO `responses` (`id`, `post`, `user`, `date`, `likes`, `content`, `reply_to`) VALUES
 (1, 1, 2, '2024-09-25 11:36:45', 2, 'Ceci est une réponse au post 1.', NULL),
-(2, 1, 3, '2024-09-25 11:36:45', 3, 'Je suis d\'accord avec le post 1.', NULL),
+(2, 1, 3, '2024-09-25 11:36:45', 3, 'Je suis daccord avec le post 1.', NULL),
 (3, 2, 1, '2024-09-25 11:36:45', 1, 'Merci pour ce post !', NULL);
 
 -- --------------------------------------------------------

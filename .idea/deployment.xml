@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+<<<<<<< Updated upstream
   <component name="PublishConfigData" autoUpload="Always" serverName="solage" confirmBeforeDeletion="false" autoUploadExternalChanges="true">
     <option name="confirmBeforeDeletion" value="false" />
     <serverData>
       <paths name="solage">
+=======
+  <component name="PublishConfigData" autoUpload="Always" serverName="alwaysData" confirmBeforeDeletion="false" autoUploadExternalChanges="true">
+    <option name="confirmBeforeDeletion" value="false" />
+    <serverData>
+      <paths name="alwaysData">
+>>>>>>> Stashed changes
         <serverdata>
           <mappings>
             <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
