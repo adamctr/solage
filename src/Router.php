@@ -33,11 +33,15 @@ class Router {
             if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
                 $routeArray = explode('#', $route['target']);
                 //var_dump($routeArray);
+                if (count($routeArray) < 2) {
+                    throw new Exception("Le 'target' doit être au format 'Controller#Method'");
+                }
+
                 $controller = $routeArray[0];
                 $functionController = $routeArray[1];
 
-                if ($matches[1]) {
-                    var_dump($matches);
+                if (isset($matches[1])) {
+                    //var_dump($matches);
                     $instance = new $controller($matches[1]);
                     call_user_func_array([$instance, $functionController], $matches);
                     return;

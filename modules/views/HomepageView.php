@@ -29,7 +29,7 @@ class HomepageView {
                             <label for="file-input">
                                 <?php echo file_get_contents('assets/image.svg' ); ?>
                             </label>
-                            <input id="file-input" type="file" style="display: none;" />
+                            <input id="file-input" accept="image/*" type="file" style="display: none;" />
                         </div>
                         <button id="postCreateButton" class="postCreateButton">Publier</button>
                     </div>
