@@ -41,7 +41,6 @@ class Router {
                 $functionController = $routeArray[1];
 
                 if (isset($matches[1])) {
-                    //var_dump($matches);
                     $instance = new $controller($matches[1]);
                     call_user_func_array([$instance, $functionController], $matches);
                     return;

@@ -3,3 +3,4 @@
 
 $router->addRoute('GET', '/',  'HomepageController#execute');
 $router->addRoute('GET', '/user/{id}',  'UserController#execute');
+$router->addRoute('GET', '/post/{id}',  'ResponseController#execute');

@@ -110,6 +110,16 @@ h1, ul, a {
     border-bottom: 1px solid var(--borderColor);
 }
 
+.mainPost {
+    min-width:320px;
+    max-width:600px;
+    width:100%;
+    padding:10px 15px 0 15px;
+    border-top: 1px solid var(--borderColor);
+    border-bottom: 1px solid var(--borderColor);
+    display:flex;
+}
+
 .bold {
     font-weight: 800;
 }
@@ -263,7 +273,13 @@ a {
 }
 
 .createPost {
-    border: 1px solid var(--borderColor);
+    min-width:320px;
+    max-width:600px;
+    width:100%;
+    padding:10px 15px 0 15px;
+    border-top: 1px solid var(--borderColor);
+    border-bottom: 1px solid var(--borderColor);
+    display:flex;
 }
 
 .postCreateToolsImage {

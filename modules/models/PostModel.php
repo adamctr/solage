@@ -6,46 +6,70 @@ class PostModel {
     protected $content;
     protected $date;
     protected $likes;
-    protected $responses;
+    protected $replyTo;
 
 
-    public function __construct($id, $user, $content, $date, $likes, $responses) {
+    public function __construct($id, $user, $content, $date, $likes, $replyTo) {
         $this->db = DataBase::getConnection();
         $this->id = $id;
         $this->user = $user;
         $this->content = $content;
         $this->date = $date;
         $this->likes = $likes;
-        $this->responses = $responses;
+        $this->replyTo = $replyTo;
     }
 
     // Récupérer les posts avec le nombre de likes
     static public function getPosts(): array {
-        $statement = DataBase::getConnection()->query(query: '
-            SELECT p.id, p.user, p.content, p.date, 
-                   COUNT(DISTINCT l.post) AS likes, 
-                   COUNT(DISTINCT r.id) AS responses
-            FROM posts p
-            LEFT JOIN likes l ON p.id = l.post
-            LEFT JOIN responses r ON p.id = r.post
-            GROUP BY p.id
-            ORDER BY p.date DESC LIMIT 5
-        ');
+        $statement = DataBase::getConnection()->query('
+        SELECT p.id, p.user, p.content, p.date, 
+               COUNT(DISTINCT l.post) AS likes, 
+               p.reply_to
+        FROM posts p
+        LEFT JOIN likes l ON p.id = l.post
+        GROUP BY p.id
+        ORDER BY p.date DESC LIMIT 5
+    ');
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->responses);
+            // Assurez-vous que le constructeur de PostModel accepte bien le paramètre reply_to
+            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to);
             $posts[] = $post;
         }
         return $posts;
     }
 
-    public function createPost() {
+
+    static public function getPostById(int $id): ?PostModel {
+        $statement = DataBase::getConnection()->prepare('
+        SELECT p.id, p.user, p.content, p.date, 
+               COUNT(DISTINCT l.post) AS likes, 
+               p.reply_to
+        FROM posts p
+        LEFT JOIN likes l ON p.id = l.post
+        WHERE p.id = :id
+        GROUP BY p.id
+    ');
+
+        $statement->bindParam(':id', $id, PDO::PARAM_INT);
+        $statement->execute();
+
+        $row = $statement->fetch(PDO::FETCH_OBJ);
+        if ($row) {
+            return new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to);
+        }
+        return null;
+    }
+
+
+    public function createPost(?int $replyTo = null) {
         try {
-            $statement = $this->db->prepare('INSERT INTO posts (user, content, date) VALUES (:user, :content, :date)');
+            $statement = $this->db->prepare('INSERT INTO posts (user, content, date, reply_to) VALUES (:user, :content, :date, :reply_to)');
             $statement->bindValue(':user', $this->user);
             $statement->bindValue(':content', $this->content);
             $statement->bindValue(':date', $this->date);
+            $statement->bindValue(':reply_to', $replyTo, PDO::PARAM_INT); // Null par défaut si pas de réponse
             $statement->execute();
 
             $this->id = $this->db->lastInsertId();
@@ -56,9 +80,50 @@ class PostModel {
         }
     }
 
+    public function getResponses(): array {
+        // Préparer la requête pour récupérer les réponses du post
+        $statement = $this->db->prepare('
+        SELECT r.id, r.content, r.user, r.date
+        FROM posts p
+        JOIN posts r ON r.reply_to = p.id
+        WHERE p.id = :post_id
+        ORDER BY r.date ASC
+    ');
+
+        // Lier l'identifiant du post
+        $statement->bindParam(':post_id', $this->id, PDO::PARAM_INT);
+        $statement->execute();
+
+        // Récupérer les réponses sous forme d'objets PostModel
+        $responses = [];
+        while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
+            $response = new PostModel($row->id, $row->user, $row->content, $row->date, 0, 0); // 0 pour likes et responses car ce sont des réponses
+            $responses[] = $response;
+        }
+        return $responses;
+    }
+
+    public function getLikesCount(): int {
+        // Préparer la requête pour récupérer le nombre de likes du post
+        $statement = $this->db->prepare('
+        SELECT COUNT(*) AS likes_count
+        FROM likes
+        WHERE post = :post_id
+    ');
+
+        // Lier l'identifiant du post
+        $statement->bindParam(':post_id', $this->id, PDO::PARAM_INT);
+        $statement->execute();
+
+        // Récupérer le résultat
+        $row = $statement->fetch(PDO::FETCH_OBJ);
+        return $row ? (int)$row->likes_count : 0; // Retourne 0 si aucun like n'existe
+    }
+
     public function getId(): int {
         return $this->id;
     }
+
     public function getUserId(): int {
         return $this->user;
     }
@@ -75,7 +140,8 @@ class PostModel {
         return $this->likes;
     }
 
-    public function getResponses(): int {
-        return $this->responses;
+    public function getResponsesCount(): int {
+        //var_dump($this->responses);
+        return 0;
     }
 }

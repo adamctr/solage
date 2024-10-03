@@ -25,65 +25,87 @@ const buttons = document.querySelectorAll("button");
 let selectedImage = null;
 
 // Écouter l'événement de changement sur l'input de fichier
-document.getElementById("file-input").addEventListener("change", (event) => {
-  const file = event.target.files[0];
 
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      selectedImage = e.target.result; // Stocke l'URL de l'image
-    };
-    reader.readAsDataURL(file);
-  }
-});
-document.getElementById("postCreateButton").addEventListener("click", () => {
-  const content = document.getElementById("postContent").innerText.trim();
-  const user = 1;
+if (document.getElementById("file-input")) {
 
-  if (!content) {
-    alert("Le contenu du post ne peut pas être vide !");
-    return;
-  }
+  document.getElementById("file-input").addEventListener("change", (event) => {
+    const file = event.target.files[0];
 
-  const postData = {
-    user: 1,
-    content: content,
-    image: selectedImage,
-  };
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        selectedImage = e.target.result; // Stocke l'URL de l'image
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-  fetch("/api/post", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(postData)
+  document.getElementById("file-input").addEventListener('submit', () => {
+    event.preventDefault();
   })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Erreur réseau");
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log(data);
-        if (data.success) {
-          appendNewPostToList(data);
-          document.getElementById("postContent").innerText = '';
-          selectedImage = null; // Réinitialise l'image après création du post
-          document.getElementById("file-input").value = ''; // Réinitialise l'input de fichier
-        } else {
-          alert("Erreur lors de la création du post : " + data.message);
-        }
-      })
-      .catch(error => {
-        console.error("Erreur:", error);
-        alert("Une erreur est survenue. Veuillez réessayer.");
-      });
-});
+}
+
+if (document.getElementById("postCreateButton")) {
+  document.getElementById("postCreateButton").addEventListener("click", (event) => {
+    const content = document.getElementById("postContent").innerText.trim();
+    const user = 1;
+
+    if (!content) {
+      alert("Le contenu du post ne peut pas être vide !");
+      return;
+    }
+
+    const postData = {
+      user: 1,
+      content: content,
+      image: selectedImage,
+    };
+
+    // Si c'est une reply, alors ajouter reply:postId
+    const postToReplyTo = event.target.getAttribute('data-posttoreply')
+    if( postToReplyTo !== '') {
+      postData.replyTo = postToReplyTo;
+    } else {
+      postData.replyTo = null;
+    }
+
+    console.log(postData);
+    console.log(postToReplyTo);
+
+    fetch("/api/post", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(postData)
+    })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Erreur réseau");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            appendNewPostToList(data);
+            document.getElementById("postContent").innerText = '';
+            selectedImage = null; // Réinitialise l'image après création du post
+            document.getElementById("file-input").value = ''; // Réinitialise l'input de fichier
+          } else {
+            alert("Erreur lors de la création du post : " + data.message);
+          }
+        })
+        .catch(error => {
+          console.error("Erreur:", error);
+          alert("Une erreur est survenue. Veuillez réessayer.");
+        });
+  });
+
+}
 
 function appendNewPostToList(data) {
   const post = data.data;
-  console.log(post);
+
   const postList = document.getElementById("postList");
   const newPost = document.createElement("div");
   newPost.classList.add("post");
@@ -130,10 +152,6 @@ function appendNewPostToList(data) {
 
 }
 
-document.getElementById("file-input").addEventListener('submit', () => {
-  event.preventDefault();
-})
-
 //
 
 document.addEventListener('click', function(event){
@@ -176,7 +194,6 @@ document.addEventListener('click', function(event){
             let currentLikes = parseInt(countLikes.textContent.trim());
 
             if (!svgElement.classList.contains('active')) {
-              console.log(svgElement);
               svgElement.classList.add('active')
               countLikes.textContent = currentLikes + 1;
             } else {

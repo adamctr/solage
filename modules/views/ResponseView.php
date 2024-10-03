@@ -1,20 +1,14 @@
 <?php
-class HomepageView {
-    protected $posts;
-    protected $sidebar;
-    protected $rightSidebar;
 
-    public function __construct($posts) {
-        $this->posts = $posts;
-    }
+class ResponseView {
 
-    public function show() {
-        $postView = new PostView($this->posts);
+    static public function show($post, $responses) {
+        $mainPostView = new MainPostView($post);
+        $postResponsesView = new PostResponsesView($responses);
         ob_start();
         ?>
 
-        <h1 class="homepageTitle">Votre actualité</h1>
-
+        <?= $mainPostView->show(); ?>
         <div class="createPost">
             <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
             <div class="postInsideContainer">
@@ -31,16 +25,16 @@ class HomepageView {
                             </label>
                             <input id="file-input" accept="image/*" type="file" style="display: none;" />
                         </div>
-                        <button id="postCreateButton" class="postCreateButton">Publier</button>
+                        <button id="postCreateButton" class="postCreateButton" data-postToReply="<?= $post->getId() ?>">Publier</button>
                     </div>
                 </div>
             </div>
 
         </div>
-        <div id="postList">
-        <?= $postView->show(); ?>
-        </div>
+        <?= $postResponsesView->show(); ?>
+
         <?php
-        (new LayoutView('La meilleure homepage', 'Ceci est la meilleure page', ob_get_clean()))->show();
+        $responseView = ob_get_clean();
+        (new LayoutView('Réponse à !!USER!!', 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
     }
 }

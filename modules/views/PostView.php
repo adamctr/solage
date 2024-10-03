@@ -23,15 +23,12 @@ class PostView {
                             <div class="postContent"><?= $post->getContent() ?></div>
                             <div class="postTools">
                                 <div class="postTool response">
-                                    <?php echo file_get_contents('assets/response.svg' ); ?>
-                                    <span class="menuTxt"></span></a>
-                                    <?= $post->getResponses() ?>
+                                    <?= PostToolResponseView::show($post, 1); ?>
                                 </div>
                                 <?= PostToolHeartView::show($post, 1); ?>
                             </div>
                         </div>
                     </div>
-
             </div>
 
             <?php
