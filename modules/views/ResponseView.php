@@ -9,13 +9,10 @@ class ResponseView {
         ?>
 
         <?= $mainPostView->show(); ?>
+
         <div class="createPost">
             <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
             <div class="postInsideContainer">
-                <div class="postNameDate">
-                    <div class="">name</div>
-                    <div class="postDate">qzdqzd></div>
-                </div>
                 <div class="postContentTools">
                     <span id="postContent" class="textarea, postCreateInput" role="textbox" contenteditable="true"></span>
                     <div class="postCreateTools">
@@ -29,8 +26,8 @@ class ResponseView {
                     </div>
                 </div>
             </div>
-
         </div>
+
         <?= $postResponsesView->show(); ?>
 
         <?php

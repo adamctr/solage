@@ -100,14 +100,21 @@ h1, ul, a {
     padding:10px 15px 0 15px;
     border-top: 1px solid var(--borderColor);
     display:flex;
-    animation: fadein 2s;
-    -moz-animation: fadein 2s; /* Firefox */
-    -webkit-animation: fadein 2s; /* Safari et Chrome */
-    -o-animation: fadein 2s; /* Opera */
 }
 
 .post:last-child {
     border-bottom: 1px solid var(--borderColor);
+}
+
+.post:not(.mainPost):hover {
+    cursor:pointer;
+}
+
+.fade-in {
+    animation: fadein 2s;
+    -moz-animation: fadein 2s; /* Firefox */
+    -webkit-animation: fadein 2s; /* Safari et Chrome */
+    -o-animation: fadein 2s; /* Opera */
 }
 
 .mainPost {
@@ -116,9 +123,17 @@ h1, ul, a {
     width:100%;
     padding:10px 15px 0 15px;
     border-top: 1px solid var(--borderColor);
-    border-bottom: 1px solid var(--borderColor);
     display:flex;
 }
+
+.mainPost > .postInsideContainer > .postContentTools > .postContent {
+    margin-top:15px;
+}
+
+.mainPost > .postInsideContainer > .postContentTools > .postTools {
+    margin-top:10px;
+}
+
 
 .bold {
     font-weight: 800;
@@ -273,13 +288,25 @@ a {
 }
 
 .createPost {
+    position:relative;
     min-width:320px;
     max-width:600px;
     width:100%;
     padding:10px 15px 0 15px;
-    border-top: 1px solid var(--borderColor);
     border-bottom: 1px solid var(--borderColor);
     display:flex;
+}
+
+.createPost::before {
+    content: '';
+    position: absolute;
+    color:var(--borderColor);
+    background-color: var(--borderColor);
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%; /* Bordure qui ne couvre que la moitié de la largeur */
+    height: 1px;
 }
 
 .postCreateToolsImage {

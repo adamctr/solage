@@ -10,7 +10,7 @@ class PostResponsesView {
         ?>
         <div id="postList">
         <?php foreach ($this->posts as $post) {;?>
-            <div class="post" data-id="<?= $post->getId() ?>">
+            <div class="post fade-in" data-id="<?= $post->getId() ?>">
 
                 <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
                 <div class="postInsideContainer">
