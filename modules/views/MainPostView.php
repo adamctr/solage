@@ -17,10 +17,10 @@ class MainPostView {
             <div class="postInsideContainer">
                 <div class="postNameDate">
                     <div><?= $this->post->getUserId() ?></div>
-                    <div class="postDate"><?= $this->post->getDate() ?></div>
                 </div>
                 <div class="postContentTools">
                     <div class="postContent"><?= $this->post->getContent() ?></div>
+                    <div class="postDate"><?= $this->post->getDate() ?></div>
                     <div class="postTools">
                         <div class="postTool response">
                             <?= PostToolResponseView::show($this->post, 1); ?>

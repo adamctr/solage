@@ -69,9 +69,6 @@ if (document.getElementById("postCreateButton")) {
       postData.replyTo = null;
     }
 
-    console.log(postData);
-    console.log(postToReplyTo);
-
     fetch("/api/post", {
       method: "POST",
       headers: {

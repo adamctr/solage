@@ -141,7 +141,19 @@ class PostModel {
     }
 
     public function getResponsesCount(): int {
-        //var_dump($this->responses);
-        return 0;
+        // Préparer la requête pour compter les réponses liées au post
+        $statement = $this->db->prepare('
+        SELECT COUNT(*) AS response_count
+        FROM posts
+        WHERE reply_to = :post_id
+    ');
+
+        // Lier l'identifiant du post
+        $statement->bindParam(':post_id', $this->id, PDO::PARAM_INT);
+        $statement->execute();
+
+        // Récupérer le résultat
+        $row = $statement->fetch(PDO::FETCH_OBJ);
+        return $row ? (int)$row->response_count : 0; // Retourner 0 si aucune réponse n'est trouvée
     }
 }
