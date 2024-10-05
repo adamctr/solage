@@ -13,13 +13,13 @@ class SidebarView {
                         <div class="menuLink">
                             <?php echo file_get_contents('assets/y.svg' ); ?>
                         </div>
-                        <a href="" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?>
+                        <a href="/" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?>
                             <span class="menuTxt">Accueil</span></a>
-                        <a href="" class="menuLink">
+                        <a href="/search" class="menuLink">
                             <?php echo file_get_contents('assets/wen.svg' ); ?>                            <span class="menuTxt">Recherche</span></a>
-                        <a href="" class="menuLink">
+                        <a href="/profile" class="menuLink">
                             <?php echo file_get_contents('assets/profile.svg' ); ?>                            <span class="menuTxt">Profil</span></a>
-                        <a href="" class="menuLink">
+                        <a href="/admin" class="menuLink">
                             <?php echo file_get_contents('assets/admin.svg' ); ?>
                             <span class="menuTxt">Admin</span></a>
 
