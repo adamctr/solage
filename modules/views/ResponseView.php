@@ -8,6 +8,12 @@ class ResponseView {
         ob_start();
         ?>
 
+        <div class="navigationBtnContainer">
+            <button class="navigationBtn" onclick="history.back()">
+                <?php echo file_get_contents('assets/back-arrow.svg' ); ?>
+            </button>
+        </div>
+
         <?= $mainPostView->show(); ?>
 
         <div class="createPost">

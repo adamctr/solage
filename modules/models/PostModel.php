@@ -22,18 +22,19 @@ class PostModel {
     // Récupérer les posts avec le nombre de likes
     static public function getPosts(): array {
         $statement = DataBase::getConnection()->query('
-        SELECT p.id, p.user, p.content, p.date, 
-               COUNT(DISTINCT l.post) AS likes, 
-               p.reply_to
-        FROM posts p
-        LEFT JOIN likes l ON p.id = l.post
-        GROUP BY p.id
-        ORDER BY p.date DESC LIMIT 5
-    ');
+            SELECT p.id, p.user, p.content, p.date, 
+                   COUNT(DISTINCT l.post) AS likes, 
+                   p.reply_to
+            FROM posts p
+            LEFT JOIN likes l ON p.id = l.post
+            WHERE p.reply_to IS NULL
+            GROUP BY p.id
+            ORDER BY p.date DESC
+            LIMIT 5;
+        ');
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            // Assurez-vous que le constructeur de PostModel accepte bien le paramètre reply_to
             $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to);
             $posts[] = $post;
         }

@@ -23,21 +23,21 @@ class SidebarView {
                             <?php echo file_get_contents('assets/admin.svg' ); ?>
                             <span class="menuTxt">Admin</span></a>
 
-                        <div class="magicButton">
+                        <div class="magicButton" id="magicButton">
                             <div class="">
                                 <div>
                                     <button class="magicButtonBis">
                                         <div class="inner">
                                             <span class="bold">
                                                 <?php echo file_get_contents('assets/plus.svg' ); ?>
-                                            </span><strong>Nouveau post</strong>
+                                            </span>
+                                            <strong>Nouveau post</strong>
                                         </div>
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </ul>
-
                 </div>
             </div>
         </div>

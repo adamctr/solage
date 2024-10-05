@@ -23,18 +23,26 @@ const buttons = document.querySelectorAll("button");
 /////////// Create a post
 
 let selectedImage = null;
+const postContent = document.getElementById('postContent');
 
 // Écouter l'événement de changement sur l'input de fichier
+const imageInput = document.getElementById("file-input");
 
-if (document.getElementById("file-input")) {
+if (imageInput) {
 
   document.getElementById("file-input").addEventListener("change", (event) => {
-    const file = event.target.files[0];
+    const file = imageInput.files[0];
 
     if (file) {
       const reader = new FileReader();
-      reader.onload = function (e) {
-        selectedImage = e.target.result; // Stocke l'URL de l'image
+      reader.onload = (event) => {
+        console.log(event)
+        const img = document.createElement('img');
+        img.src = event.target.result;
+        img.style.maxWidth = '100%';
+        img.style.display = 'block';
+        postContent.appendChild(img);
+
       };
       reader.readAsDataURL(file);
     }
@@ -85,6 +93,7 @@ if (document.getElementById("postCreateButton")) {
         .then(data => {
           if (data.success) {
             appendNewPostToList(data);
+            postOnClickPage();
             document.getElementById("postContent").innerText = '';
             selectedImage = null; // Réinitialise l'image après création du post
             document.getElementById("file-input").value = ''; // Réinitialise l'input de fichier
@@ -121,7 +130,7 @@ function appendNewPostToList(data) {
                   <div class="postTool">
                       <div class="icon">
                           <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-                          <svg width="22" class="" height="22" viewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg">
+                          <svg width="22" class="response" height="22" viewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg">
                           <path d="M7 9H17M7 13H12M21 20L17.6757 18.3378C17.4237 18.2118 17.2977 18.1488 17.1656 18.1044C17.0484 18.065 16.9277 18.0365 16.8052 18.0193C16.6672 18 16.5263 18 16.2446 18H6.2C5.07989 18 4.51984 18 4.09202 17.782C3.71569 17.5903 3.40973 17.2843 3.21799 16.908C3 16.4802 3 15.9201 3 14.8V7.2C3 6.07989 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V20Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                           </svg>
                       </div>
@@ -156,6 +165,10 @@ document.addEventListener('click', function(event){
 
   let postId;
   if (svgElement) {
+    // Si l'élement cliqué n'est pas le like, stop
+    if (!svgElement.classList.contains('heart')) {
+      return;
+    }
     let postElement = svgElement.closest(".post");
 
     if (postElement) {
@@ -208,4 +221,50 @@ document.addEventListener('click', function(event){
   }
 })
 
+// When click on a post, go to post page
+
+document.addEventListener("DOMContentLoaded", (event) => {
+  postOnClickPage()
+});
+
+function postOnClickPage() {
+  let posts = document.querySelectorAll('.post')
+
+  if (posts) {
+    posts.forEach((post) => {
+      const postId = post.getAttribute('data-id');
+
+      post.addEventListener('click', (event) => {
+        if (event.target.closest('svg') ) {
+          // Si l'élément cliqué est un SVG, on arrête le traitement
+          return;
+        }
+        window.location.href = `/post/${postId}`;
+      })
+    })
+  }
+}
+
+
+// When click on Nouveau Post, go to createPostButton
+
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("magicButton");
+  const editableElement = document.getElementById("postContent");
+  console.log(editableElement)
+
+  button.addEventListener("click", () => {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(editableElement);
+    range.collapse(false);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    editableElement.focus();
+    editableElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  });
+});
 

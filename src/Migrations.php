@@ -27,5 +27,6 @@ class Migrations {
     // Méthode pour appliquer les migrations
     public function migrate() {
         $this->addColumnIfNotExists('posts', 'reply_to', 'INT', 'NULL');
+        //$this->addColumnIfNotExists('users', 'username', 'STRING', 'NULL');
     }
 }

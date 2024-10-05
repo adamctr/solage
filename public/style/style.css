@@ -409,6 +409,17 @@ a {
     stroke: var(--secondary);
 }
 
-.icon:hover {
+.icon:not(.response):hover {
     cursor:pointer;
+}
+
+.navigationBtn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;}
+
+.navigationBtnContainer {
+    padding:10px 16px;
 }
