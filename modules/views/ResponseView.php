@@ -1,40 +1,38 @@
 <?php
 
+/**
+ *
+ */
 class ResponseView {
 
+    /**
+     * @param $post
+     * @param $responses
+     * @return void
+     */
     static public function show($post, $responses) {
         $mainPostView = new MainPostView($post);
         $postResponsesView = new PostResponsesView($responses);
+        $postView = new PostView($responses);
+
         ob_start();
         ?>
-
-        <div class="navigationBtnContainer">
-            <button class="navigationBtn" onclick="history.back()">
-                <?php echo file_get_contents('assets/back-arrow.svg' ); ?>
-            </button>
-        </div>
-
-        <?= $mainPostView->show(); ?>
-
-        <div class="createPost">
-            <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
-            <div class="postInsideContainer">
-                <div class="postContentTools">
-                    <span id="postContent" class="textarea, postCreateInput" role="textbox" contenteditable="true"></span>
-                    <div class="postCreateTools">
-                        <div class="postCreateTool">
-                            <label for="file-input">
-                                <?php echo file_get_contents('assets/image.svg' ); ?>
-                            </label>
-                            <input id="file-input" accept="image/*" type="file" style="display: none;" />
-                        </div>
-                        <button id="postCreateButton" class="postCreateButton" data-postToReply="<?= $post->getId() ?>">Publier</button>
-                    </div>
-                </div>
+        <div class="navigationContainer">
+            <div class="navigationBtnContainer">
+                <button class="navigationBtn" onclick="history.back()">
+                    <?php echo file_get_contents('assets/back-arrow.svg' ); ?>
+                </button>
             </div>
         </div>
 
-        <?= $postResponsesView->show(); ?>
+
+        <?= $mainPostView->show(); ?>
+
+        <?= CreatePostView::show($post) ?>
+
+        <div id="postList">
+            <?= $postView->show(); ?>
+        </div>
 
         <?php
         $responseView = ob_get_clean();

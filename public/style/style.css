@@ -37,8 +37,20 @@ h1, ul, a {
 }
 
 .postContainer {
-    width:600px;
     border-right:1px solid var(--borderColor);
+    max-width:630px;
+    width:100%;
+    min-width:320px;
+}
+
+.navigationContainer {
+    position:relative;
+    height:58px;
+    max-width: 630px;
+    width: 100%;
+    min-width: 320px;
+    background-color: var(--secondary);
+    z-index: 100;
 }
 
 .postCreateInput {
@@ -93,10 +105,15 @@ h1, ul, a {
     user-select: text;
 }
 
+#postList {
+    display:flex;
+    flex-direction: column;
+}
+
 .post {
     min-width:320px;
-    max-width:600px;
-    width:100%;
+    max-width:630px;
+    flex:1;
     padding:10px 15px 0 15px;
     border-top: 1px solid var(--borderColor);
     display:flex;
@@ -118,12 +135,16 @@ h1, ul, a {
 }
 
 .mainPost {
+    position:relative;
     min-width:320px;
-    max-width:600px;
     width:100%;
     padding:10px 15px 0 15px;
-    border-top: 1px solid var(--borderColor);
     display:flex;
+}
+
+.mainPost::before {
+    position: absolute;
+
 }
 
 .mainPost > .postInsideContainer > .postContentTools > .postContent {
@@ -164,15 +185,11 @@ h1, ul, a {
     bottom:0;
 }
 
-.sidebarMobile>ul {
+.sidebarMobile>.sidebarMobileContainer {
     display:flex;
 }
 
-.sidebarMobile>ul>li {
-    flex:1;
-}
-
-.sidebarFixed>ul {
+.sidebarFixed>.sidebarFixedContainer {
     display:flex;
     font-size:24px;
     flex-direction: column;
@@ -180,7 +197,7 @@ h1, ul, a {
     height:100%;
 }
 
-.sidebarFixed>ul>li {
+.sidebarFixed>.sidebarFixedContainer>li {
     height:50px;
     width:100%;
 }
@@ -208,12 +225,18 @@ a {
 
 .postAvatarContainer {
     padding-right:8px;
+    width:50px;
 }
 
 .postAvatar {
     width:40px;
     height:40px;
     border-radius: 100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    font-size:22px;
+    border: 1px solid grey;
 }
 
 .postNameDate {
@@ -248,8 +271,9 @@ a {
 }
 
 .postInsideContainer {
-    width:100%;
+    flex:1;
     height:100%;
+    width:75%;
 }
 
 .postToolsImage {
@@ -258,9 +282,9 @@ a {
 }
 
 .rightSidebar {
-    max-width:220px;
-    height:100vh;
-    padding: 16px 16px;
+    position:relative;
+    flex:1;
+    max-width:50px;
 }
 
 .postTool {
@@ -269,6 +293,12 @@ a {
     border-radius:100%;
     display:flex;
     justify-content: center;
+    align-items: center;
+    gap:4px;
+}
+
+.postCreateTool {
+    display:flex;
     align-items: center;
     gap:4px;
 }
@@ -316,6 +346,21 @@ a {
 
 .postContent {
     margin-bottom:16px;
+}
+
+.fitWidth {
+    width:inherit;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+#postContent[contenteditable]:empty::before {
+    content: 'Que vous arrive-t-il ?';
+    display: inline-block;
+    color:grey;
+}
+#postContent[contenteditable]:empty:focus::before {
+    color:grey;
 }
 
 .homepageTitle {
@@ -379,10 +424,6 @@ a {
         width:65px;
     }
 
-    .rightSidebar {
-        display:none;
-    }
-
     .magicButton {
         display:none;
     }
@@ -418,8 +459,50 @@ a {
     background: none;
     cursor: pointer;
     margin: 0;
-    padding: 0;}
+    padding: 0;
+}
 
 .navigationBtnContainer {
     padding:10px 16px;
+    height:58px;
+    position:fixed;
+    background-color: var(--secondary);
+    width:inherit;
+    border-bottom: 1px solid var(--borderColor);
 }
+
+#postList {
+
+}
+
+.postImage {
+    margin-bottom: 16px;
+    width:100%;
+    max-height:300px;
+    object-fit: cover;
+}
+
+#postContentImageContainer {
+
+}
+
+#scrollTopBtn {
+    position: fixed;
+    bottom: 75px;
+    right: 25px;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 1000;
+}
+
+#magicButton {
+    width:100%;
+    padding:8px 16px;
+    font-size: 20px;
+    margin-top:32px;
+}
+

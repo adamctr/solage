@@ -7,20 +7,34 @@ class PostView {
         $this->posts = $posts;
     }
 
+    /**
+     * @return string
+     */
     public function show() {
+
         ob_start();
         ?>
-        <?php foreach ($this->posts as $post) { ?>
+        <?php foreach ($this->posts as $post) {
+            $user = new UserModel();
+            $user = $user->getUserById($post->getUserId());
+            ?>
             <div class="post fade-in" data-id="<?= $post->getId() ?>">
 
-                    <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
+                    <div class="postAvatarContainer">
+                        <div class="postAvatar"><?= $user->getImage() ?></div>
+                    </div>
                     <div class="postInsideContainer">
                         <div class="postNameDate">
-                            <div><?= $post->getUserId() ?></div>
+                            <div><?= $user->getName() ?></div>
                             <div class="postDate"><?= $post->getDate() ?></div>
                         </div>
+                            <div class="postContent"><p class="fitWidth"><?= $post->getContent() ?></p></div>
+
+                        <?php if($post->getImagePath()): ?>
+                            <img src="/uploaded_files/<?= $post->getImagePath() ?>" alt="Post Image" class="postImage" />
+                        <?php endif; ?>
+
                         <div class="postContentTools">
-                            <div class="postContent"><?= $post->getContent() ?></div>
                             <div class="postTools">
                                 <div class="postTool response">
                                     <?= PostToolResponseView::show($post, 1); ?>
@@ -35,10 +49,6 @@ class PostView {
         }
         $postsHTML = ob_get_clean();
         return $postsHTML;
-    }
-
-    public function getContent() {
-        //var_dump($this->posts);
     }
 
 }

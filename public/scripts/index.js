@@ -1,29 +1,8 @@
-function getCursorPosition(element, event) {
-  const rect = element.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-  const x = event.clientX - centerX;
-  const y = centerY - event.clientY;
-  return { x, y };
-}
-
-const buttons = document.querySelectorAll("button");
-[...buttons].map((button) => {
-  button.addEventListener("pointermove", (event) => {
-    const { x, y } = getCursorPosition(event.target, event);
-    button.style.setProperty("--coord-x", x);
-    button.style.setProperty("--coord-y", y);
-  });
-  button.addEventListener("pointerleave", (event) => {
-    button.style.setProperty("--coord-x", 0);
-    button.style.setProperty("--coord-y", 0);
-  });
-});
-
 /////////// Create a post
 
 let selectedImage = null;
-const postContent = document.getElementById('postContent');
+const postContentImageContainer = document.getElementById('postContentImageContainer');
+const removeImageButton = document.getElementById('removeImageButton');
 
 // Écouter l'événement de changement sur l'input de fichier
 const imageInput = document.getElementById("file-input");
@@ -36,16 +15,31 @@ if (imageInput) {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        console.log(event)
         const img = document.createElement('img');
         img.src = event.target.result;
         img.style.maxWidth = '100%';
         img.style.display = 'block';
-        postContent.appendChild(img);
+        img.classList.add('postContentImage')
+        postContentImageContainer.innerHTML = '';
+        postContentImageContainer.appendChild(img);
 
+        // Afficher le bouton de suppression
+        removeImageButton.style.display = 'block';
       };
       reader.readAsDataURL(file);
+      selectedImage = file;
     }
+  });
+
+  // Logique pour le bouton de suppression de l'image
+  removeImageButton.addEventListener('click', () => {
+    // Réinitialiser l'aperçu de l'image et l'input fichier
+    postContentImageContainer.innerHTML = '';
+    imageInput.value = ''; // Réinitialiser l'input de fichier
+    selectedImage = null; // Réinitialiser l'image sélectionnée
+
+    // Cacher le bouton de suppression
+    removeImageButton.style.display = 'none';
   });
 
   document.getElementById("file-input").addEventListener('submit', () => {
@@ -56,7 +50,6 @@ if (imageInput) {
 if (document.getElementById("postCreateButton")) {
   document.getElementById("postCreateButton").addEventListener("click", (event) => {
     const content = document.getElementById("postContent").innerText.trim();
-    const user = 1;
 
     if (!content) {
       alert("Le contenu du post ne peut pas être vide !");
@@ -64,9 +57,7 @@ if (document.getElementById("postCreateButton")) {
     }
 
     const postData = {
-      user: 1,
       content: content,
-      image: selectedImage,
     };
 
     // Si c'est une reply, alors ajouter reply:postId
@@ -77,12 +68,17 @@ if (document.getElementById("postCreateButton")) {
       postData.replyTo = null;
     }
 
+    // FormData pour l'image
+
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(postData)); // Ajoute le JSON
+    if (selectedImage) {
+      formData.append('image', selectedImage); // Ajoute l'image
+    }
+
     fetch("/api/post", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(postData)
+      body: formData,
     })
         .then(response => {
           if (!response.ok) {
@@ -95,8 +91,10 @@ if (document.getElementById("postCreateButton")) {
             appendNewPostToList(data);
             postOnClickPage();
             document.getElementById("postContent").innerText = '';
-            selectedImage = null; // Réinitialise l'image après création du post
+            postContentImageContainer.innerText = "";
             document.getElementById("file-input").value = ''; // Réinitialise l'input de fichier
+            document.getElementById("postContent").scrollIntoView({ behavior: 'smooth', block: 'center' });
+
           } else {
             alert("Erreur lors de la création du post : " + data.message);
           }
@@ -125,11 +123,10 @@ function appendNewPostToList(data) {
           </div>
           <div class="postContentTools">
               <div class="postContent">${post.content}</div>
-              ${post.image ? `<img src="${post.image}" alt="Post Image" class="postImage" />` : ''}
+              ${post.image ? `<img src="/uploaded_files/${post.image}" alt="Post Image" class="postImage" />` : ''}
               <div class="postTools">
                   <div class="postTool">
                       <div class="icon">
-                          <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
                           <svg width="22" class="response" height="22" viewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg">
                           <path d="M7 9H17M7 13H12M21 20L17.6757 18.3378C17.4237 18.2118 17.2977 18.1488 17.1656 18.1044C17.0484 18.065 16.9277 18.0365 16.8052 18.0193C16.6672 18 16.5263 18 16.2446 18H6.2C5.07989 18 4.51984 18 4.09202 17.782C3.71569 17.5903 3.40973 17.2843 3.21799 16.908C3 16.4802 3 15.9201 3 14.8V7.2C3 6.07989 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V20Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                           </svg>
@@ -140,7 +137,6 @@ function appendNewPostToList(data) {
                   </div>
                   <div class="postTool">
                     <div class="icon">
-                      <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
                       <svg width="22" class="heart" height="22" vipostewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg">
                       <path fill-rule="evenodd" clip-rule="evenodd" d="M12 6.00019C10.2006 3.90317 7.19377 3.2551 4.93923 5.17534C2.68468 7.09558 2.36727 10.3061 4.13778 12.5772C5.60984 14.4654 10.0648 18.4479 11.5249 19.7369C11.6882 19.8811 11.7699 19.9532 11.8652 19.9815C11.9483 20.0062 12.0393 20.0062 12.1225 19.9815C12.2178 19.9532 12.2994 19.8811 12.4628 19.7369C13.9229 18.4479 18.3778 14.4654 19.8499 12.5772C21.6204 10.3061 21.3417 7.07538 19.0484 5.17534C16.7551 3.2753 13.7994 3.90317 12 6.00019Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
@@ -153,8 +149,7 @@ function appendNewPostToList(data) {
           </div>
       </div>
   `;
-
-  postList.prepend(newPost);  // Ajouter au début de la liste des posts
+  postList.prepend(newPost);
 
 }
 
@@ -267,4 +262,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   });
 });
+
+// Boutton pour remonter
+
+// Fonction pour détecter le scroll
+window.onscroll = function() {
+  scrollFunction();
+};
+
+function scrollFunction() {
+  const scrollTopBtn = document.getElementById("scrollTopBtn");
+  // Si on dépasse 100vh, le bouton apparaît
+  if (document.documentElement.scrollTop > window.innerHeight) {
+    scrollTopBtn.style.display = "block";
+  } else {
+    scrollTopBtn.style.display = "none";
+  }
+}
+
+// Quand l'utilisateur clique, remonter en haut
+document.getElementById("scrollTopBtn").addEventListener("click", function() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 

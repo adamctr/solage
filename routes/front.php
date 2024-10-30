@@ -1,6 +1,8 @@
 <?php
-// Le troisième argument est le chemin jusqu'à la page, le 4ème le nom
 
-$router->addRoute('GET', '/',  'HomepageController#execute');
-$router->addRoute('GET', '/user/{id}',  'UserController#execute');
-$router->addRoute('GET', '/post/{id}',  'ResponseController#execute');
+
+$router->addRoute('GET', '/',  'HomepageController#execute', AuthMiddleware::class);
+$router->addRoute('GET', '/user/{id}',  'UserController#execute', AuthMiddleware::class);
+$router->addRoute('GET', '/post/{id}',  'ResponseController#execute', AuthMiddleware::class);
+$router->addRoute('GET', '/login',  'UserController#showLoginForm', '');
+$router->addRoute('GET', '/register',  'UserController#showRegisterForm', '');

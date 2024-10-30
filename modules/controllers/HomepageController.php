@@ -12,11 +12,11 @@ class HomepageController {
         $this->posts = $postModel;
     }
 
+    /**
+     * @return void
+     */
     public function execute() {
         $view = new HomepageView($this->posts);
         $view->show();
-    }
-    public function test() {
-        // qzdq
     }
 }

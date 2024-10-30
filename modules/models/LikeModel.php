@@ -17,6 +17,9 @@ class LikeModel {
         $this->created_at = $created_at;
     }
 
+    /**
+     * @return false|int
+     */
     function create() {
         try {
             $statement = $this->db->prepare('INSERT INTO likes (id, user, post, response, created_at) VALUES (:id, :user, :post, :response, :created_at)');
@@ -35,6 +38,9 @@ class LikeModel {
         }
     }
 
+    /**
+     * @return bool
+     */
     function delete() {
         try {
             $statement = $this->db->prepare('DELETE FROM likes WHERE user = :user AND post = :post');
@@ -48,6 +54,9 @@ class LikeModel {
         }
     }
 
+    /**
+     * @return bool
+     */
     function likeAlreadyExist() {
         try {
             $statement = $this->db->prepare('SELECT * FROM likes WHERE user = :user AND post = :post LIMIT 1');
@@ -66,22 +75,37 @@ class LikeModel {
 
     }
 
+    /**
+     * @return int
+     */
     function getId() {
         return $this->id;
     }
 
+    /**
+     * @return int
+     */
     function getUser() {
         return $this->user;
     }
 
+    /**
+     * @return mixed
+     */
     function getPost() {
         return $this->post;
     }
 
+    /**
+     * @return mixed
+     */
     function getResponse() {
         return $this->response;
     }
 
+    /**
+     * @return dateTime
+     */
     function getCreatedAt() {
         return $this->created_at;
     }

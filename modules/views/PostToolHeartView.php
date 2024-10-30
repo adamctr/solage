@@ -3,16 +3,17 @@
 class PostToolHeartView {
     public $active;
 
-    // Méthode pour afficher le coeur avec la classe active si l'utilisateur a liké
+    /**
+     * @param $post
+     * @param $user
+     * @return false|string
+     */
     static public function show($post, $user) {
         // Instancier la classe pour vérifier si le like existe
         $view = new self();
-
-        // Vérifier si l'utilisateur a liké le post
         $isActive = $view->isActive($post, $user);
-
-        // Ajouter la classe active si l'utilisateur a déjà liké
         $activeClass = $isActive ? 'active' : '';
+
         ob_start();
         ?>
         <div class="postTool like">
@@ -28,7 +29,13 @@ class PostToolHeartView {
         return $postToolHeartView;
     }
 
-    // Méthode pour vérifier si l'utilisateur a déjà liké le post
+
+
+    /** Vérifier si l'utilisateur a déjà liké le post
+     * @param $post
+     * @param $user
+     * @return bool
+     */
     public function isActive($post, $user) {
         $likeModel = new LikeModel(null, $user, $post->getId(), null, null);
         return $likeModel->likeAlreadyExist();

@@ -1,25 +1,66 @@
 <?php
+
+/**
+ *
+ */
 class PostController {
+    /**
+     * @return void
+     */
     public function create() {
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode($_POST['data'], true);
+            //var_dump($_FILES);
 
+            // Vérifier si une image a été téléchargée
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                // Traitement de l'image
+                $fileTmpPath = $_FILES['image']['tmp_name'];
+                $fileName = $_FILES['image']['name'];
+                $fileSize = $_FILES['image']['size'];
+                $fileType = $_FILES['image']['type'];
+                $fileNameCmps = explode(".", $fileName);
+                $fileExtension = strtolower(end($fileNameCmps));
+
+                // Définir une liste d'extensions de fichiers autorisées
+                $allowedfileExtensions = ['jpg', 'gif', 'png', 'jpeg'];
+
+                // Vérifier l'extension
+                if (in_array($fileExtension, $allowedfileExtensions)) {
+                    // Chemin de destination pour enregistrer le fichier
+                    $uploadFileDir = $_SERVER['DOCUMENT_ROOT'] . 'uploaded_files/';
+                    $newFileName = uniqid() . '.' . $fileExtension; // Renommer le fichier
+                    $dest_path = $uploadFileDir . basename($newFileName);
+
+                    // Déplacer le fichier temporaire vers le dossier de destination
+                    if (!move_uploaded_file($fileTmpPath, $dest_path)) {
+                        Utils::sendResponse(false, 'Erreur lors de l\'enregistrement de l\'image.');
+                        return;
+                    }
+                } else {
+                    Utils::sendResponse(false, 'Type de fichier non autorisé.');
+                    return;
+                }
+            }
+        }
         // Validation des données
         if (!isset($data['user']) || !isset($data['content']) || empty(trim($data['content']))) {
             Utils::sendResponse(false, 'Données invalides ou contenu vide');
             return;
         }
 
-        // Si il y a un replyTo, alors l'insérer
-
         try {
-            $user = $data['user'];
+            $sessionController = new SessionController();
+            $user = $sessionController->getUserId();
             $content = $data['content'];
             $date = date('Y-m-d H:i:s');
-            $replyTo = (int) $data['replyTo'];
+            $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null ? (int) $data['replyTo'] : null;
+            $image = $newFileName ?? null;
 
-            $post = new PostModel(null, $user, $content, $date, null, $replyTo);
+            $post = new PostModel(null, $user, $content, $date, null, $replyTo, $image);
             $postId = $post->createPost($replyTo); // if post created, return postId
             if ($postId) {
                 Utils::sendResponse(true, "Succès lors de la création du post", [
@@ -28,6 +69,7 @@ class PostController {
                     'content' => $content,
                     'date' => $date,
                     'reply_to' => $replyTo,
+                    'image' => $image,
                 ]);
             } else {
                 Utils::sendResponse(false, 'Erreur lors de la création du post');

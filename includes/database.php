@@ -26,6 +26,9 @@ class Database {
         $this->connection = new PDO($dsn, $config['user'], $config['password'], $options);
     }
 
+    /**
+     * @return PDO
+     */
     public static function getConnection() {
         if (self::$instance === null) {
             self::$instance = new Database();

@@ -7,9 +7,11 @@ class PostModel {
     protected $date;
     protected $likes;
     protected $replyTo;
+    protected $image;
 
 
-    public function __construct($id, $user, $content, $date, $likes, $replyTo) {
+
+    public function __construct($id, $user, $content, $date, $likes, $replyTo, $image) {
         $this->db = DataBase::getConnection();
         $this->id = $id;
         $this->user = $user;
@@ -17,36 +19,43 @@ class PostModel {
         $this->date = $date;
         $this->likes = $likes;
         $this->replyTo = $replyTo;
+        $this->image = $image;
     }
 
-    // Récupérer les posts avec le nombre de likes
+    /**
+     * @return array
+     */
     static public function getPosts(): array {
         $statement = DataBase::getConnection()->query('
             SELECT p.id, p.user, p.content, p.date, 
-                   COUNT(DISTINCT l.post) AS likes, 
-                   p.reply_to
+            COUNT(DISTINCT l.post) AS likes, 
+            p.reply_to, p.image
             FROM posts p
             LEFT JOIN likes l ON p.id = l.post
             WHERE p.reply_to IS NULL
-            GROUP BY p.id
+            GROUP BY p.id, p.user, p.content, p.date, p.reply_to, p.image
             ORDER BY p.date DESC
-            LIMIT 5;
-        ');
+            LIMIT 20;
+           ');
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to);
+            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image);
             $posts[] = $post;
         }
         return $posts;
     }
 
 
+    /**
+     * @param int $id post
+     * @return PostModel|null
+     */
     static public function getPostById(int $id): ?PostModel {
         $statement = DataBase::getConnection()->prepare('
         SELECT p.id, p.user, p.content, p.date, 
                COUNT(DISTINCT l.post) AS likes, 
-               p.reply_to
+               p.reply_to, p.image
         FROM posts p
         LEFT JOIN likes l ON p.id = l.post
         WHERE p.id = :id
@@ -58,19 +67,24 @@ class PostModel {
 
         $row = $statement->fetch(PDO::FETCH_OBJ);
         if ($row) {
-            return new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to);
+            return new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image);
         }
         return null;
     }
 
 
+    /**
+     * @param int|null $replyTo = id post
+     * @return false|string
+     */
     public function createPost(?int $replyTo = null) {
         try {
-            $statement = $this->db->prepare('INSERT INTO posts (user, content, date, reply_to) VALUES (:user, :content, :date, :reply_to)');
+            $statement = $this->db->prepare('INSERT INTO posts (user, content, date, reply_to, image) VALUES (:user, :content, :date, :reply_to, :image)');
             $statement->bindValue(':user', $this->user);
             $statement->bindValue(':content', $this->content);
             $statement->bindValue(':date', $this->date);
             $statement->bindValue(':reply_to', $replyTo, PDO::PARAM_INT); // Null par défaut si pas de réponse
+            $statement->bindValue(':image', $this->image);
             $statement->execute();
 
             $this->id = $this->db->lastInsertId();
@@ -81,6 +95,9 @@ class PostModel {
         }
     }
 
+    /**
+     * @return array
+     */
     public function getResponses(): array {
         // Préparer la requête pour récupérer les réponses du post
         $statement = $this->db->prepare('
@@ -98,12 +115,15 @@ class PostModel {
         // Récupérer les réponses sous forme d'objets PostModel
         $responses = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $response = new PostModel($row->id, $row->user, $row->content, $row->date, 0, 0); // 0 pour likes et responses car ce sont des réponses
+            $response = new PostModel($row->id, $row->user, $row->content, $row->date, 0, 0, !empty($row->image) ? $row->image : null); // 0 pour likes et responses car ce sont des réponses
             $responses[] = $response;
         }
         return $responses;
     }
 
+    /**
+     * @return int
+     */
     public function getLikesCount(): int {
         // Préparer la requête pour récupérer le nombre de likes du post
         $statement = $this->db->prepare('
@@ -121,26 +141,51 @@ class PostModel {
         return $row ? (int)$row->likes_count : 0; // Retourne 0 si aucun like n'existe
     }
 
+    /**
+     * @return int
+     */
     public function getId(): int {
         return $this->id;
     }
 
+    /**
+     * @return int
+     */
     public function getUserId(): int {
         return $this->user;
     }
 
+    /**
+     * @return string
+     */
     public function getContent(): string {
         return $this->content;
     }
 
+    /**
+     * @return string
+     */
     public function getDate(): string {
         return $this->date;
     }
 
+    /**
+     * @return int
+     */
     public function getLikes(): int {
         return $this->likes;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getImagePath() {
+        return $this->image;
+    }
+
+    /**
+     * @return int
+     */
     public function getResponsesCount(): int {
         // Préparer la requête pour compter les réponses liées au post
         $statement = $this->db->prepare('

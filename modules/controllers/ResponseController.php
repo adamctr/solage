@@ -1,5 +1,8 @@
 <?php
 
+/**
+ *
+ */
 class ResponseController {
 
     protected $postId;
@@ -7,6 +10,9 @@ class ResponseController {
         $this->postId = $postId;
     }
 
+    /**
+     * @return void
+     */
     function execute() {
         $postId = (int) $this->postId;
 

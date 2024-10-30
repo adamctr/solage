@@ -1,11 +1,15 @@
 <?php
 
+/**
+ *
+ */
 class LikeController
 {
     protected $like;
 
     /**
      * Méthode pour gérer la création ou la suppression d'un like
+     * @return void
      */
     function create()
     {
@@ -38,6 +42,7 @@ class LikeController
 
     /**
      * Méthode pour créer un like
+     * @return void
      */
     protected function createLike()
     {
@@ -59,6 +64,7 @@ class LikeController
 
     /**
      * Méthode pour supprimer un like
+     * @return void
      */
     protected function deleteLike()
     {

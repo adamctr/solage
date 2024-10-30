@@ -2,6 +2,9 @@
 
 class SidebarView {
 
+    /**
+     * @return string
+     */
     public function show() {
         ob_start();
         ?>
@@ -9,45 +12,36 @@ class SidebarView {
         <div class="sidebars">
             <div class="sidebar">
                 <div class="sidebarFixed">
-                    <ul>
+                    <div class="sidebarFixedContainer">
                         <div class="menuLink">
                             <?php echo file_get_contents('assets/y.svg' ); ?>
                         </div>
-                        <a href="/" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?>
+                        <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?>
                             <span class="menuTxt">Accueil</span></a>
-                        <a href="/search" class="menuLink">
+                        <a href="/search" aria-label="Rechercher" class="menuLink">
                             <?php echo file_get_contents('assets/wen.svg' ); ?>                            <span class="menuTxt">Recherche</span></a>
-                        <a href="/profile" class="menuLink">
+                        <a href="/profile" aria-label="Profile" class="menuLink">
                             <?php echo file_get_contents('assets/profile.svg' ); ?>                            <span class="menuTxt">Profil</span></a>
-                        <a href="/admin" class="menuLink">
+                        <a href="/admin" aria-label="Admin" class="menuLink">
                             <?php echo file_get_contents('assets/admin.svg' ); ?>
                             <span class="menuTxt">Admin</span></a>
 
-                        <div class="magicButton" id="magicButton">
-                            <div class="">
-                                <div>
-                                    <button class="magicButtonBis">
-                                        <div class="inner">
-                                            <span class="bold">
-                                                <?php echo file_get_contents('assets/plus.svg' ); ?>
-                                            </span>
-                                            <strong>Nouveau post</strong>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </ul>
+
+                        <button id="magicButton">
+                            <?php echo file_get_contents('assets/plus.svg' ); ?>
+                            <strong>Nouveau post</strong>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="sidebarMobile">
-            <ul class="sidebarMobileContainer">
-                <a href="" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?> </a>
-                <a href="" class="menuLink"> <?php echo file_get_contents('assets/wen.svg' ); ?> </a>
-                <a href="" class="menuLink"> <?php echo file_get_contents('assets/profile.svg' ); ?> </a>
-                <a href="" class="menuLink"> <?php echo file_get_contents('assets/admin.svg' ); ?> </a>
-            </ul>
+            <div class="sidebarMobileContainer">
+                <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?> </a>
+                <a href="/search" aria-label="Rechercher" class="menuLink"> <?php echo file_get_contents('assets/wen.svg' ); ?> </a>
+                <a href="/profile" aria-label="Profile" class="menuLink"> <?php echo file_get_contents('assets/profile.svg' ); ?> </a>
+                <a href="/admin" aria-label="Admin" class="menuLink"> <?php echo file_get_contents('assets/admin.svg' ); ?> </a>
+            </div>
         </div>
 
         <?php

@@ -7,19 +7,32 @@ class MainPostView {
     function __construct($post) {
         $this->post = $post;
     }
+
+    /**
+     * @return string
+     */
     function show() {
         ob_start();
+        $user = new UserModel();
+        $user = $user->getUserById($this->post->getUserId());
         ?>
 
         <div class="mainPost post" data-id="<?= $this->post->getId() ?>">
 
-            <div class="postAvatarContainer"><img class="postAvatar" src="https://pbs.twimg.com/profile_images/1834449929932062720/3j3_C2V5_400x400.jpg" alt=""></div>
+            <div class="postAvatarContainer">
+                <div class="postAvatar"><?= $user->getImage() ?></div>
+            </div>
             <div class="postInsideContainer">
                 <div class="postNameDate">
-                    <div><?= $this->post->getUserId() ?></div>
+                    <div><?= $user->getName() ?></div>
                 </div>
                 <div class="postContentTools">
                     <div class="postContent"><?= $this->post->getContent() ?></div>
+
+                    <?php if($this->post->getImagePath()): ?>
+                    <img src="/uploaded_files/<?= $this->post->getImagePath() ?>" alt="Post Image" class="postImage" />
+                    <?php endif; ?>
+
                     <div class="postDate"><?= $this->post->getDate() ?></div>
                     <div class="postTools">
                         <div class="postTool response">

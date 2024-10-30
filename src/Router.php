@@ -2,15 +2,27 @@
 
 class Router {
     protected $routes = [];
-    public function addRoute($method, $path, $target) {
+
+    /**
+     * @param $method
+     * @param $path
+     * @param $target
+     * @return void
+     */
+    public function addRoute($method, $path, $target, $middleware = null) {
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
             'target' => $target,
+            'middleware' => $middleware,
         ];
 
     }
 
+    /**
+     * @return void
+     * @throws Exception
+     */
     public function match() {
         $uri = $_SERVER['REQUEST_URI'];
         $requestMethod = $_SERVER['REQUEST_METHOD'];
@@ -31,6 +43,14 @@ class Router {
             }
 
             if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
+
+                //MIDDLE WARE
+                if ($route['middleware']) {
+                    $middlewareInstance = new $route['middleware']();
+                    $middlewareInstance->handle();
+                }
+                //
+
                 $routeArray = explode('#', $route['target']);
                 //var_dump($routeArray);
                 if (count($routeArray) < 2) {

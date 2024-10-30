@@ -1,7 +1,10 @@
 <?php
 
 class PostToolResponseView {
-// Si page du post pareil que montré, alors disabled
+    /**
+     * @param $post
+     * @return string
+     */
     static public function show($post) {
         ob_start();
         ?>
@@ -17,6 +20,5 @@ class PostToolResponseView {
         <?php
         $responseView = ob_get_clean();
         return $responseView;
-        //new LayoutView('Réponse à !!USER!!', 'Page du post et des réponses de l\'utilisateur', $responseView);
     }
 }
