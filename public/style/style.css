@@ -405,6 +405,13 @@ a {
 }
 
 @media only screen and (max-width: 970px) {
+    .rightSidebar {
+        display:none;
+    }
+    #magicButton strong {
+        display: none;
+    }
+
     .sidebarFixed {
         min-width:initial;
         width:65px;
@@ -504,5 +511,84 @@ a {
     padding:8px 16px;
     font-size: 20px;
     margin-top:32px;
+}
+
+.loginRegisterContainer {
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 32px 0;
+
+}
+
+.loginRegisterForm {
+    display:flex;
+    flex-direction: column;
+    margin:16px 0;
+    gap:16px;
+    width:300px;
+}
+
+.formBlock {
+    display:flex;
+    flex-direction: column;
+    gap:8px;
+}
+
+button[type="submit"] {
+    background-color: var(--primary);
+    border: none;
+    color: var(--secondary);
+    padding:8px 16px;
+    margin-top:16px;
+}
+
+.sr-only {
+    border: 0 !important;
+    clip: rect(1px, 1px, 1px, 1px) !important;
+    -webkit-clip-path: inset(50%) !important;
+    clip-path: inset(50%) !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    position: absolute !important;
+    width: 1px !important;
+    white-space: nowrap !important;
+}
+
+.homepagelogo {
+    margin:16px 0;
+}
+
+.errorContainer {
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.btn {
+    background-color: var(--primary);
+    border: none;
+    color: var(--secondary);
+    padding:8px 16px;
+    margin-top:16px;}
+
+.ghosticon {
+    margin: 32px 0;
+}
+
+@media print {
+    body {
+        font-size: 12pt;
+        color: black;
+        background-color: white;
+    }
+    header, footer, .navigation, .sidebar {
+        display: none;
+    }
+
 }
 

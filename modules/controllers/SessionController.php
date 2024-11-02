@@ -38,7 +38,7 @@ class SessionController {
     }
 
     // Méthode pour récupérer l'ID de l'utilisateur connecté
-    public function getUserId() {
+    static public function getUserId() {
         return $_SESSION['user_id'] ?? null;
     }
 

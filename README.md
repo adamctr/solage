@@ -1,28 +1,17 @@
 A faire :
 
-PAGES
 
-// Finir Homepage
--- Créer Header Footer, liens avec meta desc et title
--- HTML CSS 
--- Intégrer SideBar responsive
--- Ajouter une réponse à un post
--- Voir les réponses d'un posts
--- Voir le nombre de réponses d'un posts
-
-// Page Utilisateur
--- Voir nom, prenom, image
--- Modifier nom, prenom, image
--- Supprimer un post
--- Ajouter un post (option addImage)
-
-// Page Admin (Back-End)
--- Supprimer un utilisateur
--- Supprimer un post
-
-AJAX
--- Ajouter un post
-
-
-EN OPTION
-Page recherche de posts/utilisateurs
+- Formulaires : validations de données « à la volée » grâce à des messages d’information
+  dynamiques) ; 
+- − pensez à charger de manière différée les images qui se situent après la ligne de flottaison ; 
+- − pensez à inscrire votre site Web sur des annuaires (du domaine) ; 
+- travaillez les référencements local (avec l’adresse du département informatique par défaut)
+  et réseaux sociaux ;
+- 
+- 
+  − convention de nommage, indentation et commentarisation du code source (5 %) ;
+  (PHPDOC Partout)
+- Bug bouton Nouveau post responsive
+- Bug sur like
+- Retailler les images
+- 

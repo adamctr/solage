@@ -7,6 +7,8 @@ class SidebarView {
      */
     public function show() {
         ob_start();
+
+        $userid = SessionController::getUserId();
         ?>
 
         <div class="sidebars">
@@ -20,7 +22,7 @@ class SidebarView {
                             <span class="menuTxt">Accueil</span></a>
                         <a href="/search" aria-label="Rechercher" class="menuLink">
                             <?php echo file_get_contents('assets/wen.svg' ); ?>                            <span class="menuTxt">Recherche</span></a>
-                        <a href="/profile" aria-label="Profile" class="menuLink">
+                        <a href="/user/<?=$userid?>" aria-label="Profile" class="menuLink">
                             <?php echo file_get_contents('assets/profile.svg' ); ?>                            <span class="menuTxt">Profil</span></a>
                         <a href="/admin" aria-label="Admin" class="menuLink">
                             <?php echo file_get_contents('assets/admin.svg' ); ?>

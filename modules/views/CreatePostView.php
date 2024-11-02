@@ -29,6 +29,7 @@ class CreatePostView {
                     <div class="postCreateTools">
                         <div class="postCreateTool">
                             <label for="file-input">
+                                <span class="sr-only">Upload image</span>
                                 <?php echo file_get_contents('assets/image.svg' ); ?>
                             </label>
                             <input id="file-input" accept="image/*" type="file" style="display: none;" />

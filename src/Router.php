@@ -73,7 +73,7 @@ class Router {
         }
 
         http_response_code(404);
-        echo "Not Found";
+        page404View::show();
     }
 
 }

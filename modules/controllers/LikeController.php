@@ -23,7 +23,7 @@ class LikeController
             return;
         }
 
-        $user = 1; // Exemples de valeurs fixes, à remplacer par SESSION_USER
+        $user = SessionController::getUserId();
         $post = $data['post'];
 
         try {

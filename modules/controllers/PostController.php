@@ -47,7 +47,7 @@ class PostController {
             }
         }
         // Validation des données
-        if (!isset($data['user']) || !isset($data['content']) || empty(trim($data['content']))) {
+        if (!isset($data['content']) || empty(trim($data['content']))) {
             Utils::sendResponse(false, 'Données invalides ou contenu vide');
             return;
         }
@@ -55,6 +55,8 @@ class PostController {
         try {
             $sessionController = new SessionController();
             $user = $sessionController->getUserId();
+            $username = $sessionController->getName();
+            $userimage = $sessionController->getImage();
             $content = $data['content'];
             $date = date('Y-m-d H:i:s');
             $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null ? (int) $data['replyTo'] : null;
@@ -66,6 +68,8 @@ class PostController {
                 Utils::sendResponse(true, "Succès lors de la création du post", [
                     'id' => $postId,
                     'user' => $user,
+                    'username' => $username,
+                    'userimage' => $userimage,
                     'content' => $content,
                     'date' => $date,
                     'reply_to' => $replyTo,

@@ -10,6 +10,10 @@ class LayoutView {
 
         $sidebar = new SidebarView();
         $rightSidebar = new RightSidebarView();
+
+        $config = Config::getInstance();
+        $cssPath = $config->getCssPath();
+        $jsPath = $config->getJsPath();
         ?>
             <!doctype html>
             <html lang="en">
@@ -18,24 +22,23 @@ class LayoutView {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <meta http-equiv="X-UA-Compatible" content="ie=edge">
                 <meta name="description" content="<?=$this->description?>">
-                <link href="/style/style.css" rel="stylesheet" />
-                <link href="/style/design.css" rel="stylesheet" />
+                <link href="/<?=$cssPath?>" rel="stylesheet" />
                 <link rel="shortcut icon" href="/assets/yfavicon.ico" type="image/x-icon"/>
                 <title><?= $this->title ?></title>
             </head>
             <body>
-                <div class="main">
+                <main class="main">
                     <?= $sidebar->show(); ?>
                     <div class="postContainer">
                         <?= $this->content; ?>
                     </div>
                     <?= $rightSidebar->show(); ?>
-                </div>
+                </main>
                 <div id="scrollTopBtn" style="display: none;">
                     <?php echo file_get_contents('assets/up-arrow.svg' ); ?>
                 </div>
 
-                <script src="/scripts/index.js"></script>
+                <script src="/<?=$jsPath?>"></script>
             </body>
         </html>
 <?php

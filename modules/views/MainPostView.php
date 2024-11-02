@@ -36,9 +36,9 @@ class MainPostView {
                     <div class="postDate"><?= $this->post->getDate() ?></div>
                     <div class="postTools">
                         <div class="postTool response">
-                            <?= PostToolResponseView::show($this->post, 1); ?>
+                            <?= PostToolResponseView::show($this->post); ?>
                         </div>
-                        <?= PostToolHeartView::show($this->post, 1); ?>
+                        <?= PostToolHeartView::show($this->post, $user->getId()); ?>
                     </div>
                 </div>
             </div>

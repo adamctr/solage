@@ -31,7 +31,7 @@ class PostView {
                             <div class="postContent"><p class="fitWidth"><?= $post->getContent() ?></p></div>
 
                         <?php if($post->getImagePath()): ?>
-                            <img src="/uploaded_files/<?= $post->getImagePath() ?>" alt="Post Image" class="postImage" />
+                            <img src="/uploaded_files/<?= $post->getImagePath() ?>" alt="" class="postImage" />
                         <?php endif; ?>
 
                         <div class="postContentTools">
