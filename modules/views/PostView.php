@@ -37,9 +37,9 @@ class PostView {
                         <div class="postContentTools">
                             <div class="postTools">
                                 <div class="postTool response">
-                                    <?= PostToolResponseView::show($post, 1); ?>
+                                    <?= PostToolResponseView::show($post, $user->getId()); ?>
                                 </div>
-                                <?= PostToolHeartView::show($post, 1); ?>
+                                <?= PostToolHeartView::show($post, $user->getId()); ?>
                             </div>
                         </div>
                     </div>

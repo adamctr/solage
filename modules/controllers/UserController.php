@@ -38,11 +38,6 @@ class UserController {
         $user = $userModel->getUserByEmail($email);
 
         if ($user) {
-            // Debugging: Affichez les mots de passe pour vérifier
-            echo "Mot de passe saisi : " . htmlspecialchars($password) . "<br>";
-            echo "Mot de passe haché en base de données : " . htmlspecialchars($user->getPassword()) . "<br>";
-
-            // Vérification du mot de passe
             if (password_verify($password, $user->getPassword())) {
                 // Authentification réussie
 

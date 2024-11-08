@@ -11,7 +11,5 @@ A faire :
 - 
   − convention de nommage, indentation et commentarisation du code source (5 %) ;
   (PHPDOC Partout)
-- Bug bouton Nouveau post responsive
-- Bug sur like
 - Retailler les images
 - 

@@ -8,10 +8,11 @@ class PostModel {
     protected $likes;
     protected $replyTo;
     protected $image;
+    protected $reply_to_parent;
 
 
 
-    public function __construct($id, $user, $content, $date, $likes, $replyTo, $image) {
+    public function __construct($id, $user, $content, $date, $likes, $replyTo, $image, $reply_to_parent) {
         $this->db = DataBase::getConnection();
         $this->id = $id;
         $this->user = $user;
@@ -20,6 +21,7 @@ class PostModel {
         $this->likes = $likes;
         $this->replyTo = $replyTo;
         $this->image = $image;
+        $this->reply_to_parent = $reply_to_parent;
     }
 
     /**
@@ -29,18 +31,18 @@ class PostModel {
         $statement = DataBase::getConnection()->query('
             SELECT p.id, p.user, p.content, p.date, 
             COUNT(DISTINCT l.post) AS likes, 
-            p.reply_to, p.image
+            p.reply_to, p.image, p.reply_to_parent
             FROM posts p
             LEFT JOIN likes l ON p.id = l.post
             WHERE p.reply_to IS NULL
-            GROUP BY p.id, p.user, p.content, p.date, p.reply_to, p.image
+            GROUP BY p.id, p.user, p.content, p.date, p.reply_to, p.image, p.reply_to_parent
             ORDER BY p.date DESC
             LIMIT 20;
            ');
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image);
+            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
             $posts[] = $post;
         }
         return $posts;
@@ -55,7 +57,7 @@ class PostModel {
         $statement = DataBase::getConnection()->prepare('
         SELECT p.id, p.user, p.content, p.date, 
                COUNT(DISTINCT l.post) AS likes, 
-               p.reply_to, p.image
+               p.reply_to, p.image, p.reply_to_parent
         FROM posts p
         LEFT JOIN likes l ON p.id = l.post
         WHERE p.id = :id
@@ -67,7 +69,7 @@ class PostModel {
 
         $row = $statement->fetch(PDO::FETCH_OBJ);
         if ($row) {
-            return new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image);
+            return new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
         }
         return null;
     }
@@ -77,14 +79,15 @@ class PostModel {
      * @param int|null $replyTo = id post
      * @return false|string
      */
-    public function createPost(?int $replyTo = null) {
+    public function createPost(?int $replyTo = null, ?int $replyToParent = null) {
         try {
-            $statement = $this->db->prepare('INSERT INTO posts (user, content, date, reply_to, image) VALUES (:user, :content, :date, :reply_to, :image)');
+            $statement = $this->db->prepare('INSERT INTO posts (user, content, date, reply_to, image, reply_to_parent) VALUES (:user, :content, :date, :reply_to, :image, :reply_to_parent)');
             $statement->bindValue(':user', $this->user);
             $statement->bindValue(':content', $this->content);
             $statement->bindValue(':date', $this->date);
             $statement->bindValue(':reply_to', $replyTo, PDO::PARAM_INT); // Null par défaut si pas de réponse
             $statement->bindValue(':image', $this->image);
+            $statement->bindValue(':reply_to_parent', $replyToParent, PDO::PARAM_INT);
             $statement->execute();
 
             $this->id = $this->db->lastInsertId();
@@ -101,7 +104,7 @@ class PostModel {
     public function getResponses(): array {
         // Préparer la requête pour récupérer les réponses du post
         $statement = $this->db->prepare('
-        SELECT r.id, r.content, r.user, r.date
+        SELECT r.id, r.content, r.user, r.date, r.likes, r.reply_to, r.image, r.reply_to_parent
         FROM posts p
         JOIN posts r ON r.reply_to = p.id
         WHERE p.id = :post_id
@@ -115,7 +118,7 @@ class PostModel {
         // Récupérer les réponses sous forme d'objets PostModel
         $responses = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $response = new PostModel($row->id, $row->user, $row->content, $row->date, 0, 0, !empty($row->image) ? $row->image : null); // 0 pour likes et responses car ce sont des réponses
+            $response = new PostModel($row->id, $row->user, $row->content, $row->date, 0, 0, !empty($row->image) ? $row->image : null, $row->reply_to_parent); // 0 pour likes et responses car ce sont des réponses
             $responses[] = $response;
         }
         return $responses;
@@ -201,5 +204,9 @@ class PostModel {
         // Récupérer le résultat
         $row = $statement->fetch(PDO::FETCH_OBJ);
         return $row ? (int)$row->response_count : 0; // Retourner 0 si aucune réponse n'est trouvée
+    }
+
+    public function getPostParentId(): int {
+        return $this->reply_to_parent;
     }
 }

@@ -412,6 +412,11 @@ a {
         display: none;
     }
 
+    #magicButton {
+        padding:4px 8px!important;
+        width:fit-content!important;
+    }
+
     .sidebarFixed {
         min-width:initial;
         width:65px;

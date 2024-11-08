@@ -60,12 +60,16 @@ if (document.getElementById("postCreateButton")) {
       content: content,
     };
 
-    // Si c'est une reply, alors ajouter reply:postId
+    // Si c'est une reply, alors ajouter reply:postId et replyToParent:postId
     const postToReplyTo = event.target.getAttribute('data-posttoreply')
+    const postParent = event.target.getAttribute('data-postparent')
+
     if( postToReplyTo !== '') {
       postData.replyTo = postToReplyTo;
+      postData.replyToParent = postParent;
     } else {
       postData.replyTo = null;
+      postData.replyToParent = null;
     }
 
     // FormData pour l'image

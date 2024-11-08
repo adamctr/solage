@@ -34,6 +34,7 @@ class Migrations {
 
     public function migrate() {
         $this->addColumnIfNotExists('posts', 'reply_to', 'INT', 'NULL');
+        $this->addColumnIfNotExists('posts', 'reply_to_parent', 'INT', 'NULL');
         $this->addColumnIfNotExists('posts', 'image', 'TEXT', 'NULL');
         $this->removeColumnIfExists('users', 'username');
     }

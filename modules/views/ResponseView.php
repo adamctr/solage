@@ -15,6 +15,8 @@ class ResponseView {
         $postResponsesView = new PostResponsesView($responses);
         $postView = new PostView($responses);
 
+        $usernameOfThePostOwner = UserModel::getNameFromId($post->getUserId());
+
         ob_start();
         ?>
         <div class="navigationContainer">
@@ -36,6 +38,6 @@ class ResponseView {
 
         <?php
         $responseView = ob_get_clean();
-        (new LayoutView('Réponse à !!USER!!', 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
+        (new LayoutView(('Réponse à ' . $usernameOfThePostOwner), 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
     }
 }
