@@ -74,7 +74,7 @@ class UserController {
         exit;
     }
 
-    public function logout() {
+    static public function logout() {
         // Déconnecte l'utilisateur en détruisant la session
         $sessionController = new SessionController();
         $sessionController->logout();

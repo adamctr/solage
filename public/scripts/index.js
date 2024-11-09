@@ -62,13 +62,17 @@ if (document.getElementById("postCreateButton")) {
 
     // Si c'est une reply, alors ajouter reply:postId et replyToParent:postId
     const postToReplyTo = event.target.getAttribute('data-posttoreply')
-    const postParent = event.target.getAttribute('data-postparent')
+    const postParent = event.target.getAttribute('data-postParent')
 
     if( postToReplyTo !== '') {
       postData.replyTo = postToReplyTo;
-      postData.replyToParent = postParent;
     } else {
       postData.replyTo = null;
+    }
+
+    if( postParent !== null) {
+      postData.replyToParent = postParent;
+    } else {
       postData.replyToParent = null;
     }
 

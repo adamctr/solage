@@ -47,7 +47,7 @@ class UserModel {
         return $this->role;
     }
 
-    public function getImage(): string {
+    public function getImage() {
         return $this->image;
     }
 

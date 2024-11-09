@@ -15,11 +15,11 @@ class ResponseController {
      */
     function execute() {
         $postId = (int) $this->postId;
-
         $post = PostModel::getPostById($postId);
+
         $responses = $post->getResponses();
 
-        $responseView = new ResponseView;
+        $responseView = new ResponseView();
         $responseView->show($post ,$responses);
     }
 }

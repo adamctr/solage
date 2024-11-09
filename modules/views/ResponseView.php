@@ -12,7 +12,6 @@ class ResponseView {
      */
     static public function show($post, $responses) {
         $mainPostView = new MainPostView($post);
-        $postResponsesView = new PostResponsesView($responses);
         $postView = new PostView($responses);
 
         $usernameOfThePostOwner = UserModel::getNameFromId($post->getUserId());
@@ -38,6 +37,6 @@ class ResponseView {
 
         <?php
         $responseView = ob_get_clean();
-        (new LayoutView(('Réponse à ' . $usernameOfThePostOwner), 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
+        (new LayoutView('Réponse à ', 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
     }
 }

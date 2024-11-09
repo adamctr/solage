@@ -5,7 +5,7 @@ require '../vendor/autoload.php';
 
 require_once '../includes/autoload.php';
 Autoloader::register();
-define('APP_ENV', 'production');
+define('APP_ENV', 'development');
 
 if (APP_ENV === 'production') {
     $minificationController = new MinificationController();

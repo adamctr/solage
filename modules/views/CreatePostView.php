@@ -38,8 +38,14 @@ class CreatePostView {
                         <button id="postCreateButton" class="postCreateButton"
                             <?php if ($post): ?>
                                 data-postToReply="<?= htmlspecialchars($post->getId(), ENT_QUOTES, 'UTF-8') ?>"
-                                data-postParent="<?= htmlspecialchars($post->getPostParentId(), ENT_QUOTES, 'UTF-8') ?>"
+
+                                <?php if($post->getReplyTo() !== null ): ?>
+                                    data-postParent="<?= htmlspecialchars($post->getPostParentId(), ENT_QUOTES, 'UTF-8') ?>"
+                                <?php endif; ?>
+
                             <?php endif; ?>
+
+
                         >Publier</button>
                     </div>
                 </div>

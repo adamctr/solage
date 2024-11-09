@@ -33,6 +33,9 @@ class SidebarView {
                             <?php echo file_get_contents('assets/plus.svg' ); ?>
                             <strong>Nouveau post</strong>
                         </button>
+                        <form action="/logout" method="post">
+                            <button type="submit" class="logoutButton">Déconnexion</button>
+                        </form>
                     </div>
                 </div>
             </div>

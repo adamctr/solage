@@ -59,9 +59,15 @@ class PostController {
             $userimage = $sessionController->getImage();
             $content = $data['content'];
             $date = date('Y-m-d H:i:s');
+            $image = $newFileName ?? null;
+
             $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null ? (int) $data['replyTo'] : null;
             $replyToParent = $data['replyToParent'] !== 0 && $data['replyToParent'] !== null ? (int) $data['replyToParent'] : null;
-            $image = $newFileName ?? null;
+            if ($replyToParent === null) {
+                if ($replyTo !== null) {
+                    $replyToParent = $replyTo;
+                }
+            }
 
             $post = new PostModel(null, $user, $content, $date, null, $replyTo, $image, $replyToParent);
             $postId = $post->createPost($replyTo, $replyToParent); // if post created, return postId
@@ -75,7 +81,7 @@ class PostController {
                     'date' => $date,
                     'reply_to' => $replyTo,
                     'image' => $image,
-                    'reply_to_parent' => $image,
+                    'reply_to_parent' => $replyToParent,
                 ]);
             } else {
                 Utils::sendResponse(false, 'Erreur lors de la création du post');

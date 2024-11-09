@@ -5,4 +5,5 @@ $router->addRoute('POST', '/api/post',  'PostController#create', AuthMiddleware:
 $router->addRoute('POST', '/api/like',  'LikeController#create', AuthMiddleware::class);
 $router->addRoute('POST', '/login', 'UserController#login');
 $router->addRoute('POST', '/register', 'UserController#register');
+$router->addRoute('POST', '/logout', 'UserController#logout');
 

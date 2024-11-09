@@ -206,7 +206,28 @@ class PostModel {
         return $row ? (int)$row->response_count : 0; // Retourner 0 si aucune réponse n'est trouvée
     }
 
-    public function getPostParentId(): int {
+    public function getAllResponsesCount(): int {
+        // Préparer la requête pour compter les réponses liées au post en utilisant reply_to_parent
+        $statement = $this->db->prepare('
+        SELECT COUNT(*) AS response_count
+        FROM posts
+        WHERE reply_to_parent = :post_id
+    ');
+
+        // Lier l'identifiant du post
+        $statement->bindParam(':post_id', $this->id, PDO::PARAM_INT);
+        $statement->execute();
+
+        // Récupérer le résultat
+        $row = $statement->fetch(PDO::FETCH_OBJ);
+        return $row ? (int)$row->response_count : 0; // Retourner 0 si aucune réponse n'est trouvée
+    }
+
+    public function getPostParentId(): ?int {
         return $this->reply_to_parent;
+    }
+
+    public function getReplyTo(): ?int {
+        return $this->replyTo;
     }
 }
