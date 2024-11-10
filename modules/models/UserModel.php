@@ -43,7 +43,7 @@ class UserModel {
         return $this->password;
     }
 
-    public function getRole(): string {
+    public function getRole(): ?string {
         return $this->role;
     }
 
@@ -80,4 +80,25 @@ class UserModel {
 
         return $stmt->execute();
     }
+
+    public function updateUser($userId, $name, $password) {
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        $sql = "UPDATE users SET name = :name, password = :password WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        $stmt->bindParam(':password', $hashedPassword, PDO::PARAM_STR);
+        $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+
+        return $stmt->execute();
+    }
+
+    public function deleteUser($userId) {
+        $sql = "DELETE FROM users WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+
+
+        return $stmt->execute();
+    }
+
 }

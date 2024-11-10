@@ -36,7 +36,9 @@ class LoginRegisterLayoutView {
             <?php echo file_get_contents('assets/up-arrow.svg' ); ?>
         </div>
 
-        <script src="/<?=$jsPath?>>"></script>
+        <script src="/<?=$jsPath?>"></script>
+        <script src="/scripts/dynamicMessages.js"></script>
+
         </body>
         </html>
         <?php

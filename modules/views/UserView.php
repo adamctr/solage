@@ -11,40 +11,50 @@ class UserView {
 
     // Méthode pour afficher la page HTML
     public function show() {
-        if ($this->user === null) {
-            echo "Utilisateur non trouvé."; // Affichage d'un message d'erreur
-            return;
-        }
-        // Utilisation d'un buffer de sortie pour capturer le HTML généré
+        $userPosts = PostModel::getAllPostsByUserId($this->user->getId());
         ob_start();
         ?>
 
-        <!doctype html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport"
-                  content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-            <meta http-equiv="X-UA-Compatible" content="ie=edge">
-            <meta name="description" content="<?=$this->description?>">
-            <title><?= $this->user->getName() ?></title>
-        </head>
-        <body>
-            <h1>Profil de <?= htmlspecialchars($this->user->getName()); ?></h1>
-            <p>Email : <?= htmlspecialchars($this->user->getEmail()); ?></p>
-        </body>
-        
+        <div class="user-profile">
+            <h1>Profil de <?= htmlspecialchars($this->user->getName() ?? '') ?></h1>
+
+            <div class="user-header">
+                <div class="postAvatarContainer">
+                    <div class="postAvatar"><?= $this->user->getImage() ?></div>
+                </div>
+
+                <?php if($this->user->getId() == SessionController::getUserId()): ?>
+                <form action="/edituser/<?= $this->user->getId() ?>" method="get">
+                    <input type="submit" value="Modifier le profil"/>
+                </form>
+                <form action="/logout" method="post">
+                    <button type="submit" class="logoutButton">Déconnexion</button>
+                </form>
+                <?php endif; ?>
+            </div>
+
+            <div class="user-posts">
+                <h2>Posts récents</h2>
+                <?php
+                $postView = new PostView($userPosts);
+                echo $postView->show();
+                ?>
+            </div>
+
+        </div>
 
         <?php
         // Envoi du HTML capturé au layout global
-        (new LayoutView('Profil de ' . htmlspecialchars($this->user->getName()), 'Détails du profil utilisateur', ob_get_clean()))->show();
+        (new LayoutView('Profil de ' . htmlspecialchars($this->user->getName() ?? ''), 'Détails du profil utilisateur', ob_get_clean()))->show();
     }
 
     public function showLoginForm() {
         ob_start()
         ?>
-        <form class="loginRegisterForm" action="/login" method="POST">
+
+        <form id="loginForm" class="loginRegisterForm" action="/login" method="POST">
             <h2>Se connecter</h2>
+            <div id="messageContainer"></div>
 
             <div class="formBlock">
                 <label for="email">Email :</label>
@@ -54,7 +64,9 @@ class UserView {
                 <label for="password">Mot de passe :</label>
                 <input type="password" id="password" name="password" required>
             </div>
+
             <button type="submit">Connexion</button>
+
         </form>
 
         <?php
@@ -66,26 +78,28 @@ class UserView {
     public function showRegisterForm() {
         ob_start()
         ?>
-        <form class="loginRegisterForm" action="/register" method="POST">
+        <form id="registerForm" class="loginRegisterForm" action="/register" method="POST">
             <h2>S'inscrire</h2>
+            <div id="messageContainer"></div>
 
             <div class="formBlock">
                 <label for="name">Nom d'utilisateur :</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required autocomplete="username">
             </div>
 
             <div class="formBlock">
                 <label for="email">Email :</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" required autocomplete="email">
             </div>
 
             <div class="formBlock">
                 <label for="password">Mot de passe :</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required autocomplete="new-password">
             </div>
 
             <button type="submit">Inscription</button>
         </form>
+
 
         <?php
         $content = ob_get_clean();

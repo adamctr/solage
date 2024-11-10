@@ -61,8 +61,8 @@ class PostController {
             $date = date('Y-m-d H:i:s');
             $image = $newFileName ?? null;
 
-            $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null ? (int) $data['replyTo'] : null;
-            $replyToParent = $data['replyToParent'] !== 0 && $data['replyToParent'] !== null ? (int) $data['replyToParent'] : null;
+            $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null ? (int)$data['replyTo'] : null;
+            $replyToParent = $data['replyToParent'] !== 0 && $data['replyToParent'] !== null ? (int)$data['replyToParent'] : null;
             if ($replyToParent === null) {
                 if ($replyTo !== null) {
                     $replyToParent = $replyTo;
@@ -88,6 +88,61 @@ class PostController {
             }
         } catch (Exception $e) {
             Utils::sendResponse(false, 'Erreur de traitement : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Supprimer un post
+     *
+     * @return void
+     */
+    public function delete() {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $rawData = file_get_contents('php://input');
+            $data = json_decode($rawData, true);
+
+            // Vérification de l'ID du post
+            if (!isset($data['postId']) || empty($data['postId'])) {
+                Utils::sendResponse(false, 'ID du post manquant ou invalide');
+                return;
+            }
+
+            $postId = (int) $data['postId'];
+
+            try {
+                // Récupérer les informations de la session de l'utilisateur
+                $sessionController = new SessionController();
+                $userId = $sessionController->getUserId();
+
+                // Vérifier si l'utilisateur est autorisé à supprimer ce post
+                $post = PostModel::getPostById($postId); // Récupérer le post par son ID
+
+                if (!$post) {
+                    Utils::sendResponse(false, 'Post non trouvé');
+                    return;
+                }
+
+                // Vérifier si l'utilisateur est le propriétaire du post ou un administrateur
+                //if ($post['user_id'] !== $userId && !$sessionController->isAdmin()) {
+                //    Utils::sendResponse(false, 'Vous n\'avez pas la permission de supprimer ce post');
+                //    return;
+                //}
+
+                // Appeler la méthode pour supprimer le post
+                $result = PostModel::delete($postId);
+
+                if ($result) {
+                    Utils::sendResponse(true, 'Post supprimé avec succès');
+                } else {
+                    Utils::sendResponse(false, 'Erreur lors de la suppression du post');
+                }
+            } catch (Exception $e) {
+                Utils::sendResponse(false, 'Erreur de traitement : ' . $e->getMessage());
+            }
+        } else {
+            Utils::sendResponse(false, 'Méthode de requête invalide');
         }
     }
 }

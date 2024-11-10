@@ -37,6 +37,6 @@ class ResponseView {
 
         <?php
         $responseView = ob_get_clean();
-        (new LayoutView('Réponse à ', 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
+        (new LayoutView(('Réponse à ' . $usernameOfThePostOwner), 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
     }
 }

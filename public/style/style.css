@@ -155,7 +155,6 @@ h1, ul, a {
     margin-top:10px;
 }
 
-
 .bold {
     font-weight: 800;
 }
@@ -546,7 +545,6 @@ button[type="submit"] {
     border: none;
     color: var(--secondary);
     padding:8px 16px;
-    margin-top:16px;
 }
 
 .sr-only {
@@ -597,3 +595,271 @@ button[type="submit"] {
 
 }
 
+
+
+
+
+.search-page {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.search-page input[type="text"] {
+    padding: 10px;
+    width: 90%;
+    border: 1px solid #ccc;
+    border-radius: 50px;
+    margin-bottom: 2vh;
+}
+
+.search-page button {
+    background-color: white;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.search-results {
+    margin: 20px auto;
+    max-width: 600px;
+    border-top: 1px solid var(--borderColor);
+}
+
+.search-results h2 {
+    padding-left: 15px;
+}
+
+.user-profile h1 {
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--primary); /* Texte en blanc */
+    border-bottom: 2px solid var(--borderColor);
+    /* border-top: 2px solid var(--borderColor); */
+    padding: 0.83em 0 0.83em 15px;
+}
+
+/* Conteneur d'information de l'utilisateur */
+.user-info {
+    display: flex;
+    margin-bottom: 20px;
+    padding: 15px;
+}
+
+/* Image de profil de l'utilisateur */
+.user-info img {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--primary); /* Bordure pour l'image */
+    margin: auto;
+}
+
+/* Texte des informations utilisateur */
+.user-info p {
+    margin: 6px 0;
+    font-size: 18px;
+}
+
+.user-info strong {
+    font-weight: bold;
+    color: var(--primary); /* Labels en blanc */
+}
+
+.user-header {
+    padding: 16px 16px;
+    display:flex;
+    gap:8px;
+    align-items: center;
+}
+
+/* Bouton pour modifier le profil */
+.user-profile form input[type="submit"] {
+
+}
+
+.user-profile form input[type="submit"]:hover {
+    background-color: #f5f5f5; /* Couleur d'effet pour le bouton */
+}
+
+.user-posts h2 {
+    border-top: 1px solid var(--borderColor);
+    padding: 0.83em 0 0 15px;
+}
+
+.edit-user-profile h1{
+    padding:16px 16px;
+}
+
+.edit-user-profile form{
+    padding:16px 16px;
+}
+
+/* Pour les petits écrans */
+@media (max-width: 600px) {
+    .user-info {
+        grid-template-columns: 1fr; /* Une seule colonne pour les petits écrans */
+        text-align: center;
+    }
+
+    .user-info img {
+        margin-bottom: 10px;
+    }
+
+    .user-profile h1 {
+        font-size: 22px;
+    }
+}
+
+/* Titre de la page */
+.edit-user-profile h1 {
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--primary); /* Texte en blanc */
+    border-bottom: 2px solid var(--borderColor);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+}
+
+/* Styles pour chaque groupe de champs du formulaire */
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* Labels des champs de formulaire */
+.form-group label {
+    font-size: 18px;
+    font-weight: bold;
+    display: block;
+    color: var(--primary); /* Texte en blanc */
+    margin-bottom: 8px;
+}
+
+/* Champs de formulaire (input) */
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: var(--thirdColor);
+    border: 1px solid var(--primary);
+    border-radius: 6px;
+    color: var(--primary); /* Texte en blanc */
+}
+
+/* Textes des inputs désactivés en gris */
+.form-group input:disabled {
+    background-color: #444; /* Fond gris foncé */
+    color: #999; /* Texte grisé */
+    cursor: not-allowed;
+}
+
+/* Image de profil (comme dans la page de profil normale) */
+.form-group img {
+    margin-top: 10px;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--primary); /* Bordure pour l'image */
+    display: block;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Conteneur des boutons */
+.edit-user-profile .button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* Bouton de soumission pour mettre à jour le profil */
+.edit-user-profile input[type="submit"] {
+    width: 48%; /* Réduit la largeur */
+    padding: 12px;
+    font-size: 18px;
+    background-color: var(--primary); /* Bouton blanc */
+    color: var(--secondary); /* Texte noir pour le bouton */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.edit-user-profile input[type="submit"]:hover {
+    background-color: #f5f5f5; /* Effet de survol pour le bouton */
+}
+
+/* Bouton Annuler */
+.edit-user-profile input[type="button"] {
+    width: 48%; /* Réduit la largeur */
+    padding: 12px;
+    font-size: 18px;
+    background-color: #333; /* Fond gris pour annuler */
+    color: var(--primary); /* Texte blanc */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.edit-user-profile input[type="button"]:hover {
+    background-color: #666; /* Effet de survol pour le bouton Annuler */
+}
+
+#messageContainer {
+    width:100%;
+    max-width:300px;
+    background-color: var(--primary);
+    color:var(--secondary);
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.dynamicMessage p {
+    padding:8px 16px;
+    margin:0;
+}
+
+.user {
+    display:flex;
+    gap:4px;
+    padding: 8px 32px;
+}
+
+.userViewButton {
+    flex:1;
+}
+
+.admin-page {
+    padding:8px 16px;
+    display:flex;
+    flex-direction: column;
+    gap:16px;
+}
+
+.admin-page form{
+    display:flex;
+    flex-direction: column;
+    gap:16px;
+}
+
+.admin-page button{
+   margin-top:0px;
+}
+
+.admin-page form label{
+    display:flex;
+    align-items: center;
+    flex-wrap:wrap;
+    gap:8px;
+}
+
+.deleteForm {
+    display:flex;
+    justify-content: flex-end;
+}

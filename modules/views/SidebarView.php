@@ -22,7 +22,7 @@ class SidebarView {
                             <span class="menuTxt">Accueil</span></a>
                         <a href="/search" aria-label="Rechercher" class="menuLink">
                             <?php echo file_get_contents('assets/wen.svg' ); ?>                            <span class="menuTxt">Recherche</span></a>
-                        <a href="/user/<?=$userid?>" aria-label="Profile" class="menuLink">
+                        <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink">
                             <?php echo file_get_contents('assets/profile.svg' ); ?>                            <span class="menuTxt">Profil</span></a>
                         <a href="/admin" aria-label="Admin" class="menuLink">
                             <?php echo file_get_contents('assets/admin.svg' ); ?>
@@ -33,9 +33,6 @@ class SidebarView {
                             <?php echo file_get_contents('assets/plus.svg' ); ?>
                             <strong>Nouveau post</strong>
                         </button>
-                        <form action="/logout" method="post">
-                            <button type="submit" class="logoutButton">Déconnexion</button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -44,7 +41,7 @@ class SidebarView {
             <div class="sidebarMobileContainer">
                 <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?> </a>
                 <a href="/search" aria-label="Rechercher" class="menuLink"> <?php echo file_get_contents('assets/wen.svg' ); ?> </a>
-                <a href="/profile" aria-label="Profile" class="menuLink"> <?php echo file_get_contents('assets/profile.svg' ); ?> </a>
+                <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink"> <?php echo file_get_contents('assets/profile.svg' ); ?> </a>
                 <a href="/admin" aria-label="Admin" class="menuLink"> <?php echo file_get_contents('assets/admin.svg' ); ?> </a>
             </div>
         </div>

@@ -18,4 +18,8 @@ class Utils {
 
         echo json_encode($response);
     }
+
+    public static function isAjax() {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+    }
 }

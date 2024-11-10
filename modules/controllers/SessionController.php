@@ -28,6 +28,7 @@ class SessionController {
             $_SESSION['user_id'] = $userId;
             $_SESSION['name'] = $user->getName();
             $_SESSION['image'] = $user->getImage();
+            $_SESSION['role'] = $user->getRole();
 
         }
     }
@@ -62,5 +63,9 @@ class SessionController {
     // Méthode pour obtenir l'objet utilisateur
     public function getUser() {
         return $this->user;
+    }
+
+    public function isAdmin() {
+        return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
     }
 }

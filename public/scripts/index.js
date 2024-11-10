@@ -50,6 +50,7 @@ if (imageInput) {
 if (document.getElementById("postCreateButton")) {
   document.getElementById("postCreateButton").addEventListener("click", (event) => {
     const content = document.getElementById("postContent").innerText.trim();
+    removeImageButton.style.display = 'none';
 
     if (!content) {
       alert("Le contenu du post ne peut pas être vide !");
@@ -206,8 +207,8 @@ function postOnClickPage() {
       const postId = post.getAttribute('data-id');
 
       post.addEventListener('click', (event) => {
-        if (event.target.closest('svg') ) {
-          // Si l'élément cliqué est un SVG, on arrête le traitement
+        if (event.target.closest('svg') || event.target.closest('button')) {
+          // Si l'élément cliqué est un SVG ou button, on arrête le traitement
           return;
         }
         window.location.href = `/post/${postId}`;
@@ -224,19 +225,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const editableElement = document.getElementById("postContent");
   console.log(editableElement)
 
-  button.addEventListener("click", () => {
-    const range = document.createRange();
-    const selection = window.getSelection();
-    range.selectNodeContents(editableElement);
-    range.collapse(false);
+  if(button) {
+    button.addEventListener("click", () => {
+      const range = document.createRange();
+      const selection = window.getSelection();
+      range.selectNodeContents(editableElement);
+      range.collapse(false);
 
-    selection.removeAllRanges();
-    selection.addRange(range);
+      selection.removeAllRanges();
+      selection.addRange(range);
 
-    editableElement.focus();
-    editableElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      editableElement.focus();
+      editableElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  });
+    });
+  }
 });
 
 // Boutton pour remonter
@@ -259,6 +262,88 @@ function scrollFunction() {
 // Quand l'utilisateur clique, remonter en haut
 document.getElementById("scrollTopBtn").addEventListener("click", function() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  // Sélectionner tous les formulaires de suppression
+  const deleteForms = document.querySelectorAll('.deleteForm');
+
+  deleteForms.forEach(function(form) {
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();  // Empêche la soumission classique du formulaire
+
+      // Obtenir l'ID de l'utilisateur à supprimer
+      const userId = form.getAttribute('data-id');
+
+      // Effectuer la requête AJAX
+      fetch("/api/users/delete", {
+        method: 'POST',  // Utiliser POST
+        headers: {
+          'Content-Type': 'application/json', // Indiquer que c'est du JSON
+          'X-Requested-With': 'XMLHttpRequest'  // Indique une requête AJAX
+        },
+        body: JSON.stringify({ userId: userId }) // Envoyer l'ID dans le corps de la requête
+      })
+        .then(response => response.json())  // S'assurer de recevoir du JSON
+        .then(data => {
+          if (data.success) {
+            // Si la suppression réussit, retirer l'utilisateur de l'interface
+            const userElement = document.getElementById(`user-${userId}`);
+            if (userElement) {
+              userElement.remove(); // Supprimer l'élément de l'UI
+            }
+          } else {
+            alert('Erreur de suppression');
+          }
+        })
+        .catch(error => {
+          console.error('Erreur AJAX:', error);
+          alert('Une erreur s\'est produite. Veuillez réessayer.');
+        });
+    });
+  });
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Sélectionner tous les formulaires de suppression de posts
+  const deleteForms = document.querySelectorAll('.deletePostForm');
+
+  deleteForms.forEach(function(form) {
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();  // Empêche la soumission classique du formulaire
+
+      // Obtenir l'ID du post à supprimer (extrait de l'URL de l'action du formulaire)
+      const postId = form.getAttribute('data-id');
+    console.log(form.action)
+      // Effectuer la requête AJAX
+      fetch(form.action, {
+        method: 'POST',  // Utiliser POST
+        headers: {
+          'Content-Type': 'application/json', // Indiquer que c'est du JSON
+          'X-Requested-With': 'XMLHttpRequest'  // Indique une requête AJAX
+        },
+        body: JSON.stringify({ postId: postId }) // Envoyer l'ID du post dans le corps de la requête
+      })
+        .then(response => response.json())  // S'assurer de recevoir du JSON
+        .then(data => {
+          console.log('data : ' . data)
+          if (data.success) {
+            // Si la suppression réussit, retirer l'élément du post de l'interface
+            const postElement = document.getElementById(`post-${postId}`);
+            if (postElement) {
+              postElement.remove(); // Supprimer l'élément de l'UI
+            }
+          } else {
+            alert('Erreur de suppression');
+          }
+        })
+        .catch(error => {
+          console.error('Erreur AJAX:', error);
+          alert('Une erreur s\'est produite. Veuillez réessayer.');
+        });
+    });
+  });
 });
 
 

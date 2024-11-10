@@ -20,6 +20,8 @@ $migrations->migrate();
 
 require_once '../routes/index.php';
 
+$userModel = new UserModel();
+
 
 
 

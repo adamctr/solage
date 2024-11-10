@@ -74,6 +74,30 @@ class PostModel {
         return null;
     }
 
+    static public function getAllPostsByUserId(int $userId): array {
+        $statement = DataBase::getConnection()->prepare('
+        SELECT p.id, p.user, p.content, p.date, 
+               COUNT(DISTINCT l.post) AS likes, 
+               p.reply_to, p.image, p.reply_to_parent
+        FROM posts p
+        LEFT JOIN likes l ON p.id = l.post
+        WHERE p.user = :userId
+        GROUP BY p.id
+        ORDER BY p.date DESC
+    ');
+
+        $statement->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $statement->execute();
+
+        $posts = [];
+        while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
+            $posts[] = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
+        }
+
+        return $posts;
+    }
+
+
 
     /**
      * @param int|null $replyTo = id post
@@ -108,7 +132,7 @@ class PostModel {
         FROM posts p
         JOIN posts r ON r.reply_to = p.id
         WHERE p.id = :post_id
-        ORDER BY r.date ASC
+        ORDER BY r.date DESC
     ');
 
         // Lier l'identifiant du post
@@ -143,6 +167,36 @@ class PostModel {
         $row = $statement->fetch(PDO::FETCH_OBJ);
         return $row ? (int)$row->likes_count : 0; // Retourne 0 si aucun like n'existe
     }
+
+    public static function delete(int $id): bool {
+        try {
+            // Connexion à la base de données
+            $db = DataBase::getConnection();
+
+            // Supprimer le post lui-même
+            $statement = $db->prepare('
+            DELETE FROM posts WHERE id = :post_id
+        ');
+
+            // Lier l'ID du post à la requête
+            $statement->bindParam(':post_id', $id, PDO::PARAM_INT);
+            $statement->execute();
+
+            // Vérification si le post a bien été supprimé
+            if ($statement->rowCount() > 0) {
+                return true;  // Retourne true si la suppression a réussi
+            } else {
+                return false;  // Retourne false si aucun post n'a été supprimé
+            }
+
+        } catch (PDOException $e) {
+            // Gestion des erreurs et affichage du message d'erreur
+            var_dump('Erreur lors de la suppression du post : ' . $e->getMessage());
+            return false;  // Retourne false en cas d'erreur
+        }
+    }
+
+
 
     /**
      * @return int
@@ -230,4 +284,6 @@ class PostModel {
     public function getReplyTo(): ?int {
         return $this->replyTo;
     }
+
+
 }

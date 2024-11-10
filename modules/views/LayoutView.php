@@ -1,7 +1,8 @@
 <?php
 
 class LayoutView {
-    public function __construct(private $title, private $description, private $content) {}
+    public function __construct(private $title, private $description, private $content) {
+    }
 
     /**
      * @return void
