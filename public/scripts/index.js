@@ -207,7 +207,7 @@ function postOnClickPage() {
       const postId = post.getAttribute('data-id');
 
       post.addEventListener('click', (event) => {
-        if (event.target.closest('svg') || event.target.closest('button')) {
+        if (event.target.closest('svg') || event.target.closest('button') || event.target.closest('.postAvatarContainer')) {
           // Si l'élément cliqué est un SVG ou button, on arrête le traitement
           return;
         }
@@ -346,4 +346,15 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.postAvatarContainer').forEach(container => {
+    container.addEventListener('click', function() {
+      const userId = this.getAttribute('data-user-id');
+      if (userId) {
+        window.location.href = `/user/${userId}`;
+      }
+    });
+  });
+
+})
 

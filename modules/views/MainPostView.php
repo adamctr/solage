@@ -19,7 +19,7 @@ class MainPostView {
 
         <div class="mainPost post" data-id="<?= $this->post->getId() ?>">
 
-            <div class="postAvatarContainer">
+            <div class="postAvatarContainer" data-user-id="<?= $this->post->getUserId() ?>">
                 <div class="postAvatar"><?= $user->getImage() ?></div>
             </div>
             <div class="postInsideContainer">

@@ -20,7 +20,7 @@ class PostView {
             ?>
             <div class="post fade-in" data-id="<?= $post->getId() ?>">
 
-                    <div class="postAvatarContainer">
+                    <div class="postAvatarContainer" data-user-id="<?= $post->getUserId() ?>">
                         <div class="postAvatar"><?= $user->getImage() ?></div>
                     </div>
                     <div class="postInsideContainer">
