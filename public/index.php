@@ -15,9 +15,6 @@ if (APP_ENV === 'production') {
 
 require_once '../includes/database.php';
 
-$migrations = new Migrations();
-$migrations->migrate();
-
 require_once '../routes/index.php';
 
 $userModel = new UserModel();

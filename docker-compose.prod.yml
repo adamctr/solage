@@ -1,0 +1,100 @@
+name: solage-prod
+
+services:
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # HTTP → HTTPS redirect at the entrypoint level.
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # Let's Encrypt (production CA). For staging, swap caServer to:
+      # https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?ACME_EMAIL is required}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/letsencrypt
+    networks:
+      - solage
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: solage-app:prod
+    command: ["php", "/app/bin/migrate.php"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - solage
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: solage-app:prod
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.solage.rule=Host(`${APP_DOMAIN:?APP_DOMAIN is required}`)
+      - traefik.http.routers.solage.entrypoints=websecure
+      - traefik.http.routers.solage.tls.certresolver=le
+      - traefik.http.services.solage.loadbalancer.server.port=80
+    networks:
+      - solage
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    # No `ports:` — Postgres is only reachable inside the `solage` network.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./solage.pg.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - solage
+
+volumes:
+  postgres-data:
+  traefik-acme:
+
+networks:
+  solage:
+    driver: bridge

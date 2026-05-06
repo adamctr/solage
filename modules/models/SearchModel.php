@@ -11,9 +11,9 @@ class SearchModel {
         $query = '%' . $query . '%';
 
         $sql = '
-            SELECT p.id, p.user, p.date, p.likes, p.content, p.reply_to, p.image, p.reply_to_parent, u.name
+            SELECT p.id, p.user_id, p.date, p.likes, p.content, p.reply_to, p.image, p.reply_to_parent, u.name
             FROM posts p
-            JOIN users u ON p.user = u.id
+            JOIN users u ON p.user_id = u.id
             WHERE u.name LIKE ? OR p.content LIKE ?
             ORDER BY p.date DESC
         ';
@@ -27,7 +27,7 @@ class SearchModel {
         foreach ($arrayResult as $row) {
             // Récupérer chaque donnée dans une variable
             $id = $row['id'];
-            $user = $row['user'];
+            $user = $row['user_id'];
             $date = $row['date'];
             $likes = $row['likes'];
             $content = $row['content'];
@@ -50,9 +50,9 @@ class SearchModel {
         $query = '%' . $query . '%';
 
         $sql = '
-            SELECT p.id, p.user, p.date, p.likes, p.content, p.reply_to, p.image, p.reply_to_parent, u.name
+            SELECT p.id, p.user_id, p.date, p.likes, p.content, p.reply_to, p.image, p.reply_to_parent, u.name
             FROM posts p
-            JOIN users u ON p.user = u.id
+            JOIN users u ON p.user_id = u.id
             WHERE p.content LIKE ?
             ORDER BY p.date DESC
         ';
@@ -66,7 +66,7 @@ class SearchModel {
         foreach ($arrayResult as $row) {
             // Récupérer chaque donnée dans une variable
             $id = $row['id'];
-            $user = $row['user'];
+            $user = $row['user_id'];
             $date = $row['date'];
             $likes = $row['likes'];
             $content = $row['content'];

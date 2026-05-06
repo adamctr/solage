@@ -22,18 +22,21 @@ class LikeModel {
      */
     function create() {
         try {
-            $statement = $this->db->prepare('INSERT INTO likes (id, user, post, response, created_at) VALUES (:id, :user, :post, :response, :created_at)');
-            $statement->bindValue(':id', $this->id);
-            $statement->bindValue(':user', $this->user);
+            $statement = $this->db->prepare('INSERT INTO likes (user_id, post, response, created_at) VALUES (:user_id, :post, :response, :created_at)');
+            $statement->bindValue(':user_id', $this->user);
             $statement->bindValue(':post', $this->post);
             $statement->bindValue(':response', $this->response);
             $statement->bindValue(':created_at', $this->created_at);
             $statement->execute();
 
-            $this->id = $this->db->lastInsertId();
+            $this->id = $this->db->lastInsertId('likes_id_seq');
             return $this->id;
         } catch (PDOException $e) {
-            var_dump('Erreur lors de l\'insertion du like la base de données : ' . $e->getMessage());
+            Logger::get()->error('like.create.failed', [
+                'user_id' => $this->user,
+                'post_id' => $this->post,
+                'exception' => $e,
+            ]);
             return false;
         }
     }
@@ -43,13 +46,17 @@ class LikeModel {
      */
     function delete() {
         try {
-            $statement = $this->db->prepare('DELETE FROM likes WHERE user = :user AND post = :post');
-            $statement->bindValue(':user', $this->user);
+            $statement = $this->db->prepare('DELETE FROM likes WHERE user_id = :user_id AND post = :post');
+            $statement->bindValue(':user_id', $this->user);
             $statement->bindValue(':post', $this->post);
             $statement->execute();
             return true;
         } catch (PDOException $e) {
-            var_dump('Erreur lors de la supression des données dans la base de données : ' . $e->getMessage());
+            Logger::get()->error('like.delete.failed', [
+                'user_id' => $this->user,
+                'post_id' => $this->post,
+                'exception' => $e,
+            ]);
             return false;
         }
     }
@@ -59,8 +66,8 @@ class LikeModel {
      */
     function likeAlreadyExist() {
         try {
-            $statement = $this->db->prepare('SELECT * FROM likes WHERE user = :user AND post = :post LIMIT 1');
-            $statement->bindValue(':user', $this->user);
+            $statement = $this->db->prepare('SELECT * FROM likes WHERE user_id = :user_id AND post = :post LIMIT 1');
+            $statement->bindValue(':user_id', $this->user);
             $statement->bindValue(':post', $this->post);
             $statement->execute();
             $result = $statement->fetch(PDO::FETCH_ASSOC);
@@ -69,7 +76,11 @@ class LikeModel {
 
             } else return false;
         } catch (PDOException $e) {
-            //var_dump('Erreur lors du check du like : ' . $e->getMessage());
+            Logger::get()->warning('like.exists.check_failed', [
+                'user_id' => $this->user,
+                'post_id' => $this->post,
+                'exception' => $e,
+            ]);
             return false;
         }
 

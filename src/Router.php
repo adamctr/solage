@@ -27,20 +27,16 @@ class Router {
         $uri = $_SERVER['REQUEST_URI'];
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($uri, PHP_URL_PATH);
-        $debug = false;
-
-        if ($debug) {
-            echo "Requête URI: " . $requestUri . "<br>";
-            echo "Méthode: " . $requestMethod . "<br>";
-        }
+        Logger::get()->debug('router.match.start', [
+            'uri'    => $requestUri,
+            'method' => $requestMethod,
+        ]);
 
         foreach ($this->routes as $route) {
             $pathRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9_]+)', $route['path']);
             $pathRegex = '#^' . $pathRegex . '$#';
 
-            if ($debug) {
-                echo "Comparaison avec: " . $pathRegex . "<br>";
-            }
+            Logger::get()->debug('router.match.try', ['pattern' => $pathRegex]);
 
             if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
 

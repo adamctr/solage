@@ -29,20 +29,20 @@ class PostModel {
      */
     static public function getPosts(): array {
         $statement = DataBase::getConnection()->query('
-            SELECT p.id, p.user, p.content, p.date, 
+            SELECT p.id, p.user_id, p.content, p.date, 
             COUNT(DISTINCT l.post) AS likes, 
             p.reply_to, p.image, p.reply_to_parent
             FROM posts p
             LEFT JOIN likes l ON p.id = l.post
             WHERE p.reply_to IS NULL
-            GROUP BY p.id, p.user, p.content, p.date, p.reply_to, p.image, p.reply_to_parent
+            GROUP BY p.id, p.user_id, p.content, p.date, p.reply_to, p.image, p.reply_to_parent
             ORDER BY p.date DESC
             LIMIT 20;
            ');
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $post = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
+            $post = new PostModel($row->id, $row->user_id, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
             $posts[] = $post;
         }
         return $posts;
@@ -55,7 +55,7 @@ class PostModel {
      */
     static public function getPostById(int $id): ?PostModel {
         $statement = DataBase::getConnection()->prepare('
-        SELECT p.id, p.user, p.content, p.date, 
+        SELECT p.id, p.user_id, p.content, p.date, 
                COUNT(DISTINCT l.post) AS likes, 
                p.reply_to, p.image, p.reply_to_parent
         FROM posts p
@@ -69,19 +69,19 @@ class PostModel {
 
         $row = $statement->fetch(PDO::FETCH_OBJ);
         if ($row) {
-            return new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
+            return new PostModel($row->id, $row->user_id, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
         }
         return null;
     }
 
     static public function getAllPostsByUserId(int $userId): array {
         $statement = DataBase::getConnection()->prepare('
-        SELECT p.id, p.user, p.content, p.date, 
+        SELECT p.id, p.user_id, p.content, p.date, 
                COUNT(DISTINCT l.post) AS likes, 
                p.reply_to, p.image, p.reply_to_parent
         FROM posts p
         LEFT JOIN likes l ON p.id = l.post
-        WHERE p.user = :userId
+        WHERE p.user_id = :userId
         GROUP BY p.id
         ORDER BY p.date DESC
     ');
@@ -91,7 +91,7 @@ class PostModel {
 
         $posts = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $posts[] = new PostModel($row->id, $row->user, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
+            $posts[] = new PostModel($row->id, $row->user_id, $row->content, $row->date, $row->likes, $row->reply_to, $row->image, $row->reply_to_parent);
         }
 
         return $posts;
@@ -105,8 +105,8 @@ class PostModel {
      */
     public function createPost(?int $replyTo = null, ?int $replyToParent = null) {
         try {
-            $statement = $this->db->prepare('INSERT INTO posts (user, content, date, reply_to, image, reply_to_parent) VALUES (:user, :content, :date, :reply_to, :image, :reply_to_parent)');
-            $statement->bindValue(':user', $this->user);
+            $statement = $this->db->prepare('INSERT INTO posts (user_id, content, date, reply_to, image, reply_to_parent) VALUES (:user_id, :content, :date, :reply_to, :image, :reply_to_parent)');
+            $statement->bindValue(':user_id', $this->user);
             $statement->bindValue(':content', $this->content);
             $statement->bindValue(':date', $this->date);
             $statement->bindValue(':reply_to', $replyTo, PDO::PARAM_INT); // Null par défaut si pas de réponse
@@ -114,10 +114,14 @@ class PostModel {
             $statement->bindValue(':reply_to_parent', $replyToParent, PDO::PARAM_INT);
             $statement->execute();
 
-            $this->id = $this->db->lastInsertId();
+            $this->id = $this->db->lastInsertId('posts_id_seq');
             return $this->id;
         } catch (PDOException $e) {
-            var_dump('Erreur lors de l\'insertion du post dans la base de données : ' . $e->getMessage());
+            Logger::get()->error('post.create.failed', [
+                'user_id' => $this->user,
+                'reply_to' => $replyTo,
+                'exception' => $e,
+            ]);
             return false;
         }
     }
@@ -128,7 +132,7 @@ class PostModel {
     public function getResponses(): array {
         // Préparer la requête pour récupérer les réponses du post
         $statement = $this->db->prepare('
-        SELECT r.id, r.content, r.user, r.date, r.likes, r.reply_to, r.image, r.reply_to_parent
+        SELECT r.id, r.content, r.user_id, r.date, r.likes, r.reply_to, r.image, r.reply_to_parent
         FROM posts p
         JOIN posts r ON r.reply_to = p.id
         WHERE p.id = :post_id
@@ -142,7 +146,7 @@ class PostModel {
         // Récupérer les réponses sous forme d'objets PostModel
         $responses = [];
         while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
-            $response = new PostModel($row->id, $row->user, $row->content, $row->date, 0, 0, !empty($row->image) ? $row->image : null, $row->reply_to_parent); // 0 pour likes et responses car ce sont des réponses
+            $response = new PostModel($row->id, $row->user_id, $row->content, $row->date, 0, 0, !empty($row->image) ? $row->image : null, $row->reply_to_parent); // 0 pour likes et responses car ce sont des réponses
             $responses[] = $response;
         }
         return $responses;
@@ -190,9 +194,11 @@ class PostModel {
             }
 
         } catch (PDOException $e) {
-            // Gestion des erreurs et affichage du message d'erreur
-            var_dump('Erreur lors de la suppression du post : ' . $e->getMessage());
-            return false;  // Retourne false en cas d'erreur
+            Logger::get()->error('post.delete.failed', [
+                'post_id' => $id,
+                'exception' => $e,
+            ]);
+            return false;
         }
     }
 

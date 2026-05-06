@@ -1,0 +1,27 @@
+# Listen on Caddy's default Docker socket; Traefik handles TLS termination
+# in front, so FrankenPHP only speaks HTTP internally.
+{
+    # Disable Caddy's automatic HTTPS — Traefik does it.
+    auto_https off
+    # FrankenPHP worker mode is OFF: classic request-per-script semantics.
+    frankenphp
+}
+
+:80 {
+    root * /app/public
+    encode gzip zstd
+
+    # Front controller: serve static assets if they exist, otherwise hand off
+    # the request to public/index.php (the entry point).
+    @notFile {
+        not file
+    }
+    rewrite @notFile /index.php
+
+    php_server
+
+    log {
+        output stdout
+        format console
+    }
+}
