@@ -47,6 +47,16 @@ class UserModel {
         return $this->role;
     }
 
+    public function getRoleName(): ?string {
+        if ($this->role === null) {
+            return null;
+        }
+        $stmt = $this->db->prepare('SELECT name FROM roles WHERE id = :id');
+        $stmt->execute([':id' => $this->role]);
+        $name = $stmt->fetchColumn();
+        return $name === false ? null : $name;
+    }
+
     public function getImage() {
         return $this->image;
     }

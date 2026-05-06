@@ -74,6 +74,22 @@ class UserController {
     }
 
     public function update() {
+        $session = new SessionController();
+        $currentUserId = SessionController::getUserId();
+        $targetUserId  = $this->user?->getId();
+
+        // Auth : le user doit exister et être soit le propriétaire, soit admin.
+        if ($targetUserId === null || ($currentUserId !== $targetUserId && !$session->isAdmin())) {
+            Logger::get()->warning('user.update.forbidden', [
+                'current_user_id' => $currentUserId,
+                'target_user_id'  => $targetUserId,
+            ]);
+            http_response_code(403);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "403 — vous ne pouvez pas modifier ce profil.";
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processUpdate(); // Si la méthode est POST, on traite la mise à jour
         } else {

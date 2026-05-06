@@ -36,7 +36,8 @@ class LikeController
                 $this->createLike();
             }
         } catch (Exception $e) {
-            Utils::sendResponse(false, 'Erreur de traitement du like : ' . $e->getMessage());
+            Logger::get()->error('like.toggle.failed', ['exception' => $e]);
+            Utils::sendResponse(false, 'Erreur de traitement du like.');
         }
     }
 
@@ -58,7 +59,8 @@ class LikeController
                 Utils::sendResponse(false, 'Erreur lors de la création du like');
             }
         } catch (Exception $ex) {
-            Utils::sendResponse(false, 'Erreur : ' . $ex->getMessage());
+            Logger::get()->error('like.create.failed', ['exception' => $ex]);
+            Utils::sendResponse(false, 'Erreur lors de la création du like.');
         }
     }
 
@@ -72,7 +74,8 @@ class LikeController
             $this->like->delete();
             Utils::sendResponse(true, 'Like bien supprimé');
         } catch (Exception $ex) {
-            Utils::sendResponse(false, 'Erreur : ' . $ex->getMessage());
+            Logger::get()->error('like.delete.failed', ['exception' => $ex]);
+            Utils::sendResponse(false, 'Erreur lors de la suppression du like.');
         }
     }
 }

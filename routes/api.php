@@ -9,7 +9,7 @@ $router->addRoute('POST', '/api/users/delete', 'UserController#delete');
 $router->addRoute('POST', '/api/posts/delete', 'PostController#delete');
 
 $router->addRoute('POST', '/logout', 'UserController#logout');
-$router->addRoute('POST', '/edituser/{id}', 'UserController#update');
+$router->addRoute('POST', '/edituser/{id}', 'UserController#update', AuthMiddleware::class);
 
 // Validators :
 

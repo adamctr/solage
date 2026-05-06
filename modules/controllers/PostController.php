@@ -16,7 +16,16 @@ class PostController {
             //var_dump($_FILES);
 
             // Vérifier si une image a été téléchargée
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $uploadError = $_FILES['image']['error'];
+                if ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE) {
+                    Utils::sendResponse(false, "Image trop lourde (max " . ini_get('upload_max_filesize') . ").");
+                    return;
+                }
+                if ($uploadError !== UPLOAD_ERR_OK) {
+                    Utils::sendResponse(false, "Erreur lors de l'upload de l'image (code $uploadError).");
+                    return;
+                }
                 // Traitement de l'image
                 $fileTmpPath = $_FILES['image']['tmp_name'];
                 $fileName = $_FILES['image']['name'];
@@ -31,7 +40,10 @@ class PostController {
                 // Vérifier l'extension
                 if (in_array($fileExtension, $allowedfileExtensions)) {
                     // Chemin de destination pour enregistrer le fichier
-                    $uploadFileDir = $_SERVER['DOCUMENT_ROOT'] . 'uploaded_files/';
+                    $uploadFileDir = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/uploaded_files/';
+                    if (!is_dir($uploadFileDir)) {
+                        mkdir($uploadFileDir, 0755, true);
+                    }
                     $newFileName = uniqid() . '.' . $fileExtension; // Renommer le fichier
                     $dest_path = $uploadFileDir . basename($newFileName);
 
@@ -87,7 +99,8 @@ class PostController {
                 Utils::sendResponse(false, 'Erreur lors de la création du post');
             }
         } catch (Exception $e) {
-            Utils::sendResponse(false, 'Erreur de traitement : ' . $e->getMessage());
+            Logger::get()->error('post.create.failed', ['exception' => $e]);
+            Utils::sendResponse(false, 'Erreur de traitement du post.');
         }
     }
 
@@ -139,7 +152,11 @@ class PostController {
                     Utils::sendResponse(false, 'Erreur lors de la suppression du post');
                 }
             } catch (Exception $e) {
-                Utils::sendResponse(false, 'Erreur de traitement : ' . $e->getMessage());
+                Logger::get()->error('post.delete.failed', [
+                    'post_id' => $postId ?? null,
+                    'exception' => $e,
+                ]);
+                Utils::sendResponse(false, 'Erreur lors de la suppression du post.');
             }
         } else {
             Utils::sendResponse(false, 'Méthode de requête invalide');

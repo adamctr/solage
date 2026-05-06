@@ -65,7 +65,7 @@ class SessionController {
         return $this->user;
     }
 
-    public function isAdmin() {
-        return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+    public function isAdmin(): bool {
+        return $this->user !== null && $this->user->getRoleName() === 'Admin';
     }
 }
