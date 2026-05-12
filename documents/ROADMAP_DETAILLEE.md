@@ -12,7 +12,7 @@ Dernière mise à jour : 2026-05-12
 
 ### Stack technique (actuelle)
 - PHP 7.4+ / **PostgreSQL** via PDO (anciennement MariaDB, migré)
-- MVC custom (`Router`, `Autoloader`, `Migrations`, `AuthMiddleware`, `AdminMiddleware`)
+- MVC custom (`Router`, `Autoloader`, `Migrations`, `AuthMiddleware`, `AdminMiddleware`) avec une couche `modules/validators/` parallèle à `controllers/models/views`
 - Composer : `matthiasmullie/minify`, `vlucas/phpdotenv`, `psr/log`
 - Logger PSR-3 maison (`src/Logger.php`) → JSON-line sur stdout/stderr
 - Sessions PHP, vanilla JS, CSS pur
@@ -48,7 +48,7 @@ Dernière mise à jour : 2026-05-12
 
 ### 1.1 Failles à corriger (XSS / IDOR / CSRF / Auth)
 
-- [x] **XSS stocké** : helper `Utils::e()` (`htmlspecialchars` + `ENT_QUOTES | ENT_HTML5` + UTF-8) appliqué sur toutes les vues affichant du contenu user-controlled (`PostView`, `MainPostView`, `PostResponsesView`, `UserView`, `AdminView`, `CreatePostView`, `DynamicMessageView`)
+- [x] **XSS stocké** : helper `Utils::e()` (`htmlspecialchars` + `ENT_QUOTES | ENT_HTML5` + UTF-8) appliqué sur toutes les vues affichant du contenu user-controlled (`PostView`, `MainPostView`, `UserView`, `AdminView`, `CreatePostView`). Le markup du message dynamique (login/register) est désormais construit côté JS via `escapeHtml()` après la suppression de `DynamicMessageView`.
 - [x] **XSS côté JS** : `escapeHtml()` miroir dans `index.js` pour les interpolations `${post.*}` injectées via `innerHTML` (affichage optimiste après création de post)
 - [x] **IDOR édition profil** (`UserController::update`) : check `current_user_id === target_user_id || isAdmin()` + 403 + log warning
 - [x] **IDOR suppression post** (`PostController::delete`) : check ownership ou admin, 403 + log warning
@@ -63,7 +63,7 @@ Dernière mise à jour : 2026-05-12
 ### 1.2 Validation à la volée
 
 - [ ] **Côté JS** : étendre `dynamicMessages.js` avec écouteurs `input`/`blur` sur login, register, edit profil, post → règles : email valide, password ≥ 8 + 1 maj + 1 chiffre, contenu post ≤ N caractères
-- [ ] **Côté PHP** : doubler systématiquement la validation dans `ValidatorController` — actuellement `register()` ne vérifie ni format email ni robustesse du mot de passe
+- [ ] **Côté PHP** : doubler systématiquement la validation dans `UserValidator` (`modules/validators/`) — actuellement `register()` ne vérifie ni format email ni robustesse du mot de passe
 - [ ] **Messages d'erreur dynamiques** liés à chaque champ (pas seulement un toast global)
 
 ### 1.3 Middleware Admin ✅ **TERMINÉE**
@@ -76,10 +76,21 @@ Dernière mise à jour : 2026-05-12
 ### 1.4 Qualité de code
 
 - [ ] **PHPDoc** systématique (controllers, models, views) : `@param`, `@return`, `@throws`
-- [ ] **Convention de nommage** homogène (corriger mix `DataBase`/`Database`, `MainPostView`, etc.)
+- [ ] **Convention de nommage** homogène (corriger mix `DataBase`/`Database`)
 - [ ] **Indentation** cohérente, supprimer code mort (echo "Requête URI" debug dans `Router.php` si encore présent, blocs commentés résiduels)
 - [ ] **`declare(strict_types=1)`** en tête de chaque fichier PHP
 - [ ] **PHP_CodeSniffer PSR-12** : faire passer la base à 0 violation
+
+### 1.5 Audit MVC & nettoyage architectural ✅ **TERMINÉE**
+
+> Passe d'audit MVC : la couche présentation ne parle plus à la base, les helpers sont rangés selon leur rôle réel, la réponse JSON est unique pour toute l'app. Voir `documents/Probleme-Solution.md` pour le détail de chaque décision et `documents/Workflow.md` pour le schéma du cycle AJAX.
+
+- [x] **N+1 query** sur les vues corrigé via `UserModel::getUsersByIds` ; `PostView` / `MainPostView` reçoivent une map `[user_id => UserModel]` préchargée par le contrôleur (21 requêtes → 2 sur la page d'accueil avec 20 posts)
+- [x] **Helpers déplacés** hors de `modules/controllers/` vers `src/` : `Utils` (escape + sendResponse) et `MinificationController` (build d'assets)
+- [x] **`UserValidator` extrait** vers `modules/validators/` (renommé depuis `ValidatorController`) — la validation devient pure (retourne un array, ne fait plus d'echo)
+- [x] **`DynamicMessageController` + `DynamicMessageView` supprimés** ; unification de la réponse JSON sur `Utils::sendResponse` (`{success: bool, message: string, data?: object}`) — un seul format pour login/register/API
+- [x] **Code mort supprimé** : `PostResponsesView` (aucun appelant), `$type = $_GET['type']` (lu sans usage), méthodes `showAdminInDesktopSidebar`/`InMobileSidebar` (inlinées)
+- [x] **Bugs préexistants corrigés** : `PostToolHeartView` recevait l'ID de l'auteur du post au lieu du user courant ; `session_start()` déplacé dans le bootstrap pour éviter `headers already sent` au login
 
 ---
 
@@ -126,7 +137,7 @@ Dernière mise à jour : 2026-05-12
 
 ### 3.1 Tests unitaires
 - [ ] Installer **PHPUnit** via Composer (dev dependency)
-- [ ] Couvrir : `ValidatorController`, `UserModel`, `PostModel`, `LikeModel`, `Router`, `Utils::e()`
+- [ ] Couvrir : `UserValidator`, `UserModel`, `PostModel`, `LikeModel`, `Router`, `Utils::e()`
 - [ ] BDD de test : conteneur Postgres dédié ou SQLite en mémoire (avec adaptateur)
 
 ### 3.2 Tests d'intégration
@@ -205,7 +216,8 @@ Dernière mise à jour : 2026-05-12
 - [ ] Documenter : sources suivies + vulnérabilités détectées sur le projet (XSS, IDOR déjà documentés dans `Probleme-Solution.md` → exploiter en veille)
 
 ### 5.4 Démarche de résolution de problèmes
-- [x] Documentation initiée : `documents/Probleme-Solution.md` (XSS, IDOR, Logger PSR-3, Migrations, Authn vs Authz)
+- [x] Documentation initiée : `documents/Probleme-Solution.md` (XSS, IDOR, Logger PSR-3, Migrations, Authn vs Authz, découplage validator, audit MVC + finitions, suppression `DynamicMessageController`)
+- [x] `documents/Workflow.md` : schéma ASCII du cycle AJAX login/register (browser → validator → response → session)
 - [ ] Compléter avec 1-2 bugs supplémentaires diagnostiqués + résolus en détail
 
 ### 5.5 Accessibilité (RGAA) & RGPD & éco-conception
@@ -258,7 +270,7 @@ Dernière mise à jour : 2026-05-12
 | Ordre | Bloc | État | Effort restant | Risque si non fait |
 |---|---|---|---|---|
 | 🔴 1 | Phase 0 (hygiène) | ✅ | — | — |
-| 🔴 2 | Phase 1 (sécurité) | 🟠 ~50% | 2-3 j (CSRF, headers, upload, brute-force, validation, PHPDoc) | Échec CCP1 |
+| 🔴 2 | Phase 1 (sécurité) | 🟠 ~60% | 2-3 j (CSRF, headers, upload, brute-force, validation, PHPDoc) | Échec CCP1 |
 | 🟠 3 | Phase 2 (conception/UML) | ⚪ | 3-5 j | Échec CCP2 |
 | 🟠 4 | Phase 3 (tests) | ⚪ | 3-4 j | Échec CCP3 (compétence 9) |
 | 🟡 5 | Phase 4 (DevOps) | 🟠 ~30% | 2-3 j (CI/CD, backups, doc déploiement) | Échec compétences 10-11 |
