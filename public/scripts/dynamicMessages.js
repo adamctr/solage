@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let email = document.getElementById('email').value;
       let password = document.getElementById('password').value;
 
-      // Effectuer une requête AJAX pour valider le mot de passe
       fetch('/login', {
         method: 'POST',
         headers: {
@@ -18,13 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
       })
         .then(response => response.json())
         .then(data => {
-          console.log(data)
-
-          if (data.success === 'success') {
+          if (data.success) {
             window.location.href = '/';
           }
+          const type = data.success ? 'success' : 'error';
           const messageContainer = document.getElementById('messageContainer');
-          messageContainer.innerHTML = data.divMessageHtml;
+          messageContainer.innerHTML =
+            `<div class="${type} dynamicMessage"><p>${escapeHtml(data.message)}</p></div>`;
         })
         .catch(error => {
           console.error('Error:', error);
@@ -42,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let password = document.getElementById('password').value;
       let username = document.getElementById('name').value;  // Si vous avez un champ pour le nom d'utilisateur
 
-      // Effectuer une requête AJAX pour l'inscription
       fetch('/register', {
         method: 'POST',
         headers: {
@@ -52,16 +50,13 @@ document.addEventListener('DOMContentLoaded', function() {
       })
         .then(response => response.json())
         .then(data => {
-          console.log(data);
-
-          if (data.success === 'success') {
-            // Rediriger vers une autre page après inscription réussie
+          if (data.success) {
             window.location.href = '/';
           }
-
-          // Afficher le message d'erreur ou de succès dans le conteneur
+          const type = data.success ? 'success' : 'error';
           const messageContainer = document.getElementById('messageContainer');
-          messageContainer.innerHTML = data.divMessageHtml;
+          messageContainer.innerHTML =
+            `<div class="${type} dynamicMessage"><p>${escapeHtml(data.message)}</p></div>`;
         })
         .catch(error => {
           console.error('Error:', error);

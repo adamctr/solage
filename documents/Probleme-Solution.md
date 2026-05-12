@@ -319,3 +319,56 @@ Dans `SearchController::searchResults`, lecture sans usage. Reliquat probable d'
 **Réponse jury** : *"Variable lue puis jetée — pas de usage en aval. À supprimer plutôt qu'à garder 'au cas où' : un lecteur futur perd du temps à comprendre pourquoi c'est là."*
 
 ✅ Implémenté.
+
+---
+
+## Suppression de DynamicMessageController : unification de la réponse JSON
+
+### Contexte
+
+`DynamicMessageController::showMessage($type, $message)` était utilisé uniquement par `UserController::login` et `register`. Il :
+
+1. Appelait `DynamicMessageView::getDivMessage($type, $message)` pour pré-rendre un `<div class="success|error">…</div>`.
+2. Echo'ait `{success: type, divMessageHtml: html}` en JSON.
+
+Pendant ce temps, le reste de l'API (post create, like, delete) utilisait `Utils::sendResponse($success, $message, $data)` qui renvoie `{success: bool, message: string, data?: object}`.
+
+### Problème
+
+| Symptôme | Conséquence |
+|---|---|
+| Deux conventions JSON dans la même app | Le client doit savoir, pour chaque route, quel format il va recevoir |
+| Clé `success` typée différemment (`string` vs `bool`) | Code client comme `if (data.success === 'success')` qui mélange deux paradigmes |
+| 2 classes pour 5 lignes utiles, 1 seul appelant | Indirection sans bénéfice |
+| Nom "Controller" alors qu'aucune route ne pointe dessus | Nomenclature trompeuse |
+| HTML pré-rendu envoyé par le serveur pour un message de statut | Couplage inutile : le client connaît déjà les classes CSS, il peut construire ce `<div>` |
+
+### Options envisagées
+
+| Option | Pour | Contre |
+|---|---|---|
+| **A. Renommer + déplacer** dans `src/` (comme `Utils`, `MinificationController`) | Conserve le helper, juste mieux rangé | Garde les deux conventions JSON inconsistantes |
+| **B. Inliner dans `UserController`** | Supprime 2 classes pour 4 lignes | Garde les deux conventions JSON |
+| **C. Supprimer + unifier sur `Utils::sendResponse`** | Une convention pour toute l'app, 2 classes en moins, client construit son markup comme partout ailleurs | Touche aussi `dynamicMessages.js` (10 lignes JS à adapter) |
+
+### Solution retenue : Option C
+
+- Suppression de `modules/controllers/DynamicMessageController.php` et `modules/views/DynamicMessageView.php`.
+- `UserController::login/register` appelle maintenant `header('Content-Type: application/json'); Utils::sendResponse($result['ok'], $result['message']);` — exactement le même helper que tous les autres endpoints AJAX.
+- `public/scripts/dynamicMessages.js` construit lui-même le `<div class="success|error dynamicMessage">` à partir de `data.message`, en passant par `escapeHtml()` (déjà présent côté JS, miroir de `Utils::e` PHP).
+
+### Justification jury
+
+> *"Un sérialiseur déguisé en contrôleur, un seul appelant, et qui imposait un deuxième format JSON dans l'app. Le ratio coût/bénéfice ne se justifiait pas. J'ai unifié sur `Utils::sendResponse` — un format `{success, message, data?}` pour toute l'app, un seul helper côté serveur, le client construit son markup à partir des données comme partout ailleurs. C'est la consolidation que ferait un senior pendant une revue."*
+
+### Ce qu'on a supprimé / changé
+
+| Fichier | Action |
+|---|---|
+| `modules/controllers/DynamicMessageController.php` | supprimé |
+| `modules/views/DynamicMessageView.php` | supprimé |
+| `modules/controllers/UserController.php` | login/register utilisent `Utils::sendResponse` |
+| `public/scripts/dynamicMessages.js` | construit le `<div>` du message côté client via `escapeHtml(data.message)` |
+| `documents/Workflow.md` | mis à jour pour refléter le pattern unique |
+
+✅ Implémenté.

@@ -36,7 +36,8 @@ class UserController {
         $password = trim($_POST['password']) ?? '';
 
         $result = UserValidator::login($email, $password);
-        DynamicMessageController::showMessage($result['type'], $result['message']);
+        header('Content-Type: application/json');
+        Utils::sendResponse($result['ok'], $result['message']);
 
         if ($result['ok']) {
             $user = (new UserModel())->getUserByEmail($email);
@@ -51,7 +52,8 @@ class UserController {
         $password = $_POST['password'] ?? '';
 
         $result = UserValidator::register($email, $password);
-        DynamicMessageController::showMessage($result['type'], $result['message']);
+        header('Content-Type: application/json');
+        Utils::sendResponse($result['ok'], $result['message']);
 
         if ($result['ok']) {
             (new UserModel())->createUser($name, $email, $password);

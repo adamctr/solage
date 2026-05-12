@@ -1,6 +1,21 @@
-# Workflow AJAX / Validator / DynamicMessage / Session
+# Workflow AJAX / Validator / Session
 
-Schéma de référence pour comprendre le cycle complet d'une requête login (et register, identique). Utilise les 4 composants que le jury va probablement questionner ensemble : **AJAX**, **UserValidator**, **DynamicMessageController**, **SessionController**.
+Schéma de référence pour comprendre le cycle complet d'une requête AJAX (login, register, post, like, delete) — toutes suivent le même pattern depuis l'unification de la réponse JSON.
+
+---
+
+## Convention de réponse JSON (unique pour toute l'app)
+
+```json
+{
+  "success": true | false,
+  "message": "Texte affiché à l'utilisateur",
+  "data": { ... }            // optionnel, présent uniquement si le contrôleur passe une payload
+}
+```
+
+Helper unique côté serveur : **`Utils::sendResponse($success, $message, $data = null)`** (`src/Utils.php`).
+Côté client, chaque flow lit `data.success`, `data.message`, et reconstruit le DOM nécessaire (message stylé, post inséré, etc.) — pas de HTML pré-rendu envoyé par le serveur.
 
 ---
 
@@ -13,8 +28,8 @@ Schéma de référence pour comprendre le cycle complet d'une requête login (et
 │  [user clique Submit]                                                │
 │        │                                                             │
 │        ▼                                                             │
-│  public/scripts/index.js                                             │
-│   ├─ e.preventDefault()       (empêche le submit HTML natif)         │
+│  public/scripts/dynamicMessages.js                                   │
+│   ├─ e.preventDefault()      (empêche le submit HTML natif)          │
 │   └─ fetch('/login', {                                               │
 │        method: 'POST',                                               │
 │        headers: 'application/x-www-form-urlencoded',                 │
@@ -58,28 +73,19 @@ Schéma de référence pour comprendre le cycle complet d'une requête login (et
 │  │         │   ► PURE : pas d'echo, pas de header     │        │     │
 │  │         └──────────────────────────────────────────┘        │     │
 │  │                                                             │     │
-│  │  3. DynamicMessageController::showMessage(                  │     │
-│  │        $result['type'], $result['message']                  │     │
+│  │  3. header('Content-Type: application/json')                │     │
+│  │     Utils::sendResponse(                                    │     │
+│  │        $result['ok'], $result['message']                    │     │
 │  │     )                                                       │     │
 │  │     │                                                       │     │
-│  │     │   ┌────────────────────────────────────────────────┐  │     │
-│  │     └─▶ │ DynamicMessageController                       │  │     │
-│  │         │   ├─ $html = DynamicMessageView::               │  │     │
-│  │         │   │           getDivMessage(type, message)     │  │     │
-│  │         │   │   returns:                                 │  │     │
-│  │         │   │     <div class="success dynamicMessage">   │  │     │
-│  │         │   │       <p>...</p>                           │  │     │
-│  │         │   │     </div>                                 │  │     │
-│  │         │   ├─ header('Content-Type: application/json')  │  │     │
-│  │         │   └─ echo json_encode([                        │  │     │
-│  │         │        'success'        => $type,              │  │     │
-│  │         │        'divMessageHtml' => $html               │  │     │
-│  │         │      ])  ◄── OUTPUT envoyé au client           │  │     │
-│  │         └────────────────────────────────────────────────┘  │     │
+│  │     └─▶ echo json_encode([                                  │     │
+│  │           'success' => bool,                                │     │
+│  │           'message' => string                               │     │
+│  │         ])                          ◄── OUTPUT au client    │     │
 │  │                                                             │     │
 │  │  4. if ($result['ok']) :                                    │     │
 │  │       $user = UserModel::getUserByEmail($email)             │     │
-│  │       (new SessionController)->login($user->getId())       │     │
+│  │       (new SessionController)->login($user->getId())        │     │
 │  │            └─ $_SESSION['user_id'] = ...                    │     │
 │  │            └─ $_SESSION['name']    = ...                    │     │
 │  │            └─ $_SESSION['image']   = ...                    │     │
@@ -90,8 +96,7 @@ Schéma de référence pour comprendre le cycle complet d'une requête login (et
                                │
                   HTTP 200
                   Set-Cookie: PHPSESSID=...
-                  body: {"success":"success",
-                         "divMessageHtml":"<div ...>...</div>"}
+                  body: {"success": true, "message": "Vous vous êtes bien connecté !"}
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -99,23 +104,24 @@ Schéma de référence pour comprendre le cycle complet d'une requête login (et
 │                                                                      │
 │  .then(response => response.json())                                  │
 │  .then(data => {                                                     │
-│      if (data.success === 'success') {                               │
+│      if (data.success) {                                             │
 │          window.location.href = '/';   ◄── reload page d'accueil     │
 │      }                                                               │
-│      const messageContainer = document.getElementById(               │
-│          'messageContainer'                                          │
-│      );                                                              │
-│      messageContainer.innerHTML = data.divMessageHtml;               │
-│      └─ injecte le <div> de feedback dans la page                    │
+│      const type = data.success ? 'success' : 'error';                │
+│      messageContainer.innerHTML =                                    │
+│          `<div class="${type} dynamicMessage">                       │
+│             <p>${escapeHtml(data.message)}</p>                       │
+│           </div>`;                                                   │
+│      └─ le <div> est construit côté client à partir du message       │
+│         (escapeHtml() protège contre XSS si le message contient      │
+│          du contenu user-influencé)                                  │
 │  })                                                                  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Contraste : workflow API (post / like / delete)
-
-L'autre famille d'AJAX du projet (création de post, like, delete) utilise un **helper différent** : `Utils::sendResponse`. Pas de HTML pré-rendu — du JSON brut. C'est important à comprendre parce que le projet a **deux conventions de réponse JSON qui coexistent**.
+## Workflow API (post / like / delete) — même pattern
 
 ```
 Browser  ▸  fetch('/api/post', { POST, FormData })
@@ -128,20 +134,15 @@ PostController::create()
       └─ echo json_encode([
            'success' => true,
            'message' => 'Succès',
-           'data'    => [...]
+           'data'    => [ ... ]
          ])
               │
               ▼
-Browser  ▸  if (data.success) → JS construit le <div class="post"> en DOM
-            (PAS de HTML pré-rendu reçu du serveur)
+Browser  ▸  if (data.success) { construit <div class="post"> en DOM via innerHTML }
+            (utilise escapeHtml() pour chaque champ user-controlled)
 ```
 
-### Pourquoi DEUX patterns coexistent ?
-
-| Cas d'usage           | Helper                          | Forme du JSON                              | Raison                                          |
-|-----------------------|---------------------------------|---------------------------------------------|-------------------------------------------------|
-| login / register      | `DynamicMessageController`      | `{success, divMessageHtml}`                | Le message stylé (`<div class="success">`) est rendu côté serveur pour garantir le styling cohérent. |
-| API (post/like/delete)| `Utils::sendResponse`           | `{success, message, data}`                 | Le post à afficher est reconstruit côté JS à partir des données brutes — pas besoin de HTML serveur. |
+**Seule différence** avec login/register : la présence d'un `data` (la payload du nouveau post / like / etc.) que le client utilise pour construire le markup. Le wrapper JSON est strictement le même.
 
 ---
 
@@ -149,26 +150,27 @@ Browser  ▸  if (data.success) → JS construit le <div class="post"> en DOM
 
 | Couche                                | Rôle                                                                 |
 |---------------------------------------|----------------------------------------------------------------------|
-| `public/scripts/index.js`             | Intercept submit, fetch AJAX, parse JSON, inject HTML, redirect      |
+| `public/scripts/dynamicMessages.js`   | Login/register : intercept submit, fetch, build message `<div>`, redirect |
+| `public/scripts/index.js`             | API actions : create post / like / delete, fetch, build post `<div>` |
 | `public/index.php`                    | Bootstrap : autoload, `session_start()`, dispatch                    |
 | `src/Router`                          | Match URL+method → `Controller#method`                               |
-| `modules/controllers/UserController`  | Orchestrer : lire `$_POST`, appeler validator, formater réponse, ouvrir session si OK |
-| `modules/validators/UserValidator`    | Décider si inputs valides — **retourne un array, AUCUN side-effect HTTP** |
-| `modules/controllers/DynamicMessageController` | Sérialiser un message stylé → JSON (avec HTML pré-rendu)        |
-| `modules/views/DynamicMessageView`    | Générer le `<div>` HTML du message                                   |
-| `src/Utils::sendResponse`             | Sérialiser JSON brut `{success, message, data}` pour les routes API  |
-| `modules/controllers/SessionController` | Démarrer + peupler `$_SESSION`                                     |
+| `modules/controllers/UserController`  | Orchestre login/register : `$_POST` → validator → `sendResponse` → session si OK |
+| `modules/validators/UserValidator`    | Décide si inputs valides — **retourne un array, AUCUN side-effect HTTP** |
+| `modules/controllers/PostController`  | Idem pour create/delete post (validation + ownership inline)         |
+| `modules/controllers/LikeController`  | Idem pour like                                                       |
+| `src/Utils::sendResponse`             | Sérialise la réponse JSON unifiée `{success, message, data?}`        |
+| `modules/controllers/SessionController` | Démarre + peuple `$_SESSION`                                       |
 
 ---
 
 ## Points à connaître pour la défense
 
-1. **`UserValidator` retourne un array, n'echo'e jamais.** Avant le refactor, il appelait `DynamicMessageController::showMessage` lui-même — couplé à la sortie HTTP, donc intestable. Maintenant : validator pur, contrôleur décide.
+1. **`UserValidator` retourne un array, n'echo'e jamais.** Avant le refactor, il appelait un sérialiseur HTTP lui-même — couplé à la sortie, donc intestable. Maintenant : validator pur, contrôleur décide.
 
-2. **`session_start()` est appelé dans `public/index.php`, pas dans le contrôleur.** Sans ça, l'`echo` de `DynamicMessageController::showMessage` partait avant `session_start`, et le cookie `PHPSESSID` ne pouvait plus être posé → login fragile. Le bootstrap garantit le bon ordre.
+2. **`session_start()` est appelé dans `public/index.php`, pas dans le contrôleur.** Sans ça, l'`echo` de la réponse JSON partait avant `session_start`, et le cookie `PHPSESSID` ne pouvait plus être posé → login fragile. Le bootstrap garantit le bon ordre.
 
-3. **Deux conventions JSON coexistent.** `divMessageHtml` (HTML pré-rendu, pour les messages de feedback) vs `data` (champs bruts, pour les API). Pas unifié — à mentionner si pointé en soutenance. Refonte hors scope car les deux flux fonctionnent indépendamment.
+3. **Une seule convention JSON dans l'app.** `{success: bool, message: string, data?: object}` partout. Helper unique `Utils::sendResponse`. Le précédent doublon (`DynamicMessageController` qui renvoyait du HTML pré-rendu) a été supprimé : il imposait deux formats pour une seule app et coûtait plus en complexité qu'il ne gagnait en cohérence visuelle.
 
-4. **`UserValidator` n'est pas un contrôleur** — pas appelé par le router, appelé par `UserController`. Vit dans `modules/validators/` parce qu'il est domaine-spécifique (User), pas framework (`src/`). Parallèle aux dossiers `controllers/`, `models/`, `views/`.
+4. **Le markup des feedback messages est construit côté client.** Le serveur renvoie le texte du message, le client wrap dans un `<div class="success|error dynamicMessage">`. La protection XSS est assurée par `escapeHtml()` JS, miroir du `Utils::e()` PHP.
 
-5. **`DynamicMessageController` est encore mal nommé** — pas un contrôleur non plus, juste un sérialiseur. Renommage / fusion possible dans une passe ultérieure (peut être collapsé dans `UserController` puisqu'il n'a qu'un appelant).
+5. **`UserValidator` n'est pas un contrôleur** — pas appelé par le router, appelé par `UserController`. Vit dans `modules/validators/` parce qu'il est domaine-spécifique (User), pas framework (`src/`). Parallèle aux dossiers `controllers/`, `models/`, `views/`.
