@@ -2,30 +2,30 @@
 
 class PostView {
     protected $posts;
-    public function __construct($posts)
-    {
+    protected $users;
+
+    public function __construct($posts, array $users) {
         $this->posts = $posts;
+        $this->users = $users;
     }
 
     /**
      * @return string
      */
     public function show() {
-
         ob_start();
         ?>
-        <?php foreach ($this->posts as $post) {
-            $user = new UserModel();
-            $user = $user->getUserById($post->getUserId());
+        <?php foreach ($this->posts as $post):
+            $user = $this->users[$post->getUserId()] ?? null;
             ?>
             <div class="post fade-in" data-id="<?= $post->getId() ?>">
 
                     <div class="postAvatarContainer">
-                        <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
+                        <div class="postAvatar"><?= Utils::e($user?->getImage()) ?></div>
                     </div>
                     <div class="postInsideContainer">
                         <div class="postNameDate">
-                            <div><?= Utils::e($user->getName()) ?></div>
+                            <div><?= Utils::e($user?->getName()) ?></div>
                             <div class="postDate"><?= $post->getDate() ?></div>
                         </div>
                             <div class="postContent"><p class="fitWidth"><?= Utils::e($post->getContent()) ?></p></div>
@@ -37,36 +37,33 @@ class PostView {
                         <div class="postContentTools">
                             <div class="postTools">
                                 <div class="postTool response">
-                                    <?= PostToolResponseView::show($post, $user->getId()); ?>
+                                    <?= PostToolResponseView::show($post); ?>
                                 </div>
-                                <?= PostToolHeartView::show($post, $user->getId()); ?>
+                                <?= PostToolHeartView::show($post, SessionController::getUserId()); ?>
                             </div>
                         </div>
                     </div>
             </div>
 
-            <?php
-        }
-        $postsHTML = ob_get_clean();
-        return $postsHTML;
+        <?php endforeach;
+        return ob_get_clean();
     }
 
 
     public function showAdminPost() {
         ob_start();
         ?>
-        <?php foreach ($this->posts as $post) {
-            $user = new UserModel();
-            $user = $user->getUserById($post->getUserId());
+        <?php foreach ($this->posts as $post):
+            $user = $this->users[$post->getUserId()] ?? null;
             ?>
             <div class="post fade-in" id="post-<?= $post->getId() ?>">
 
                 <div class="postAvatarContainer">
-                    <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
+                    <div class="postAvatar"><?= Utils::e($user?->getImage()) ?></div>
                 </div>
                 <div class="postInsideContainer">
                     <div class="postNameDate">
-                        <div><?= Utils::e($user->getName()) ?></div>
+                        <div><?= Utils::e($user?->getName()) ?></div>
                         <div class="postDate"><?= $post->getDate() ?></div>
                     </div>
                     <div class="postContent"><p class="fitWidth"><?= Utils::e($post->getContent()) ?></p></div>
@@ -82,16 +79,13 @@ class PostView {
                                     <button type="submit">Supprimer</button>
                                 </form>
                             </div>
-                            <?= PostToolHeartView::show($post, $user->getId()); ?>
+                            <?= PostToolHeartView::show($post, SessionController::getUserId()); ?>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <?php
-        }
-        $postsHTML = ob_get_clean();
-        return $postsHTML;
+        <?php endforeach;
+        return ob_get_clean();
     }
-
 }

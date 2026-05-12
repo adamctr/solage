@@ -1,18 +1,18 @@
 <?php
 class HomepageView {
     protected $posts;
-    protected $sidebar;
-    protected $rightSidebar;
+    protected $users;
 
-    public function __construct($posts) {
+    public function __construct($posts, array $users) {
         $this->posts = $posts;
+        $this->users = $users;
     }
 
     /**
      * @return void
      */
     public function show() {
-        $postView = new PostView($this->posts);
+        $postView = new PostView($this->posts, $this->users);
         ob_start();
         ?>
 

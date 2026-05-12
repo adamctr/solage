@@ -1,22 +1,21 @@
 <?php
 class UserView {
-    protected $user; // Propriété pour stocker les données de l'utilisateur
+    protected $user;
+    protected $posts;
+    protected $users;
 
-    // Le constructeur prend en paramètre l'objet utilisateur récupéré par le contrôleur
-    public function __construct($user = null) {
-        if ($user != null) {
-            $this->user = $user;
-        }
+    public function __construct($user = null, array $posts = [], array $users = []) {
+        $this->user = $user;
+        $this->posts = $posts;
+        $this->users = $users;
     }
 
-    // Méthode pour afficher la page HTML
     public function show() {
-        $userPosts = PostModel::getAllPostsByUserId($this->user->getId());
         ob_start();
         ?>
 
         <div class="user-profile">
-            <h1>Profil de <?= htmlspecialchars($this->user->getName() ?? '') ?></h1>
+            <h1>Profil de <?= Utils::e($this->user->getName()) ?></h1>
 
             <div class="user-header">
                 <div class="postAvatarContainer">
@@ -36,7 +35,7 @@ class UserView {
             <div class="user-posts">
                 <h2>Posts récents</h2>
                 <?php
-                $postView = new PostView($userPosts);
+                $postView = new PostView($this->posts, $this->users);
                 echo $postView->show();
                 ?>
             </div>
@@ -44,8 +43,7 @@ class UserView {
         </div>
 
         <?php
-        // Envoi du HTML capturé au layout global
-        (new LayoutView('Profil de ' . htmlspecialchars($this->user->getName() ?? ''), 'Détails du profil utilisateur', ob_get_clean()))->show();
+        (new LayoutView('Profil de ' . Utils::e($this->user->getName()), 'Détails du profil utilisateur', ob_get_clean()))->show();
     }
 
     public function showLoginForm() {

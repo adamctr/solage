@@ -8,13 +8,16 @@ class ResponseView {
     /**
      * @param $post
      * @param $responses
+     * @param array $users  Map [user_id => UserModel] for the main post author and all reply authors.
      * @return void
      */
-    static public function show($post, $responses) {
-        $mainPostView = new MainPostView($post);
-        $postView = new PostView($responses);
+    static public function show($post, $responses, array $users) {
+        $author = $users[$post->getUserId()] ?? null;
 
-        $usernameOfThePostOwner = UserModel::getNameFromId($post->getUserId());
+        $mainPostView = new MainPostView($post, $author);
+        $postView = new PostView($responses, $users);
+
+        $usernameOfThePostOwner = $author ? $author->getName() : '';
 
         ob_start();
         ?>
@@ -37,6 +40,6 @@ class ResponseView {
 
         <?php
         $responseView = ob_get_clean();
-        (new LayoutView(('Réponse à ' . $usernameOfThePostOwner), 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
+        (new LayoutView(('Réponse à ' . Utils::e($usernameOfThePostOwner)), 'Page du post et des réponses de l\'utilisateur', $responseView))->show();
     }
 }

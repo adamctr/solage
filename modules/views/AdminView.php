@@ -29,7 +29,7 @@ class AdminView {
         return ob_get_clean();
     }
 
-    public function renderPostsResult($resultPosts) {
+    public function renderPostsResult($resultPosts, array $users) {
         ob_start();
         ?>
 
@@ -39,8 +39,7 @@ class AdminView {
             <h2>Résultats</h2>
             <?php if (!empty($resultPosts)): ?>
                 <?php foreach ($resultPosts as $post):
-                    // On passe chaque post individuellement à PostView
-                    $postView = new PostView([$post]);
+                    $postView = new PostView([$post], $users);
                     ?>
                     <?= $postView->showAdminPost(); ?>
                 <?php endforeach; ?>

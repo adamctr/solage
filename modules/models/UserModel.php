@@ -68,6 +68,30 @@ class UserModel {
         return $row->name;
     }
 
+    /**
+     * Bulk-fetch users by their IDs to avoid N+1 in list views.
+     * Returns a map keyed by user id.
+     *
+     * @param int[] $ids
+     * @return array<int, UserModel>
+     */
+    public static function getUsersByIds(array $ids): array {
+        if (empty($ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = DataBase::getConnection()->prepare(
+            "SELECT id, name, email, password, role, image FROM users WHERE id IN ($placeholders)"
+        );
+        $stmt->execute(array_values($ids));
+
+        $users = [];
+        while ($row = $stmt->fetch(PDO::FETCH_OBJ)) {
+            $users[(int)$row->id] = new UserModel($row);
+        }
+        return $users;
+    }
+
     public function getUserByEmail($email) {
         $sql = "SELECT * FROM users WHERE email = :email";
         $stmt = $this->db->prepare($sql);

@@ -12,8 +12,10 @@ class UserController {
     }
 
     public function execute($userId) {
-        // On passe les informations de l'utilisateur à la vue
-        $view = new UserView($this->user);
+        $posts = PostModel::getAllPostsByUserId($this->user->getId());
+        $users = [$this->user->getId() => $this->user];
+
+        $view = new UserView($this->user, $posts, $users);
         $view->show();
     }
 
@@ -30,37 +32,30 @@ class UserController {
     }
 
     public function login() {
-        $userModel = new UserModel();
-
         $email = trim($_POST['email']) ?? '';
         $password = trim($_POST['password']) ?? '';
 
-        $validation = ValidatorController::login($email, $password);
+        $result = ValidatorController::login($email, $password);
+        DynamicMessageController::showMessage($result['type'], $result['message']);
 
-        if ($validation) {
-            $user = $userModel->getUserByEmail($email);
-            $sessionController = new SessionController();
-            $sessionController->login($user->getId());
-            //header("Location: /");
-            //exit;
+        if ($result['ok']) {
+            $user = (new UserModel())->getUserByEmail($email);
+            (new SessionController())->login($user->getId());
         }
     }
 
 
     public function register() {
-        $userModel = new UserModel();
-
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
 
-        $validation = ValidatorController::register($email, $password);
+        $result = ValidatorController::register($email, $password);
+        DynamicMessageController::showMessage($result['type'], $result['message']);
 
-        if ($validation) {
-            $userModel->createUser($name, $email, $password);
+        if ($result['ok']) {
+            (new UserModel())->createUser($name, $email, $password);
         }
-
-
     }
 
     static public function logout() {

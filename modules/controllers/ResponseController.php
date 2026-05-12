@@ -16,10 +16,14 @@ class ResponseController {
     function execute() {
         $postId = (int) $this->postId;
         $post = PostModel::getPostById($postId);
-
         $responses = $post->getResponses();
 
-        $responseView = new ResponseView();
-        $responseView->show($post ,$responses);
+        $userIds = [$post->getUserId()];
+        foreach ($responses as $r) {
+            $userIds[] = $r->getUserId();
+        }
+        $users = UserModel::getUsersByIds($userIds);
+
+        ResponseView::show($post, $responses, $users);
     }
 }

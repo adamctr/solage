@@ -1,22 +1,15 @@
 <?php
 
-//namespace Home\Controllers;
 class HomepageController {
-    protected $posts;
-    protected $sidebar;
-
-    protected $rightSidebar;
-
-    public function __construct() {
-        $postModel = PostModel::getPosts();
-        $this->posts = $postModel;
-    }
-
     /**
      * @return void
      */
     public function execute() {
-        $view = new HomepageView($this->posts);
+        $posts = PostModel::getPosts();
+        $userIds = array_map(fn($p) => $p->getUserId(), $posts);
+        $users = UserModel::getUsersByIds($userIds);
+
+        $view = new HomepageView($posts, $users);
         $view->show();
     }
 }

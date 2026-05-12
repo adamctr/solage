@@ -27,8 +27,11 @@ class AdminController {
         $searchModel = new SearchModel();
         $posts = $searchModel->searchPosts($query);
 
+        $userIds = array_map(fn($p) => $p->getUserId(), $posts);
+        $users = UserModel::getUsersByIds($userIds);
+
         $adminView = new AdminView();
-        $adminView->renderPostsResult($posts);
+        $adminView->renderPostsResult($posts, $users);
     }
 
 }

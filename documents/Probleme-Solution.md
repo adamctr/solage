@@ -138,3 +138,184 @@ Leçon pour la défense : *"Tester en CLI ne garantit pas que ça marche en HTTP
 **Réponse jury** : *"Même classe de faille IDOR que sur `/edituser/{id}`. Le pattern est identique : ownership ou rôle admin, vérifié au plus tôt dans le contrôleur, log `warning` pour audit. Le code commenté dans le contrôleur prouvait que l'équipe avait identifié le besoin mais l'avait désactivé pendant un debug — c'est exactement le genre de dette qu'un audit doit rattraper."*
 
 ✅ Implémenté.
+
+---
+
+## Helpers et outils mal rangés dans `controllers/`
+
+### Contexte
+
+Trois fichiers vivaient dans `modules/controllers/` sans être des handlers de requête HTTP :
+
+| Fichier | Rôle réel |
+|---|---|
+| `Utils.php` | Helpers (escape `Utils::e`, `sendResponse` JSON, `isAjax`) |
+| `MinificationController.php` | Outil de build d'assets, appelé une fois au boot dans `public/index.php` |
+
+### Problème
+
+Le suffixe `Controller` suggère « invoqué par le routeur sur une route ». Aucun de ces deux fichiers ne l'est. Un jury qui ouvre `controllers/` y voit une nomenclature trompeuse — et perd confiance dans le reste du layering.
+
+### Solution retenue
+
+- Déplacement vers `src/` (framework + infra) :
+  - `modules/controllers/Utils.php` → `src/Utils.php`
+  - `modules/controllers/MinificationController.php` → `src/MinificationController.php`
+- L'autoloader scanne déjà `src/` (`includes/autoload.php`), donc **aucun changement de code appelant** n'est requis.
+- `MinificationController` garde son nom pour ne pas casser `public/index.php`. Un renommage en `AssetCompiler` serait plus propre mais sort du scope.
+
+### Justification jury
+
+> *"`src/` contient le code framework et infrastructure (Router, Migrations, Middleware, Logger, helpers). `modules/controllers/` contient strictement les handlers HTTP appelés par une route. La nomenclature reflète maintenant le rôle réel."*
+
+✅ Implémenté (déplacement via `git mv`).
+
+---
+
+## ValidatorController couplé à la sortie HTTP
+
+### Contexte
+
+`ValidatorController::login` et `register` faisaient deux choses en une :
+
+1. Valider les inputs (vide / email inconnu / mauvais mot de passe / email déjà pris).
+2. **Echo'er** une réponse JSON via `DynamicMessageController::showMessage(...)`.
+
+```php
+// Avant
+static public function login($email, $password) {
+    if (empty($email) || empty($password)) {
+        DynamicMessageController::showMessage('error', "Merci de renseigner...");  // ← echo dans le validator
+        return false;
+    }
+    // ...
+}
+```
+
+### Problème
+
+- **Intestable** : on ne peut pas appeler le validator sans qu'il pollue la sortie HTTP. Tester `ValidatorController::login('', '')` écrit du JSON dans le buffer.
+- **Mauvaise séparation des responsabilités** : un validator décide-t-il du format de réponse ? Non. C'est au contrôleur — qui possède le cycle requête/réponse — de décider quoi faire des erreurs.
+- **Effet de bord caché** : un appelant croit invoquer une fonction pure et déclenche un `header()` + `echo`.
+
+### Solution retenue
+
+- Le validator retourne désormais un **résultat structuré** :
+  ```php
+  ['ok' => bool, 'type' => 'success'|'error', 'message' => string]
+  ```
+- `UserController::login/register` reçoit le résultat, appelle lui-même `DynamicMessageController::showMessage($result['type'], $result['message'])`, puis décide selon `$result['ok']` de continuer (créer la session, créer le user).
+
+### Justification jury
+
+> *"Une fonction de validation retourne une décision, pas une réponse HTTP. C'est au contrôleur — responsable du cycle requête/réponse — de décider comment exposer cette décision au client. Avant, le validator pilotait la réponse à la place du contrôleur. Maintenant, chacun reste dans son rôle."*
+
+### Bug connexe corrigé dans la foulée
+
+Le découplage avait surfacé un bug pré-existant : `DynamicMessageController::showMessage` envoie les headers + le body JSON **avant** que `SessionController::__construct` n'appelle `session_start()`. Cookie de session impossible à poser → login fragile. Voir l'entrée *Audit MVC — finitions* pour le fix (session démarrée dans le bootstrap).
+
+✅ Implémenté (découplage validator + correction du bug session).
+
+---
+
+## N+1 query : les vues fetchaient leur propre data
+
+### Contexte
+
+Plusieurs vues instanciaient un `UserModel` à l'intérieur d'une boucle pour afficher l'auteur de chaque post :
+
+```php
+// modules/views/PostView.php — avant
+foreach ($this->posts as $post) {
+    $user = new UserModel();
+    $user = $user->getUserById($post->getUserId());  // ← 1 SELECT par post
+    // ... rendu ...
+}
+```
+
+Pareil dans `MainPostView`, et dans `UserView` qui appelait directement `PostModel::getAllPostsByUserId`. `ResponseView` appelait `UserModel::getNameFromId` pour le titre. Bref, **les vues parlaient au modèle**, sans passer par le contrôleur.
+
+### Problème
+
+- **Performance** : page d'accueil avec 20 posts → 1 requête posts + 20 requêtes users = **21 requêtes**. Linéaire en nombre de posts.
+- **Architecture** : violation de la séparation MVC. Les règles du `CLAUDE.md` disent « views: output (HTML / JSON); no business logic » — fetcher la base **est** de la business logic.
+- **Testabilité** : impossible d'instancier une vue avec des données factices sans monter une connexion DB.
+
+### Options envisagées
+
+| Option | Pour | Contre |
+|---|---|---|
+| **A.** Cache mémoire interne à `PostView` (bulk-fetch unique à `show()`) | Minimum de changements, le N+1 disparaît | La vue continue à interroger la base — séparation MVC pas respectée. Smell « view avec DB » reste là. |
+| **B.** Map `[user_id => UserModel]` passée à la vue, contrôleur la prépare | Vue redevient pure présentation. Perf optimale. Testabilité gratuite. | Touche 14 fichiers (cascade contrôleur → vue parente → PostView). |
+| **C.** SQL avec `JOIN posts/users` retournant tout dans la même ligne | Une seule requête, données dénormalisées disponibles directement | Casse le typage : impossible de retourner un `PostModel` propre, on mélange post et user dans la même row. Refactor plus invasif sur les modèles. |
+
+### Solution retenue : Option B
+
+- Nouvelle méthode `UserModel::getUsersByIds(array $ids): array` — un seul `SELECT ... WHERE id IN (?,?,?)`, retourne une map `[id => UserModel]`.
+- `PostView` et `MainPostView` reçoivent `$users` par constructeur (paramètre obligatoire, pas de fallback).
+- Chaque contrôleur de page (`Homepage`, `User`, `Response`, `Search`, `Admin`) :
+  1. Récupère les posts (ou résultats de recherche).
+  2. Extrait les `user_id` distincts.
+  3. Appelle `UserModel::getUsersByIds(...)`.
+  4. Passe `(posts, users)` à la vue parente, qui transmet à `PostView`.
+- `UserView::show` et `ResponseView::show` n'instancient plus de modèle — leurs données arrivent par paramètre.
+
+### Coût en requêtes
+
+| Page | Avant | Après |
+|---|---|---|
+| Accueil (20 posts) | 21 | **2** |
+| Profil user (N posts du même user) | N+1 | **1** (le user est déjà chargé en mémoire) |
+| Réponses à un post (M réponses) | M+2 | **2** |
+
+### Justification jury
+
+> *"La vue affiche, le contrôleur fournit. J'ai préchargé tous les utilisateurs nécessaires en une requête batch (`WHERE id IN (...)`) et propagé la map à travers la chaîne contrôleur → vue parente → composant de rendu. Ça résout deux problèmes en un seul refactor : la perf (1 requête au lieu de N) et l'architecture (la vue ne parle plus jamais au modèle directement)."*
+
+### Pièges rencontrés
+
+1. **`IN ()` vide est une erreur SQL en PostgreSQL.** `getUsersByIds([])` doit court-circuiter et retourner `[]` avant de préparer la requête.
+2. **Construction sécurisée du `IN`** : `array_fill(0, count($ids), '?')` puis `implode(',', ...)` produit `?,?,?` sans interpolation utilisateur — les valeurs partent en bound params via `execute()`. Pas d'injection possible.
+3. **Bugs préexistants surfacés au passage** — corrigés dans la foulée, voir l'entrée *Audit MVC — finitions* ci-dessous.
+
+✅ Implémenté.
+
+---
+
+## Audit MVC — finitions
+
+Suite à la passe d'audit MVC (N+1, validator découplé, helpers déplacés), 4 bugs préexistants ont été identifiés et corrigés dans la foulée.
+
+### 1. `PostToolHeartView` recevait le mauvais user ID
+
+`PostView::show/showAdminPost` et `MainPostView::show` appelaient `PostToolHeartView::show($post, $user->getId())` où `$user` était l'**auteur du post**, pas l'utilisateur courant. Conséquence : l'état `active` du cœur reflétait si l'auteur avait liké son propre post, jamais si l'utilisateur connecté l'avait liké.
+
+**Fix** : substitution par `SessionController::getUserId()` aux 3 occurrences. C'est l'utilisateur dont on veut savoir s'il a déjà liké ce post.
+
+**Réponse jury** : *"Bug fonctionnel silencieux : le code compilait, le rendu marchait, mais l'argument passé n'avait pas la sémantique attendue. C'est précisément le genre de bug qu'un audit forcé par une refonte (ici, le passage de la map users) attrape — parce qu'on relit chaque ligne au lieu de la survoler."*
+
+### 2. Flux login : `headers already sent` empêchait la pose du cookie de session
+
+`UserController::login` echo'e la réponse JSON via `DynamicMessageController::showMessage` **avant** que `SessionController::__construct` n'appelle `session_start()`. Les headers HTTP étant déjà envoyés, `session_start()` ne pouvait plus poser le cookie `PHPSESSID` — le login "marchait" mais la session n'était pas persistée correctement.
+
+**Fix** : `session_start()` appelé dans `public/index.php` juste après l'enregistrement de l'autoloader, **avant tout output possible**. La session est désormais active sur toutes les requêtes ; le `session_start()` défensif dans `SessionController::__construct` (gardé par un check `PHP_SESSION_NONE`) devient un no-op en HTTP mais reste utile en CLI/tests.
+
+**Réponse jury** : *"Une session doit être démarrée avant tout output — c'est une règle PHP, pas une opinion. Centraliser ça dans le bootstrap garantit le bon cycle de vie quel que soit ce que fait le contrôleur ensuite. Le check idempotent dans SessionController reste comme garde-fou."*
+
+### 3. `PostResponsesView` était du code mort
+
+Aucun appelant — un grep `PostResponsesView` ne renvoyait que la déclaration de classe elle-même.
+
+**Fix** : suppression du fichier (`git rm modules/views/PostResponsesView.php`).
+
+**Réponse jury** : *"Code mort identifié à l'audit. Maintenir un fichier qu'aucune route ni vue n'invoque, c'est promettre une fonctionnalité sans personne pour la tester. À supprimer."*
+
+### 4. `$type = $_GET['type']` jamais utilisé
+
+Dans `SearchController::searchResults`, lecture sans usage. Reliquat probable d'une distinction user/post jamais implémentée côté front (la séparation user/post est faite côté admin via deux routes distinctes).
+
+**Fix** : ligne supprimée.
+
+**Réponse jury** : *"Variable lue puis jetée — pas de usage en aval. À supprimer plutôt qu'à garder 'au cas où' : un lecteur futur perd du temps à comprendre pourquoi c'est là."*
+
+✅ Implémenté.

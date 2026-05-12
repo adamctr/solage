@@ -3,9 +3,11 @@
 class MainPostView {
 
     protected $post;
+    protected $user;
 
-    function __construct($post) {
+    function __construct($post, $user) {
         $this->post = $post;
+        $this->user = $user;
     }
 
     /**
@@ -13,18 +15,16 @@ class MainPostView {
      */
     function show() {
         ob_start();
-        $user = new UserModel();
-        $user = $user->getUserById($this->post->getUserId());
         ?>
 
         <div class="mainPost post" data-id="<?= $this->post->getId() ?>">
 
             <div class="postAvatarContainer">
-                <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
+                <div class="postAvatar"><?= Utils::e($this->user?->getImage()) ?></div>
             </div>
             <div class="postInsideContainer">
                 <div class="postNameDate">
-                    <div><?= Utils::e($user->getName()) ?></div>
+                    <div><?= Utils::e($this->user?->getName()) ?></div>
                 </div>
                 <div class="postContentTools">
                     <div class="postContent"><?= Utils::e($this->post->getContent()) ?></div>
@@ -38,7 +38,7 @@ class MainPostView {
                         <div class="postTool response">
                             <?= PostToolResponseView::show($this->post); ?>
                         </div>
-                        <?= PostToolHeartView::show($this->post, $user->getId()); ?>
+                        <?= PostToolHeartView::show($this->post, SessionController::getUserId()); ?>
                     </div>
                 </div>
             </div>
@@ -46,7 +46,6 @@ class MainPostView {
         </div>
 
         <?php
-        $content = ob_get_clean();
-        return $content;
+        return ob_get_clean();
     }
 }

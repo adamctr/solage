@@ -2,46 +2,35 @@
 
 class ValidatorController {
 
-    static public function login($email, $password) {
-
-        if(empty($email) || empty($password)) {
-            DynamicMessageController::showMessage('error', "Merci de renseigner vos informations");
-            return false;
+    static public function login($email, $password): array {
+        if (empty($email) || empty($password)) {
+            return ['ok' => false, 'type' => 'error', 'message' => "Merci de renseigner vos informations"];
         }
 
-        $userModel = new UserModel();
-        $user = $userModel->getUserByEmail($email);
+        $user = (new UserModel())->getUserByEmail($email);
 
-        if ($user) {
-            if (password_verify($password, $user->getPassword())) {
-                DynamicMessageController::showMessage('success', "Vous vous êtes bien connecté !");
-                return true;
-            } else {
-                DynamicMessageController::showMessage('error', "Le mot de passe ne correspond pas");
-                return false;
-            }
-        } else {
-            DynamicMessageController::showMessage('error', "L'email n'existe pas");
-            return false;
+        if (!$user) {
+            return ['ok' => false, 'type' => 'error', 'message' => "L'email n'existe pas"];
         }
+
+        if (!password_verify($password, $user->getPassword())) {
+            return ['ok' => false, 'type' => 'error', 'message' => "Le mot de passe ne correspond pas"];
+        }
+
+        return ['ok' => true, 'type' => 'success', 'message' => "Vous vous êtes bien connecté !"];
     }
 
-    static public function register($email, $password) {
-
-        if(empty($email) || empty($password)) {
-            DynamicMessageController::showMessage('error', "Merci de renseigner vos informations");
-            return false;
+    static public function register($email, $password): array {
+        if (empty($email) || empty($password)) {
+            return ['ok' => false, 'type' => 'error', 'message' => "Merci de renseigner vos informations"];
         }
 
-        $userModel = new UserModel();
-        $user = $userModel->getUserByEmail($email);
+        $user = (new UserModel())->getUserByEmail($email);
 
         if ($user) {
-            DynamicMessageController::showMessage('error', "L'email est déjà utilisé");
-            return false;
-        } else {
-            DynamicMessageController::showMessage('success', "Inscription réussie");
-            return true;
+            return ['ok' => false, 'type' => 'error', 'message' => "L'email est déjà utilisé"];
         }
+
+        return ['ok' => true, 'type' => 'success', 'message' => "Inscription réussie"];
     }
 }

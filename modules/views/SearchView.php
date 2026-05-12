@@ -15,7 +15,7 @@ class SearchView {
         (new LayoutView('Recherche', 'Recherchez des posts', ob_get_clean()))->show();
     }
 
-    public function renderResults($resultPosts) {
+    public function renderResults($resultPosts, array $users) {
         ob_start();
         ?>
         <div class="search-page">
@@ -27,8 +27,7 @@ class SearchView {
             <h2>Résultats de la recherche</h2>
             <?php if (!empty($resultPosts)): ?>
                 <?php foreach ($resultPosts as $post):
-                    // On passe chaque post individuellement à PostView
-                    $postView = new PostView([$post]);
+                    $postView = new PostView([$post], $users);
                     ?>
                     <?= $postView->show(); ?>
                 <?php endforeach; ?>
