@@ -35,7 +35,7 @@ class UserController {
         $email = trim($_POST['email']) ?? '';
         $password = trim($_POST['password']) ?? '';
 
-        $result = ValidatorController::login($email, $password);
+        $result = UserValidator::login($email, $password);
         DynamicMessageController::showMessage($result['type'], $result['message']);
 
         if ($result['ok']) {
@@ -50,7 +50,7 @@ class UserController {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
 
-        $result = ValidatorController::register($email, $password);
+        $result = UserValidator::register($email, $password);
         DynamicMessageController::showMessage($result['type'], $result['message']);
 
         if ($result['ok']) {

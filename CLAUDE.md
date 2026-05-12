@@ -85,13 +85,14 @@ PHP MVC app, custom router. PostgreSQL via PDO. FrankenPHP + Caddy + Traefik in 
 ### Layering — respect it
 
 ```
-public/index.php  → entrypoint (autoload, env, router)
+public/index.php  → entrypoint (autoload, session_start, router)
 routes/           → URL → "Controller#method" mappings only
 modules/
   controllers/    → request handling, calls models, picks views
   models/         → all SQL lives here; PDO prepared statements
   views/          → output (HTML / JSON); no business logic
-src/              → framework code (Router, Migrations, AuthMiddleware)
+  validators/     → domain input validation (returns result arrays, no HTTP output)
+src/              → framework code (Router, Migrations, Middleware, Utils, Logger)
 includes/         → bootstrap (Database, Autoloader)
 ```
 

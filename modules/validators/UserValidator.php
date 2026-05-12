@@ -1,6 +1,6 @@
 <?php
 
-class ValidatorController {
+class UserValidator {
 
     static public function login($email, $password): array {
         if (empty($email) || empty($password)) {

@@ -19,6 +19,7 @@ class Autoloader {
             __DIR__ . '/../modules/views/' . str_replace('\\', '/', $class) . '.php',
             __DIR__ . '/../modules/models/' . str_replace('\\', '/', $class) . '.php',
             __DIR__ . '/../modules/controllers/' . str_replace('\\', '/', $class) . '.php',
+            __DIR__ . '/../modules/validators/' . str_replace('\\', '/', $class) . '.php',
             __DIR__ . '/../src/' . str_replace('\\', '/', $class) . '.php'
         ];
 
