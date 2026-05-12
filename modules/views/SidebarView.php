@@ -9,6 +9,8 @@ class SidebarView {
         ob_start();
 
         $userid = SessionController::getUserId();
+        $session = new SessionController();
+        $isAdmin = $session->isAdmin();
         ?>
 
         <div class="sidebars">
@@ -16,21 +18,22 @@ class SidebarView {
                 <div class="sidebarFixed">
                     <div class="sidebarFixedContainer">
                         <div class="menuLink">
-                            <?php echo file_get_contents('assets/y.svg' ); ?>
+                            <?php echo file_get_contents('assets/y.svg'); ?>
                         </div>
-                        <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?>
+                        <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg'); ?>
                             <span class="menuTxt">Accueil</span></a>
                         <a href="/search" aria-label="Rechercher" class="menuLink">
-                            <?php echo file_get_contents('assets/wen.svg' ); ?>                            <span class="menuTxt">Recherche</span></a>
+                            <?php echo file_get_contents('assets/wen.svg'); ?>                            <span class="menuTxt">Recherche</span></a>
                         <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink">
-                            <?php echo file_get_contents('assets/profile.svg' ); ?>                            <span class="menuTxt">Profil</span></a>
-                        <a href="/admin" aria-label="Admin" class="menuLink">
-                            <?php echo file_get_contents('assets/admin.svg' ); ?>
-                            <span class="menuTxt">Admin</span></a>
-
+                            <?php echo file_get_contents('assets/profile.svg'); ?>                            <span class="menuTxt">Profil</span></a>
+                        <?php if ($isAdmin): ?>
+                            <a href="/admin" aria-label="Admin" class="menuLink">
+                                <?php echo file_get_contents('assets/admin.svg'); ?>
+                                <span class="menuTxt">Admin</span></a>
+                        <?php endif; ?>
 
                         <button id="magicButton">
-                            <?php echo file_get_contents('assets/plus.svg' ); ?>
+                            <?php echo file_get_contents('assets/plus.svg'); ?>
                             <strong>Nouveau post</strong>
                         </button>
                     </div>
@@ -39,15 +42,16 @@ class SidebarView {
         </div>
         <div class="sidebarMobile">
             <div class="sidebarMobileContainer">
-                <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg' ); ?> </a>
-                <a href="/search" aria-label="Rechercher" class="menuLink"> <?php echo file_get_contents('assets/wen.svg' ); ?> </a>
-                <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink"> <?php echo file_get_contents('assets/profile.svg' ); ?> </a>
-                <a href="/admin" aria-label="Admin" class="menuLink"> <?php echo file_get_contents('assets/admin.svg' ); ?> </a>
+                <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg'); ?> </a>
+                <a href="/search" aria-label="Rechercher" class="menuLink"> <?php echo file_get_contents('assets/wen.svg'); ?> </a>
+                <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink"> <?php echo file_get_contents('assets/profile.svg'); ?> </a>
+                <?php if ($isAdmin): ?>
+                    <a href="/admin" aria-label="Admin" class="menuLink"> <?php echo file_get_contents('assets/admin.svg'); ?> </a>
+                <?php endif; ?>
             </div>
         </div>
 
         <?php
-        $sidebar = ob_get_clean();
-        return $sidebar;
+        return ob_get_clean();
     }
 }

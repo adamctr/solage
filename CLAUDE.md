@@ -119,3 +119,7 @@ includes/         → bootstrap (Database, Autoloader)
 - `.env` is gitignored. Credentials are loaded by `vlucas/phpdotenv` in `includes/database.php`.
 - `.env.example` is the template — keep it in sync when adding env vars.
 - Never commit real credentials, even temporarily.
+
+### Git commits
+
+- **Never add Claude (or any AI) as commit co-author.** No `Co-Authored-By: Claude ...` trailer, no mention of Claude / Anthropic in commit messages. The user owns this codebase for a graded defense — every commit must read as the user's own work.
