@@ -79,6 +79,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./solage.pg.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-solage} -d ${DB_NAME:-solage}"]
       interval: 5s
