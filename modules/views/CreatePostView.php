@@ -17,11 +17,11 @@ class CreatePostView {
 
         <div class="createPost">
             <div class="postAvatarContainer">
-                <div class="postAvatar"><?= $userImage ?></div>
+                <div class="postAvatar"><?= Utils::e($userImage) ?></div>
             </div>
             <div class="postInsideContainer">
                 <div class="postNameDate">
-                    <div class=""><?= $username ?></div>
+                    <div class=""><?= Utils::e($username) ?></div>
                 </div>
                 <div class="postContentTools">
                     <span id="postContent" aria-label="Contenu du post" class="textarea, postCreateInput" role="textbox" contenteditable="true"></span>

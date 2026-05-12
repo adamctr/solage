@@ -127,7 +127,21 @@ class UserController {
             return;
         }
 
-        $userId = $data['userId'];
+        $userId = (int) $data['userId'];
+
+        // Auth : seul le propriétaire du compte ou un admin peut supprimer.
+        $session = new SessionController();
+        $currentUserId = SessionController::getUserId();
+        if ($currentUserId !== $userId && !$session->isAdmin()) {
+            Logger::get()->warning('user.delete.forbidden', [
+                'current_user_id' => $currentUserId,
+                'target_user_id'  => $userId,
+            ]);
+            http_response_code(403);
+            Utils::sendResponse(false, "Vous n'avez pas la permission de supprimer ce compte.");
+            return;
+        }
+
         $userModel = new UserModel();
         // Appeler la méthode deleteUser dans le modèle pour supprimer l'utilisateur
         $result = $userModel->deleteUser($userId);

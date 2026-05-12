@@ -63,9 +63,9 @@ class AdminView {
                 <?php foreach ($resultUsers as $user): ?>
                     <div class="user fade-in" id="user-<?= $user->getId() ?>">
                         <div class="postAvatarContainer">
-                            <div class="postAvatar"><?= $user->getImage() ?></div>
+                            <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
                         </div>
-                        <div><?= $user->getName() ?></div>
+                        <div><?= Utils::e($user->getName()) ?></div>
                         <div class="userViewButton">
                             <form action="/api/users/delete" data-id="<?= $user->getId() ?>" class="deleteForm" method="post">
                                 <button type="submit">Supprimer</button>

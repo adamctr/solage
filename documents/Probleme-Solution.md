@@ -104,3 +104,37 @@ Leçon pour la défense : *"Tester en CLI ne garantit pas que ça marche en HTTP
 **Réponse jury** : *"Authentification ≠ autorisation. Les deux failles venaient du même réflexe — supposer que 'loggé' = 'autorisé'. Le fix sépare explicitement les deux notions."*
 
 ✅ Implémenté.
+
+---
+
+## XSS stocké sur le contenu des posts
+
+**Problème** : `PostView` (et autres) affichaient `$post->getContent()`, `$user->getName()`, `$user->getImage()` **sans `htmlspecialchars`**. Un user pouvait poster `<script>alert(1)</script>` et le code s'exécutait dans le navigateur de **tous les autres users** consultant le feed (XSS stocké, OWASP A03).
+
+**Solution** : escaping à l'**output**, pas à l'input.
+- Helper `Utils::e()` (`htmlspecialchars` + `ENT_QUOTES | ENT_HTML5` + UTF-8).
+- Sweep des 6 vues qui affichent du contenu user-controlled (`PostView`, `MainPostView`, `PostResponsesView`, `UserView`, `AdminView`, `CreatePostView`, `DynamicMessageView`).
+- **Côté JS** : `index.js` injecte du contenu de post via `innerHTML` (bypass de l'escape serveur). Ajout d'un `escapeHtml()` JS miroir, appliqué à chaque interpolation `${post.*}`.
+
+**Vérification** : payload `<script>alert(1)</script><img src=x onerror=alert(2)>` posté → rendu en texte (`&lt;script&gt;...`), pas exécuté.
+
+**Réponse jury** : *"L'escaping se fait à la sortie, pas à l'entrée — sinon on perd l'information originale (l'utilisateur peut légitimement écrire `<` dans un message). Le pattern est centralisé dans `Utils::e()` côté serveur et `escapeHtml()` côté client. La double protection est nécessaire car le JS reconstruit du HTML à la volée pour l'affichage optimiste après création de post."*
+
+---
+
+## IDOR sur suppression (post / user)
+
+**Problème** :
+- `PostController::delete` : un check d'ownership existait mais était **commenté en dur** (debug oublié). N'importe quel user authentifié pouvait supprimer le post d'un autre.
+- `UserController::delete` : aucun check du tout — un user authentifié pouvait supprimer le compte de n'importe qui.
+- En plus, les routes `/api/posts/delete` et `/api/users/delete` n'avaient **pas de middleware d'auth** (un non-loggé pouvait théoriquement les invoquer).
+
+**Solution** :
+- Ajout d'`AuthMiddleware` sur les deux routes (assure le `session_start`).
+- Vérification dans chaque contrôleur : `current_user_id === target_owner_id || isAdmin()`. Refus → 403, log `warning` avec contexte (current/target ids).
+
+**Vérification** : 5 scénarios E2E (user supprime post d'autre, user supprime son post, admin supprime, etc.) → tous conformes.
+
+**Réponse jury** : *"Même classe de faille IDOR que sur `/edituser/{id}`. Le pattern est identique : ownership ou rôle admin, vérifié au plus tôt dans le contrôleur, log `warning` pour audit. Le code commenté dans le contrôleur prouvait que l'équipe avait identifié le besoin mais l'avait désactivé pendant un debug — c'est exactement le genre de dette qu'un audit doit rattraper."*
+
+✅ Implémenté.

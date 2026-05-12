@@ -58,7 +58,11 @@ Ces points sont des **red flags** pour le jury et sont rapides à régler.
 - **XSS** : `PostView.php` affiche `$post->getContent()` **sans `htmlspecialchars`** → faille XSS stockée. À corriger sur **tous les contenus utilisateurs** (posts, réponses, name, image path).
 - **IDOR sur édition profil** (`UserController::update`) : aucun contrôle que `session.user_id === $userId`. N'importe qui connecté peut éditer n'importe quel profil.
 - **IDOR sur suppression post / user** : le commentaire en `PostController::delete:128-131` montre que la vérif d'ownership est désactivée.
-- **CSRF** : aucun token sur `/api/post`, `/api/like`, `/api/posts/delete`, `/edituser/{id}`, `/login`, `/register`. Implémenter un token CSRF en session, vérifié à chaque POST.
+- **CSRF** : aucun token sur `/api/post`, `/api/like`, `/api/posts/delete`, `/edituser/{id}`, `/login`, `/register`. 
+
+----
+
+Implémenter un token CSRF en session, vérifié à chaque POST.
 - **Upload d'images** : valider via `getimagesize()` et MIME réel (`finfo`), pas seulement l'extension ; bloquer SVG/PHP ; renommer ; limiter la taille.
 - **Headers de sécurité** : `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Strict-Transport-Security`, cookies `HttpOnly` + `Secure` + `SameSite=Lax`.
 - **Régénérer l'ID de session** (`session_regenerate_id(true)`) après login/logout pour empêcher la fixation de session.

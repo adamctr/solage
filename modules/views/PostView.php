@@ -21,17 +21,17 @@ class PostView {
             <div class="post fade-in" data-id="<?= $post->getId() ?>">
 
                     <div class="postAvatarContainer">
-                        <div class="postAvatar"><?= $user->getImage() ?></div>
+                        <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
                     </div>
                     <div class="postInsideContainer">
                         <div class="postNameDate">
-                            <div><?= $user->getName() ?></div>
+                            <div><?= Utils::e($user->getName()) ?></div>
                             <div class="postDate"><?= $post->getDate() ?></div>
                         </div>
-                            <div class="postContent"><p class="fitWidth"><?= $post->getContent() ?></p></div>
+                            <div class="postContent"><p class="fitWidth"><?= Utils::e($post->getContent()) ?></p></div>
 
                         <?php if($post->getImagePath()): ?>
-                            <img src="/uploaded_files/<?= $post->getImagePath() ?>" alt="" class="postImage" />
+                            <img src="/uploaded_files/<?= Utils::e($post->getImagePath()) ?>" alt="" class="postImage" />
                         <?php endif; ?>
 
                         <div class="postContentTools">
@@ -62,17 +62,17 @@ class PostView {
             <div class="post fade-in" id="post-<?= $post->getId() ?>">
 
                 <div class="postAvatarContainer">
-                    <div class="postAvatar"><?= $user->getImage() ?></div>
+                    <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
                 </div>
                 <div class="postInsideContainer">
                     <div class="postNameDate">
-                        <div><?= $user->getName() ?></div>
+                        <div><?= Utils::e($user->getName()) ?></div>
                         <div class="postDate"><?= $post->getDate() ?></div>
                     </div>
-                    <div class="postContent"><p class="fitWidth"><?= $post->getContent() ?></p></div>
+                    <div class="postContent"><p class="fitWidth"><?= Utils::e($post->getContent()) ?></p></div>
 
                     <?php if($post->getImagePath()): ?>
-                        <img src="/uploaded_files/<?= $post->getImagePath() ?>" alt="" class="postImage" />
+                        <img src="/uploaded_files/<?= Utils::e($post->getImagePath()) ?>" alt="" class="postImage" />
                     <?php endif; ?>
 
                     <div class="postContentTools">

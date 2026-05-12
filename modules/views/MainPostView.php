@@ -20,17 +20,17 @@ class MainPostView {
         <div class="mainPost post" data-id="<?= $this->post->getId() ?>">
 
             <div class="postAvatarContainer">
-                <div class="postAvatar"><?= $user->getImage() ?></div>
+                <div class="postAvatar"><?= Utils::e($user->getImage()) ?></div>
             </div>
             <div class="postInsideContainer">
                 <div class="postNameDate">
-                    <div><?= $user->getName() ?></div>
+                    <div><?= Utils::e($user->getName()) ?></div>
                 </div>
                 <div class="postContentTools">
-                    <div class="postContent"><?= $this->post->getContent() ?></div>
+                    <div class="postContent"><?= Utils::e($this->post->getContent()) ?></div>
 
                     <?php if($this->post->getImagePath()): ?>
-                    <img src="/uploaded_files/<?= $this->post->getImagePath() ?>" alt="Post Image" class="postImage" />
+                    <img src="/uploaded_files/<?= Utils::e($this->post->getImagePath()) ?>" alt="Post Image" class="postImage" />
                     <?php endif; ?>
 
                     <div class="postDate"><?= $this->post->getDate() ?></div>

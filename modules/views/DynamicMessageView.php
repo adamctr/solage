@@ -6,8 +6,8 @@ class DynamicMessageView {
         ob_start();
         ?>
 
-        <div class="<?= $type ?> dynamicMessage">
-            <p><?= $message ?></p>
+        <div class="<?= Utils::e($type) ?> dynamicMessage">
+            <p><?= Utils::e($message) ?></p>
         </div>
 
         <?php

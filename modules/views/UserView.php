@@ -20,7 +20,7 @@ class UserView {
 
             <div class="user-header">
                 <div class="postAvatarContainer">
-                    <div class="postAvatar"><?= $this->user->getImage() ?></div>
+                    <div class="postAvatar"><?= Utils::e($this->user->getImage()) ?></div>
                 </div>
 
                 <?php if($this->user->getId() == SessionController::getUserId()): ?>

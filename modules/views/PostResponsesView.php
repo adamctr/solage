@@ -23,7 +23,7 @@ class PostResponsesView {
                                 <div class="postDate"><?= $post->getDate() ?></div>
                             </div>
                             <div class="postContentTools">
-                                <div class="postContent"><?= $post->getContent() ?></div>
+                                <div class="postContent"><?= Utils::e($post->getContent()) ?></div>
                                 <div class="postTools">
                                     <div class="postTool response">
                                         <?= PostToolResponseView::show($post, 1); ?>

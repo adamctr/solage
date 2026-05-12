@@ -1,5 +1,17 @@
 /////////// Create a post
 
+// HTML-escape user-controlled content. Mirror of Utils::e() server-side.
+// Required because we inject post fields via innerHTML below.
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 let selectedImage = null;
 const postContentImageContainer = document.getElementById('postContentImageContainer');
 const removeImageButton = document.getElementById('removeImageButton');
@@ -125,7 +137,7 @@ function appendNewPostToList(data) {
   const newPost = document.createElement("div");
   newPost.classList.add("post");
   newPost.setAttribute('data-id', post.id);
-  newPost.innerHTML = `<div class="postAvatarContainer"><div class="postAvatar">${post.userimage}</div></div><div class="postInsideContainer"><div class="postNameDate"><div>${post.username}</div><div class="postDate"><?= $post->${post.date}</div></div><div class="postContentTools"><div class="postContent">${post.content}</div>${post.image ? `<img src="/uploaded_files/${post.image}" alt="" class="postImage" />` : ''}<div class="postTools"><div class="postTool"><div class="icon"><svg width="22" class="response" height="22" viewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg"><path d="M7 9H17M7 13H12M21 20L17.6757 18.3378C17.4237 18.2118 17.2977 18.1488 17.1656 18.1044C17.0484 18.065 16.9277 18.0365 16.8052 18.0193C16.6672 18 16.5263 18 16.2446 18H6.2C5.07989 18 4.51984 18 4.09202 17.782C3.71569 17.5903 3.40973 17.2843 3.21799 16.908C3 16.4802 3 15.9201 3 14.8V7.2C3 6.07989 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V20Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menuTxt">0</span></div><div class="postTool"><div class="icon"><svg width="22" class="heart" height="22" vipostewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 6.00019C10.2006 3.90317 7.19377 3.2551 4.93923 5.17534C2.68468 7.09558 2.36727 10.3061 4.13778 12.5772C5.60984 14.4654 10.0648 18.4479 11.5249 19.7369C11.6882 19.8811 11.7699 19.9532 11.8652 19.9815C11.9483 20.0062 12.0393 20.0062 12.1225 19.9815C12.2178 19.9532 12.2994 19.8811 12.4628 19.7369C13.9229 18.4479 18.3778 14.4654 19.8499 12.5772C21.6204 10.3061 21.3417 7.07538 19.0484 5.17534C16.7551 3.2753 13.7994 3.90317 12 6.00019Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="countLikes">0</span></div></div></div></div>`
+  newPost.innerHTML = `<div class="postAvatarContainer"><div class="postAvatar">${escapeHtml(post.userimage)}</div></div><div class="postInsideContainer"><div class="postNameDate"><div>${escapeHtml(post.username)}</div><div class="postDate"><?= $post->${escapeHtml(post.date)}</div></div><div class="postContentTools"><div class="postContent">${escapeHtml(post.content)}</div>${post.image ? `<img src="/uploaded_files/${escapeHtml(post.image)}" alt="" class="postImage" />` : ''}<div class="postTools"><div class="postTool"><div class="icon"><svg width="22" class="response" height="22" viewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg"><path d="M7 9H17M7 13H12M21 20L17.6757 18.3378C17.4237 18.2118 17.2977 18.1488 17.1656 18.1044C17.0484 18.065 16.9277 18.0365 16.8052 18.0193C16.6672 18 16.5263 18 16.2446 18H6.2C5.07989 18 4.51984 18 4.09202 17.782C3.71569 17.5903 3.40973 17.2843 3.21799 16.908C3 16.4802 3 15.9201 3 14.8V7.2C3 6.07989 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V20Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="menuTxt">0</span></div><div class="postTool"><div class="icon"><svg width="22" class="heart" height="22" vipostewBox="0 0 24 24" fill="var(--secondary)" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 6.00019C10.2006 3.90317 7.19377 3.2551 4.93923 5.17534C2.68468 7.09558 2.36727 10.3061 4.13778 12.5772C5.60984 14.4654 10.0648 18.4479 11.5249 19.7369C11.6882 19.8811 11.7699 19.9532 11.8652 19.9815C11.9483 20.0062 12.0393 20.0062 12.1225 19.9815C12.2178 19.9532 12.2994 19.8811 12.4628 19.7369C13.9229 18.4479 18.3778 14.4654 19.8499 12.5772C21.6204 10.3061 21.3417 7.07538 19.0484 5.17534C16.7551 3.2753 13.7994 3.90317 12 6.00019Z" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="countLikes">0</span></div></div></div></div>`
   postList.prepend(newPost);
 
 }

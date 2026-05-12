@@ -138,10 +138,16 @@ class PostController {
                 }
 
                 // Vérifier si l'utilisateur est le propriétaire du post ou un administrateur
-                //if ($post['user_id'] !== $userId && !$sessionController->isAdmin()) {
-                //    Utils::sendResponse(false, 'Vous n\'avez pas la permission de supprimer ce post');
-                //    return;
-                //}
+                if ($post->getUserId() !== $userId && !$sessionController->isAdmin()) {
+                    Logger::get()->warning('post.delete.forbidden', [
+                        'current_user_id' => $userId,
+                        'post_owner_id'   => $post->getUserId(),
+                        'post_id'         => $postId,
+                    ]);
+                    http_response_code(403);
+                    Utils::sendResponse(false, 'Vous n\'avez pas la permission de supprimer ce post.');
+                    return;
+                }
 
                 // Appeler la méthode pour supprimer le post
                 $result = PostModel::delete($postId);
