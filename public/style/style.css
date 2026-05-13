@@ -12,9 +12,11 @@
     --muted:         #6b6b80;   /* texte secondaire */
     --border-color:  #1a1a2e;
 
-    --accent:        #7c3aed;   /* violet (CTA, like) */
-    --accent-2:      #fb7185;   /* rose vif (highlight) */
-    --accent-3:      #f0abfc;   /* rose pâle (avatars / info) */
+    --accent:        #7c3aed;   /* violet : actions primaires */
+    --accent-2:      #d946ef;   /* fuchsia : bannières + cœur actif + toasts */
+    --accent-3:      #f0abfc;   /* rose pâle : avatars uniquement */
+    --hover:         #ddd6fe;   /* lavande violet : survol cards/liens/tools */
+    --focus-tint:    #ede9fe;   /* lavande accent : tint focus inputs */
     --danger:        #ef4444;
     --danger-ink:    #ffffff;
 
@@ -192,7 +194,7 @@ input {
 }
 
 .menuLink:hover {
-    background-color: var(--accent-2);
+    background-color: var(--hover);
     border-color: var(--ink);
     box-shadow: var(--shadow-sm);
     transform: translate(-0.125rem, -0.125rem);
@@ -223,10 +225,19 @@ input {
     padding: var(--space-2) 0;
 }
 
+.sidebarMobile .menuLink:hover {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Vide volontairement : équilibre la composition avec la sidebar gauche
+   (sinon postContainer décalé à gauche du centre visuel). */
 .rightSidebar {
     position: relative;
-    flex: 1;
-    max-width: 3.125rem;
+    min-width: var(--sidebar-w);
+    max-width: var(--sidebar-w);
 }
 
 /* =========================================================
@@ -328,7 +339,9 @@ input[type="email"]:focus,
 input[type="password"]:focus,
 input[type="search"]:focus {
     outline: none;
-    background-color: var(--accent-2);
+    border-color: var(--accent);
+    background-color: var(--focus-tint);
+    box-shadow: var(--shadow-accent);
 }
 
 input[type="file"] { font-family: inherit; }
@@ -343,34 +356,38 @@ input[type="file"] { font-family: inherit; }
    ========================================================= */
 
 .navigationContainer {
-    position: relative;
+    position: sticky;
+    top: 0;
     height: 3.625rem;
-    max-width: var(--content-max);
-    width: 100%;
-    min-width: var(--content-min);
     background-color: var(--surface);
+    border-bottom: var(--bw) solid var(--ink);
     z-index: 100;
 }
 
 .navigationBtnContainer {
     padding: var(--space-3) var(--space-4);
-    height: 3.625rem;
-    position: fixed;
-    background-color: var(--surface);
-    width: inherit;
-    border-bottom: var(--bw) solid var(--ink);
+    height: 100%;
 }
 
 /* =========================================================
    Home / Listing
    ========================================================= */
 
-.homepageTitle {
+/* Bannière de page (Accueil, Profil, Édition, Recherche, Admin) :
+   même traitement visuel partout pour repérer instantanément le type d'écran. */
+.homepageTitle,
+.user-profile > h1,
+.edit-user-profile > h1,
+.search-page > h1,
+.admin-page > h1 {
     padding: var(--space-5) var(--space-4);
+    margin: 0;
     background-color: var(--accent-2);
     border-bottom: var(--bw-thick) solid var(--ink);
     font-size: var(--fs-2xl);
     font-weight: var(--fw-black);
+    color: var(--ink);
+    text-align: left;
 }
 
 #postList {
@@ -398,7 +415,7 @@ input[type="file"] { font-family: inherit; }
 
 .post:not(.mainPost):hover {
     cursor: pointer;
-    background-color: var(--accent-2);
+    background-color: var(--hover);
 }
 
 .mainPost {
@@ -498,7 +515,7 @@ input[type="file"] { font-family: inherit; }
 }
 
 .postTool:hover {
-    background-color: var(--accent-2);
+    background-color: var(--hover);
     cursor: pointer;
 }
 
@@ -536,7 +553,7 @@ input[type="file"] { font-family: inherit; }
     padding: var(--space-3);
     border: var(--bw) solid var(--ink);
     border-radius: var(--radius-md);
-    background-color: var(--bg);
+    background-color: var(--surface);
     box-shadow: var(--shadow-sm);
     margin-bottom: var(--space-2);
     min-height: 2.5rem;
@@ -544,7 +561,9 @@ input[type="file"] { font-family: inherit; }
 
 .postCreateInput:focus {
     outline: none;
-    background-color: var(--accent-2);
+    border-color: var(--accent);
+    background-color: var(--focus-tint);
+    box-shadow: var(--shadow-accent);
 }
 
 #postContent[contenteditable]:empty::before {
@@ -599,7 +618,7 @@ input[type="file"] { font-family: inherit; }
 }
 
 .heart.active {
-    fill: var(--accent);
+    fill: var(--accent-2);
 }
 
 .heart.active > path {
@@ -718,17 +737,11 @@ input[type="file"] { font-family: inherit; }
    Search
    ========================================================= */
 
-.search-page {
-    text-align: center;
-    margin-top: var(--space-5);
-    padding: 0 var(--space-4);
-}
-
 .search-page form {
     display: flex;
     gap: var(--space-2);
-    margin: var(--space-4) auto;
-    max-width: 37.5rem;
+    padding: var(--space-4);
+    border-bottom: var(--bw) solid var(--ink);
 }
 
 .search-page input[type="text"] {
@@ -736,50 +749,15 @@ input[type="file"] { font-family: inherit; }
     margin: 0;
 }
 
-.search-results {
-    margin: var(--space-5) auto;
-    max-width: 37.5rem;
-    border-top: var(--bw) solid var(--ink);
+.search-results h2 {
+    padding: var(--space-4);
+    background-color: var(--bg);
+    border-bottom: var(--bw) solid var(--ink);
 }
-
-.search-results h2 { padding: var(--space-4); }
 
 /* =========================================================
    Profil utilisateur
    ========================================================= */
-
-.user-profile h1 {
-    font-size: var(--fs-2xl);
-    color: var(--ink);
-    background-color: var(--accent-2);
-    border-bottom: var(--bw-thick) solid var(--ink);
-    padding: var(--space-5) var(--space-4);
-}
-
-.user-info {
-    display: flex;
-    margin-bottom: var(--space-5);
-    padding: var(--space-4);
-}
-
-.user-info img {
-    border-radius: var(--radius-pill);
-    width: 6.25rem;
-    height: 6.25rem;
-    border: var(--bw-thick) solid var(--ink);
-    box-shadow: var(--shadow-md);
-    margin: auto;
-}
-
-.user-info p {
-    margin: var(--space-1) 0;
-    font-size: var(--fs-md);
-}
-
-.user-info strong {
-    font-weight: var(--fw-black);
-    color: var(--ink);
-}
 
 .user-header {
     padding: var(--space-4);
@@ -787,26 +765,18 @@ input[type="file"] { font-family: inherit; }
     gap: var(--space-3);
     align-items: center;
     flex-wrap: wrap;
+    border-bottom: var(--bw) solid var(--ink);
 }
 
 .user-posts h2 {
-    border-top: var(--bw) solid var(--ink);
     padding: var(--space-4);
     background-color: var(--bg);
+    border-bottom: var(--bw) solid var(--ink);
 }
 
 /* =========================================================
    Édition profil
    ========================================================= */
-
-.edit-user-profile h1 {
-    padding: var(--space-5) var(--space-4);
-    font-size: var(--fs-2xl);
-    color: var(--ink);
-    background-color: var(--accent-2);
-    border-bottom: var(--bw-thick) solid var(--ink);
-    margin-bottom: var(--space-5);
-}
 
 .edit-user-profile form { padding: var(--space-4); }
 
@@ -897,18 +867,20 @@ input[type="file"] { font-family: inherit; }
 .user {
     display: flex;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-8);
+    padding: var(--space-3) var(--space-4);
     border-bottom: var(--bw) solid var(--ink);
     align-items: center;
+}
+
+.user:hover {
+    background-color: var(--hover);
 }
 
 .userViewButton { flex: 1; display: flex; justify-content: flex-end; }
 
 .admin-page {
-    padding: var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
 }
 
 .admin-page form {
@@ -916,10 +888,12 @@ input[type="file"] { font-family: inherit; }
     flex-direction: column;
     gap: var(--space-3);
     padding: var(--space-4);
+    background-color: var(--surface);
+    border-bottom: var(--bw) solid var(--ink);
+}
+
+.admin-page form + form {
     background-color: var(--bg);
-    border: var(--bw) solid var(--ink);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
 }
 
 .admin-page form label {
@@ -993,9 +967,13 @@ input[type="file"] { font-family: inherit; }
 }
 
 @media (max-width: 37.5rem) { /* 600px */
-    .user-info { grid-template-columns: 1fr; text-align: center; }
-    .user-info img { margin-bottom: var(--space-3); }
-    .user-profile h1 { font-size: var(--fs-xl); }
+    .homepageTitle,
+    .user-profile > h1,
+    .edit-user-profile > h1,
+    .search-page > h1,
+    .admin-page > h1 {
+        font-size: var(--fs-xl);
+    }
 }
 
 /* =========================================================
