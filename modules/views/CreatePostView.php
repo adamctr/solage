@@ -24,7 +24,7 @@ class CreatePostView {
                     <div class=""><?= Utils::e($username) ?></div>
                 </div>
                 <div class="postContentTools">
-                    <span id="postContent" aria-label="Contenu du post" class="textarea, postCreateInput" role="textbox" contenteditable="true"></span>
+                    <span id="postContent" aria-label="Contenu du post" class="postCreateInput" role="textbox" contenteditable="true"></span>
                     <div id="postContentImageContainer"></div>
                     <div class="postCreateTools">
                         <div class="postCreateTool">
@@ -32,8 +32,8 @@ class CreatePostView {
                                 <span class="sr-only">Upload image</span>
                                 <?php echo file_get_contents('assets/image.svg' ); ?>
                             </label>
-                            <input id="file-input" accept="image/*" type="file" style="display: none;" />
-                            <button id="removeImageButton" style="display:none;">Supprimer l'image</button>
+                            <input id="file-input" accept="image/*" type="file" class="hidden" />
+                            <button id="removeImageButton" class="hidden">Supprimer l'image</button>
                         </div>
                         <button id="postCreateButton" class="postCreateButton"
                             <?php if ($post): ?>
