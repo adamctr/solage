@@ -1,21 +1,36 @@
 <?php
 
-class PostView {
+declare(strict_types=1);
+
+/**
+ * Vue d'une liste de posts (fil, profil, résultats de recherche).
+ */
+class PostView
+{
     protected $posts;
     protected $users;
 
-    public function __construct($posts, array $users) {
+    /**
+     * @param PostModel[]           $posts Posts à afficher.
+     * @param array<int, UserModel> $users Auteurs indexés par identifiant.
+     */
+    public function __construct($posts, array $users)
+    {
         $this->posts = $posts;
         $this->users = $users;
     }
 
     /**
-     * @return string
+     * Rend la liste de posts.
+     *
+     * @return string HTML de la liste de posts.
      */
-    public function show() {
+    public function show()
+    {
+        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
-        <?php foreach ($this->posts as $post):
+        <?php foreach ($this->posts as $post) :
             $user = $this->users[$post->getUserId()] ?? null;
             ?>
             <div class="post fade-in" data-id="<?= $post->getId() ?>">
@@ -30,7 +45,7 @@ class PostView {
                         </div>
                             <div class="postContent"><p class="fitWidth"><?= Utils::e($post->getContent()) ?></p></div>
 
-                        <?php if($post->getImagePath()): ?>
+                        <?php if ($post->getImagePath()) : ?>
                             <img src="/uploaded_files/<?= Utils::e($post->getImagePath()) ?>" alt="" class="postImage" />
                         <?php endif; ?>
 
@@ -39,7 +54,7 @@ class PostView {
                                 <div class="postTool response">
                                     <?= PostToolResponseView::show($post); ?>
                                 </div>
-                                <?= PostToolHeartView::show($post, SessionController::getUserId()); ?>
+                                <?= PostToolHeartView::show($post, $sessionUserId); ?>
                             </div>
                         </div>
                     </div>
@@ -50,10 +65,17 @@ class PostView {
     }
 
 
-    public function showAdminPost() {
+    /**
+     * Rend la liste de posts avec un bouton de suppression (vue admin).
+     *
+     * @return string HTML de la liste de posts (back-office).
+     */
+    public function showAdminPost()
+    {
+        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
-        <?php foreach ($this->posts as $post):
+        <?php foreach ($this->posts as $post) :
             $user = $this->users[$post->getUserId()] ?? null;
             ?>
             <div class="post fade-in" id="post-<?= $post->getId() ?>">
@@ -68,7 +90,7 @@ class PostView {
                     </div>
                     <div class="postContent"><p class="fitWidth"><?= Utils::e($post->getContent()) ?></p></div>
 
-                    <?php if($post->getImagePath()): ?>
+                    <?php if ($post->getImagePath()) : ?>
                         <img src="/uploaded_files/<?= Utils::e($post->getImagePath()) ?>" alt="" class="postImage" />
                     <?php endif; ?>
 
@@ -79,7 +101,7 @@ class PostView {
                                     <button type="submit">Supprimer</button>
                                 </form>
                             </div>
-                            <?= PostToolHeartView::show($post, SessionController::getUserId()); ?>
+                            <?= PostToolHeartView::show($post, $sessionUserId); ?>
                         </div>
                     </div>
                 </div>

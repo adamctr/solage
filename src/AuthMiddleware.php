@@ -1,13 +1,15 @@
 <?php
 
-class AuthMiddleware {
-    public function handle() {
-        $sessionController = new SessionController();
+declare(strict_types=1);
 
-        // Vérifiez si l'utilisateur est connecté
-        if (!$sessionController->isLoggedIn()) {
-            // Redirigez vers la page de connexion
-            header("Location: /login");
+class AuthMiddleware
+{
+    public function handle()
+    {
+        $session = new SessionManager(new UserModel());
+
+        if (!$session->isLoggedIn()) {
+            header('Location: /login');
             exit;
         }
     }

@@ -1,16 +1,36 @@
 <?php
-class UserView {
+
+declare(strict_types=1);
+
+/**
+ * Vue du profil utilisateur et des formulaires de connexion/inscription.
+ */
+class UserView
+{
     protected $user;
     protected $posts;
     protected $users;
 
-    public function __construct($user = null, array $posts = [], array $users = []) {
+    /**
+     * @param UserModel|null        $user  Utilisateur affiché (null pour les formulaires).
+     * @param PostModel[]           $posts Posts de l'utilisateur.
+     * @param array<int, UserModel> $users Auteurs indexés par identifiant.
+     */
+    public function __construct($user = null, array $posts = [], array $users = [])
+    {
         $this->user = $user;
         $this->posts = $posts;
         $this->users = $users;
     }
 
-    public function show() {
+    /**
+     * Affiche le profil de l'utilisateur (en-tête + posts) dans le layout.
+     *
+     * @return void
+     */
+    public function show()
+    {
+        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
 
@@ -22,11 +42,12 @@ class UserView {
                     <div class="postAvatar"><?= Utils::e($this->user->getImage()) ?></div>
                 </div>
 
-                <?php if($this->user->getId() == SessionController::getUserId()): ?>
+                <?php if ($this->user->getId() == $sessionUserId) : ?>
                 <form action="/edituser/<?= $this->user->getId() ?>" method="get">
                     <input type="submit" value="Modifier le profil"/>
                 </form>
                 <form action="/logout" method="post">
+                    <?= CsrfHelper::field() ?>
                     <button type="submit" class="logoutButton">Déconnexion</button>
                 </form>
                 <?php endif; ?>
@@ -46,11 +67,18 @@ class UserView {
         (new LayoutView('Profil de ' . Utils::e($this->user->getName()), 'Détails du profil utilisateur', ob_get_clean()))->show();
     }
 
-    public function showLoginForm() {
+    /**
+     * Affiche le formulaire de connexion dans le layout connexion/inscription.
+     *
+     * @return void
+     */
+    public function showLoginForm()
+    {
         ob_start()
         ?>
 
         <form id="loginForm" class="loginRegisterForm" action="/login" method="POST">
+            <?= CsrfHelper::field() ?>
             <h2>Se connecter</h2>
             <div id="messageContainer"></div>
 
@@ -70,13 +98,19 @@ class UserView {
         <?php
         $content = ob_get_clean();
         (new LoginRegisterLayoutView('Connexion', 'Page de connexion du site', $content))->show();
-
     }
 
-    public function showRegisterForm() {
+    /**
+     * Affiche le formulaire d'inscription dans le layout connexion/inscription.
+     *
+     * @return void
+     */
+    public function showRegisterForm()
+    {
         ob_start()
         ?>
         <form id="registerForm" class="loginRegisterForm" action="/register" method="POST">
+            <?= CsrfHelper::field() ?>
             <h2>S'inscrire</h2>
             <div id="messageContainer"></div>
 
@@ -102,6 +136,5 @@ class UserView {
         <?php
         $content = ob_get_clean();
         (new LoginRegisterLayoutView('Inscription', "Page d'inscription", $content))->show();
-
     }
 }

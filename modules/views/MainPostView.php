@@ -1,19 +1,33 @@
 <?php
 
-class MainPostView {
+declare(strict_types=1);
 
+/**
+ * Vue d'un post « principal » (en-tête de la page d'un post).
+ */
+class MainPostView
+{
     protected $post;
     protected $user;
 
-    function __construct($post, $user) {
+    /**
+     * @param PostModel      $post Post à afficher.
+     * @param UserModel|null $user Auteur du post.
+     */
+    public function __construct($post, $user)
+    {
         $this->post = $post;
         $this->user = $user;
     }
 
     /**
-     * @return string
+     * Rend le HTML du post principal.
+     *
+     * @return string HTML du post.
      */
-    function show() {
+    public function show()
+    {
+        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
 
@@ -29,7 +43,7 @@ class MainPostView {
                 <div class="postContentTools">
                     <div class="postContent"><?= Utils::e($this->post->getContent()) ?></div>
 
-                    <?php if($this->post->getImagePath()): ?>
+                    <?php if ($this->post->getImagePath()) : ?>
                     <img src="/uploaded_files/<?= Utils::e($this->post->getImagePath()) ?>" alt="Post Image" class="postImage" />
                     <?php endif; ?>
 
@@ -38,7 +52,7 @@ class MainPostView {
                         <div class="postTool response">
                             <?= PostToolResponseView::show($this->post); ?>
                         </div>
-                        <?= PostToolHeartView::show($this->post, SessionController::getUserId()); ?>
+                        <?= PostToolHeartView::show($this->post, $sessionUserId); ?>
                     </div>
                 </div>
             </div>

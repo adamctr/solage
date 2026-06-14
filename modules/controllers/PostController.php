@@ -1,19 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- *
+ * Création et suppression de posts (endpoints JSON).
  */
-class PostController {
+class PostController
+{
     /**
+     * Crée un post (contenu texte + image optionnelle) pour l'utilisateur
+     * connecté, puis renvoie le résultat en JSON.
+     *
      * @return void
      */
-    public function create() {
+    public function create()
+    {
         header('Content-Type: application/json');
 
         $data = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode($_POST['data'], true);
-            //var_dump($_FILES);
 
             // Vérifier si une image a été téléchargée
             if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -65,16 +71,20 @@ class PostController {
         }
 
         try {
-            $sessionController = new SessionController();
-            $user = $sessionController->getUserId();
-            $username = $sessionController->getName();
-            $userimage = $sessionController->getImage();
+            $session = new SessionManager(new UserModel());
+            $user = $session->getUserId();
+            $username = $session->getName();
+            $userimage = $session->getImage();
             $content = $data['content'];
             $date = date('Y-m-d H:i:s');
             $image = $newFileName ?? null;
 
-            $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null ? (int)$data['replyTo'] : null;
-            $replyToParent = $data['replyToParent'] !== 0 && $data['replyToParent'] !== null ? (int)$data['replyToParent'] : null;
+            $replyTo = $data['replyTo'] !== 0 && $data['replyTo'] !== null
+                ? (int) $data['replyTo']
+                : null;
+            $replyToParent = $data['replyToParent'] !== 0 && $data['replyToParent'] !== null
+                ? (int) $data['replyToParent']
+                : null;
             if ($replyToParent === null) {
                 if ($replyTo !== null) {
                     $replyToParent = $replyTo;
@@ -105,11 +115,13 @@ class PostController {
     }
 
     /**
-     * Supprimer un post
+     * Supprime un post si l'utilisateur connecté en est l'auteur ou un admin.
+     * Renvoie le résultat en JSON.
      *
      * @return void
      */
-    public function delete() {
+    public function delete()
+    {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -126,8 +138,8 @@ class PostController {
 
             try {
                 // Récupérer les informations de la session de l'utilisateur
-                $sessionController = new SessionController();
-                $userId = $sessionController->getUserId();
+                $session = new SessionManager(new UserModel());
+                $userId = $session->getUserId();
 
                 // Vérifier si l'utilisateur est autorisé à supprimer ce post
                 $post = PostModel::getPostById($postId); // Récupérer le post par son ID
@@ -138,7 +150,7 @@ class PostController {
                 }
 
                 // Vérifier si l'utilisateur est le propriétaire du post ou un administrateur
-                if ($post->getUserId() !== $userId && !$sessionController->isAdmin()) {
+                if ($post->getUserId() !== $userId && !$session->isAdmin()) {
                     Logger::get()->warning('post.delete.forbidden', [
                         'current_user_id' => $userId,
                         'post_owner_id'   => $post->getUserId(),

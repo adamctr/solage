@@ -1,17 +1,35 @@
 <?php
 
-class UserController {
+declare(strict_types=1);
+
+/**
+ * Gère les utilisateurs : profil, connexion, inscription, édition, suppression.
+ */
+class UserController
+{
     protected $user;
 
-    // Le constructeur prend maintenant l'ID de l'utilisateur en paramètre
-    public function __construct($userId = null) {
+    /**
+     * Charge l'utilisateur ciblé si un identifiant est fourni (paramètre d'URL).
+     *
+     * @param int|string|null $userId Identifiant de l'utilisateur, ou null.
+     */
+    public function __construct($userId = null)
+    {
         if ($userId !== null) {
             $userModel = new UserModel();
             $this->user = $userModel->getUserById($userId); // On récupère l'utilisateur avec l'ID
         }
     }
 
-    public function execute($userId) {
+    /**
+     * Affiche le profil de l'utilisateur chargé et ses posts.
+     *
+     * @param int|string $userId Identifiant d'URL (le profil est déjà chargé au constructeur).
+     * @return void
+     */
+    public function execute($userId)
+    {
         $posts = PostModel::getAllPostsByUserId($this->user->getId());
         $users = [$this->user->getId() => $this->user];
 
@@ -19,19 +37,35 @@ class UserController {
         $view->show();
     }
 
-    public function showLoginForm() {
-        // Affiche le formulaire de connexion
+    /**
+     * Affiche le formulaire de connexion.
+     *
+     * @return void
+     */
+    public function showLoginForm()
+    {
         $view = new UserView();
         $view->showLoginForm();
     }
 
-    public function showRegisterForm() {
-        // Affiche le formulaire d'inscription
+    /**
+     * Affiche le formulaire d'inscription.
+     *
+     * @return void
+     */
+    public function showRegisterForm()
+    {
         $view = new UserView();
         $view->showRegisterForm();
     }
 
-    public function login() {
+    /**
+     * Valide la connexion (JSON) et ouvre la session si les identifiants sont bons.
+     *
+     * @return void
+     */
+    public function login()
+    {
         $email = trim($_POST['email']) ?? '';
         $password = trim($_POST['password']) ?? '';
 
@@ -40,13 +74,20 @@ class UserController {
         Utils::sendResponse($result['ok'], $result['message']);
 
         if ($result['ok']) {
-            $user = (new UserModel())->getUserByEmail($email);
-            (new SessionController())->login($user->getId());
+            $userModel = new UserModel();
+            $user = $userModel->getUserByEmail($email);
+            (new SessionManager($userModel))->login($user->getId());
         }
     }
 
 
-    public function register() {
+    /**
+     * Valide l'inscription (JSON) et crée le compte si l'email est libre.
+     *
+     * @return void
+     */
+    public function register()
+    {
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
@@ -60,19 +101,31 @@ class UserController {
         }
     }
 
-    static public function logout() {
-        // Déconnecte l'utilisateur en détruisant la session
-        $sessionController = new SessionController();
-        $sessionController->logout();
+    /**
+     * Détruit la session et redirige vers la page de connexion.
+     *
+     * @return void
+     */
+    public static function logout()
+    {
+        $session = new SessionManager(new UserModel());
+        $session->logout();
 
         // Redirige vers la page de connexion après déconnexion
         header("Location: /login");
         exit;
     }
 
-    public function update() {
-        $session = new SessionController();
-        $currentUserId = SessionController::getUserId();
+    /**
+     * Met à jour le profil : vérifie l'autorisation, puis traite le POST ou
+     * affiche le formulaire d'édition.
+     *
+     * @return void
+     */
+    public function update()
+    {
+        $session = new SessionManager(new UserModel());
+        $currentUserId = $session->getUserId();
         $targetUserId  = $this->user?->getId();
 
         // Auth : le user doit exister et être soit le propriétaire, soit admin.
@@ -94,14 +147,24 @@ class UserController {
         }
     }
 
-    // Affiche le formulaire d'édition
-    protected function showEditForm() {
+    /**
+     * Affiche le formulaire d'édition du profil chargé.
+     *
+     * @return void
+     */
+    protected function showEditForm()
+    {
         $view = new EditUserView($this->user);
         $view->show();
     }
 
-    // Traite la mise à jour de l'utilisateur
-    protected function processUpdate() {
+    /**
+     * Traite la soumission du formulaire d'édition (nom + mot de passe).
+     *
+     * @return void
+     */
+    protected function processUpdate()
+    {
         $name = $_POST['name'] ?? null;
         $password = $_POST['password'] ?? null;
 
@@ -114,7 +177,14 @@ class UserController {
         exit();
     }
 
-    public function delete() {
+    /**
+     * Supprime un compte si l'utilisateur connecté en est le propriétaire ou un
+     * admin. Renvoie le résultat en JSON.
+     *
+     * @return void
+     */
+    public function delete()
+    {
         $rawData = file_get_contents('php://input');
         $data = json_decode($rawData, true);
 
@@ -127,8 +197,9 @@ class UserController {
         $userId = (int) $data['userId'];
 
         // Auth : seul le propriétaire du compte ou un admin peut supprimer.
-        $session = new SessionController();
-        $currentUserId = SessionController::getUserId();
+        $userModel = new UserModel();
+        $session = new SessionManager($userModel);
+        $currentUserId = $session->getUserId();
         if ($currentUserId !== $userId && !$session->isAdmin()) {
             Logger::get()->warning('user.delete.forbidden', [
                 'current_user_id' => $currentUserId,
@@ -139,19 +210,16 @@ class UserController {
             return;
         }
 
-        $userModel = new UserModel();
         // Appeler la méthode deleteUser dans le modèle pour supprimer l'utilisateur
         $result = $userModel->deleteUser($userId);
 
         if ($result) {
             // Si la suppression réussit, redirige vers la page d'administration ou une autre page pertinente
             Utils::sendResponse(true, 'Utilisateur bien supprimé');
-            //header("Location: /admin");
             exit();
         } else {
             // Si la suppression échoue, affiche un message d'erreur
             Utils::sendResponse(false, "Une erreur est survenue lors de la suppression de l'utilisateur");
         }
     }
-
 }

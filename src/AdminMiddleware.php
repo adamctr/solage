@@ -1,8 +1,12 @@
 <?php
 
-class AdminMiddleware {
-    public function handle() {
-        $session = new SessionController();
+declare(strict_types=1);
+
+class AdminMiddleware
+{
+    public function handle()
+    {
+        $session = new SessionManager(new UserModel());
 
         if (!$session->isLoggedIn()) {
             header('Location: /login');
@@ -11,7 +15,7 @@ class AdminMiddleware {
 
         if (!$session->isAdmin()) {
             Logger::get()->warning('admin.access.denied', [
-                'user_id' => SessionController::getUserId(),
+                'user_id' => $session->getUserId(),
                 'uri'     => $_SERVER['REQUEST_URI'] ?? '',
             ]);
             http_response_code(403);

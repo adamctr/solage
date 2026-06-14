@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- *
+ * Gère les likes via une seule action « toggle » (crée ou supprime).
  */
 class LikeController
 {
     protected $like;
 
     /**
-     * Méthode pour gérer la création ou la suppression d'un like
+     * Bascule le like de l'utilisateur sur un post : le crée s'il n'existe pas,
+     * le supprime sinon.
+     *
      * @return void
      */
-    function create()
+    public function create()
     {
         header('Content-Type: application/json');
 
@@ -23,7 +27,7 @@ class LikeController
             return;
         }
 
-        $user = SessionController::getUserId();
+        $user = (new SessionManager(new UserModel()))->getUserId();
         $post = $data['post'];
 
         try {

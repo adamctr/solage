@@ -1,3 +1,27 @@
+// ── CSRF ──────────────────────────────────────────────────────────────────
+// On enveloppe fetch() une seule fois pour injecter le token CSRF sur toute
+// requête mutante (POST/PUT/PATCH/DELETE). Le token est rendu par le layout
+// dans <meta name="csrf-token"> (lu depuis la session). index.js étant le
+// premier script chargé, ce patch s'applique avant tout appel fetch du reste
+// du code, sans avoir à modifier chaque fetch individuellement.
+(function () {
+  const token = document.querySelector('meta[name="csrf-token"]')?.content;
+  const nativeFetch = window.fetch.bind(window);
+
+  window.fetch = function (resource, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const safe = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+
+    if (token && !safe) {
+      const headers = new Headers(options.headers || {});
+      headers.set('X-CSRF-Token', token);
+      options = { ...options, headers };
+    }
+
+    return nativeFetch(resource, options);
+  };
+})();
+
 /////////// Create a post
 
 // HTML-escape user-controlled content. Mirror of Utils::e() server-side.
@@ -36,7 +60,7 @@ if (imageInput) {
         postContentImageContainer.appendChild(img);
 
         // Afficher le bouton de suppression
-        removeImageButton.style.display = 'block';
+        removeImageButton.classList.remove('hidden');
       };
       reader.readAsDataURL(file);
       selectedImage = file;
@@ -51,7 +75,7 @@ if (imageInput) {
     selectedImage = null; // Réinitialiser l'image sélectionnée
 
     // Cacher le bouton de suppression
-    removeImageButton.style.display = 'none';
+    removeImageButton.classList.add('hidden');
   });
 
   document.getElementById("file-input").addEventListener('submit', () => {
@@ -62,7 +86,7 @@ if (imageInput) {
 if (document.getElementById("postCreateButton")) {
   document.getElementById("postCreateButton").addEventListener("click", (event) => {
     const content = document.getElementById("postContent").innerText.trim();
-    removeImageButton.style.display = 'none';
+    removeImageButton.classList.add('hidden');
 
     if (!content) {
       alert("Le contenu du post ne peut pas être vide !");
@@ -265,9 +289,9 @@ function scrollFunction() {
   const scrollTopBtn = document.getElementById("scrollTopBtn");
   // Si on dépasse 100vh, le bouton apparaît
   if (document.documentElement.scrollTop > window.innerHeight) {
-    scrollTopBtn.style.display = "block";
+    scrollTopBtn.classList.remove("hidden");
   } else {
-    scrollTopBtn.style.display = "none";
+    scrollTopBtn.classList.add("hidden");
   }
 }
 
@@ -359,3 +383,35 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+// Navigation Back Button
+
+document.addEventListener('DOMContentLoaded', function() {
+  const backButton = document.querySelectorAll('.navigationBtn.backButton');
+
+  if (backButton.length === 0) {
+    return;
+  }
+
+  backButton.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.history.back();
+    });
+  })
+});
+
+// Cancel Edit Profile URL Navigation
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+
+  if (!cancelEditProfileBtn) {
+    return;
+  }
+
+  const dataCancelUrl = cancelEditProfileBtn.getAttribute('data-cancel-url');
+
+  cancelEditProfileBtn.addEventListener('click', () => {
+    window.location.href = dataCancelUrl;
+  });
+
+});

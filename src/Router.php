@@ -1,6 +1,9 @@
 <?php
 
-class Router {
+declare(strict_types=1);
+
+class Router
+{
     protected $routes = [];
 
     /**
@@ -9,21 +12,22 @@ class Router {
      * @param $target
      * @return void
      */
-    public function addRoute($method, $path, $target, $middleware = null) {
+    public function addRoute($method, $path, $target, $middleware = null)
+    {
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
             'target' => $target,
             'middleware' => $middleware,
         ];
-
     }
 
     /**
      * @return void
      * @throws Exception
      */
-    public function match() {
+    public function match()
+    {
         $uri = $_SERVER['REQUEST_URI'];
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($uri, PHP_URL_PATH);
@@ -39,16 +43,20 @@ class Router {
             Logger::get()->debug('router.match.try', ['pattern' => $pathRegex]);
 
             if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
-
                 //MIDDLE WARE
                 if ($route['middleware']) {
                     $middlewareInstance = new $route['middleware']();
                     $middlewareInstance->handle();
                 }
-                //
+
+                // CSRF MIDDLEWARE FOR POST REQUESTS
+
+                if ($route['method'] === 'POST') {
+                    $csrfMiddleware = new CsrfMiddleware();
+                    $csrfMiddleware->handle();
+                }
 
                 $routeArray = explode('#', $route['target']);
-                //var_dump($routeArray);
                 if (count($routeArray) < 2) {
                     throw new Exception("Le 'target' doit être au format 'Controller#Method'");
                 }
@@ -69,9 +77,6 @@ class Router {
         }
 
         http_response_code(404);
-        page404View::show();
+        Page404View::show();
     }
-
 }
-
-

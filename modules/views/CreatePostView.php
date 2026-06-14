@@ -1,14 +1,24 @@
 <?php
 
-class CreatePostView {
+declare(strict_types=1);
+
+/**
+ * Formulaire de création de post (publication ou réponse).
+ */
+class CreatePostView
+{
     /**
-     * @param $post
-     * @return false|string
+     * Rend le formulaire de création de post. Si un post est fourni, le
+     * formulaire répond à ce post.
+     *
+     * @param PostModel|null $post Post auquel répondre, ou null pour un nouveau post.
+     * @return string HTML du formulaire.
      */
-    static public function show($post = null) {
-        $sessionController = new SessionController();
-        $username = $sessionController->getName();
-        $userImage = $sessionController->getImage();
+    public static function show($post = null)
+    {
+        $session = new SessionManager(new UserModel());
+        $username = $session->getName();
+        $userImage = $session->getImage();
 
         //$username = $sessionController->getProfilePicture();
 
@@ -30,17 +40,17 @@ class CreatePostView {
                         <div class="postCreateTool">
                             <label for="file-input">
                                 <span class="sr-only">Upload image</span>
-                                <?php echo file_get_contents('assets/image.svg' ); ?>
+                                <?php echo file_get_contents('assets/image.svg'); ?>
                             </label>
                             <input id="file-input" accept="image/*" type="file" class="hidden" />
                             <button id="removeImageButton" class="hidden">Supprimer l'image</button>
                         </div>
                         <button id="postCreateButton" class="postCreateButton"
-                            <?php if ($post): ?>
-                                data-postToReply="<?= htmlspecialchars($post->getId(), ENT_QUOTES, 'UTF-8') ?>"
+                            <?php if ($post) : ?>
+                                data-postToReply="<?= $post->getId() ?>"
 
-                                <?php if($post->getReplyTo() !== null ): ?>
-                                    data-postParent="<?= htmlspecialchars($post->getPostParentId(), ENT_QUOTES, 'UTF-8') ?>"
+                                <?php if ($post->getReplyTo() !== null) : ?>
+                                    data-postParent="<?= $post->getPostParentId() ?>"
                                 <?php endif; ?>
 
                             <?php endif; ?>
@@ -52,7 +62,7 @@ class CreatePostView {
             </div>
 
         </div>
-    <?php
+        <?php
         $content = ob_get_clean();
         return $content;
     }

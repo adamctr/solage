@@ -1,15 +1,23 @@
 <?php
 
-class SidebarView {
+declare(strict_types=1);
 
+/**
+ * Barre latérale de navigation (accueil, recherche, profil, admin).
+ */
+class SidebarView
+{
     /**
-     * @return string
+     * Rend la barre latérale de navigation.
+     *
+     * @return string HTML de la barre latérale.
      */
-    public function show() {
+    public function show()
+    {
         ob_start();
 
-        $userid = SessionController::getUserId();
-        $session = new SessionController();
+        $session = new SessionManager(new UserModel());
+        $userid = $session->getUserId();
         $isAdmin = $session->isAdmin();
         ?>
 
@@ -26,7 +34,7 @@ class SidebarView {
                             <?php echo file_get_contents('assets/wen.svg'); ?>                            <span class="menuTxt">Recherche</span></a>
                         <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink">
                             <?php echo file_get_contents('assets/profile.svg'); ?>                            <span class="menuTxt">Profil</span></a>
-                        <?php if ($isAdmin): ?>
+                        <?php if ($isAdmin) : ?>
                             <a href="/admin" aria-label="Admin" class="menuLink">
                                 <?php echo file_get_contents('assets/admin.svg'); ?>
                                 <span class="menuTxt">Admin</span></a>
@@ -45,7 +53,7 @@ class SidebarView {
                 <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg'); ?> </a>
                 <a href="/search" aria-label="Rechercher" class="menuLink"> <?php echo file_get_contents('assets/wen.svg'); ?> </a>
                 <a href="/user/<?= $userid ?>" aria-label="Profile" class="menuLink"> <?php echo file_get_contents('assets/profile.svg'); ?> </a>
-                <?php if ($isAdmin): ?>
+                <?php if ($isAdmin) : ?>
                     <a href="/admin" aria-label="Admin" class="menuLink"> <?php echo file_get_contents('assets/admin.svg'); ?> </a>
                 <?php endif; ?>
             </div>
