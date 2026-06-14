@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<ruleset name="Solage">
+    <description>PSR-12 coding standard for the Solage codebase.</description>
+
+    <!-- First-party code only -->
+    <file>bin</file>
+    <file>includes</file>
+    <file>modules</file>
+    <file>public</file>
+    <file>routes</file>
+    <file>src</file>
+
+    <!-- Dependencies and generated data are out of scope -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/public/assets/emojiList.php</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="p"/>
+
+    <rule ref="PSR12">
+        <!--
+            Le projet utilise un autoloader maison basé sur les chemins, en espace
+            de noms global (choix d'architecture assumé, défendu à l'oral pour sa
+            simplicité). On exclut donc la seule règle PSR-12 qui impose un
+            namespace par classe ; tout le reste de PSR-12 est respecté.
+        -->
+        <exclude name="PSR1.Classes.ClassDeclaration.MissingNamespace"/>
+    </rule>
+
+    <!--
+        public/index.php est le point d'entrée : il amorce l'application (require,
+        session, en-têtes de sécurité) et définit la constante APP_ENV. Ce mélange
+        amorçage + définition de symbole est inhérent à un entrypoint, on y tolère
+        donc la règle PSR-1 "side effects".
+    -->
+    <rule ref="PSR1.Files.SideEffects">
+        <exclude-pattern>public/index.php</exclude-pattern>
+    </rule>
+
+    <!--
+        Les vues mêlent HTML et SVG inline (icônes) : certaines lignes dépassent
+        120 caractères sans pouvoir être coupées proprement. La limite de longueur
+        PSR-12 (un simple warning) n'y est donc pas appliquée. Le code PHP
+        (modèles, contrôleurs, src) reste, lui, sous 120 caractères.
+    -->
+    <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>modules/views/*</exclude-pattern>
+    </rule>
+</ruleset>
