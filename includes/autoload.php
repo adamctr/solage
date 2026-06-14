@@ -1,19 +1,27 @@
 <?php
 
-class Autoloader {
+declare(strict_types=1);
 
+class Autoloader
+{
     /**
+     * Enregistre l'autoloader auprès de la SPL.
+     *
      * @return void
      */
-    static function register() {
+    public static function register()
+    {
         spl_autoload_register(array(__CLASS__, 'autoload'));
     }
 
     /**
-     * @param $class
+     * Charge le fichier d'une classe en la cherchant dans les dossiers du projet.
+     *
+     * @param string $class Nom de la classe à charger.
      * @return void
      */
-    static function autoload($class) {
+    public static function autoload($class)
+    {
         $paths = [
             __DIR__ . '/../routes/' . str_replace('\\', '/', $class) . '.php',
             __DIR__ . '/../modules/views/' . str_replace('\\', '/', $class) . '.php',
@@ -31,5 +39,3 @@ class Autoloader {
         }
     }
 }
-
-

@@ -1,17 +1,30 @@
 <?php
 
-class AdminController {
+declare(strict_types=1);
 
-    public function __construct() {
-
-    }
-
-    public function showAdminPage() {
+/**
+ * Back-office d'administration : tableau de bord et recherches.
+ */
+class AdminController
+{
+    /**
+     * Affiche le tableau de bord d'administration.
+     *
+     * @return void
+     */
+    public function showAdminPage()
+    {
         $adminView = new AdminView();
         $adminView->show();
     }
 
-    public function showSearchUsersPage() {
+    /**
+     * Affiche les utilisateurs correspondant au terme recherché (GET « query »).
+     *
+     * @return void
+     */
+    public function showSearchUsersPage()
+    {
         $query = $_GET['query'] ?? '';
 
         $searchModel = new SearchModel();
@@ -21,7 +34,13 @@ class AdminController {
         $adminView->renderUsersResult($users);
     }
 
-    public function showSearchPostsPage() {
+    /**
+     * Affiche les posts correspondant au terme recherché (GET « query »).
+     *
+     * @return void
+     */
+    public function showSearchPostsPage()
+    {
         $query = $_GET['query'] ?? '';
 
         $searchModel = new SearchModel();
@@ -33,5 +52,4 @@ class AdminController {
         $adminView = new AdminView();
         $adminView->renderPostsResult($posts, $users);
     }
-
 }

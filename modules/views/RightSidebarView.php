@@ -1,10 +1,19 @@
 <?php
 
-class RightSidebarView {
+declare(strict_types=1);
+
+/**
+ * Barre latérale droite (zone réservée).
+ */
+class RightSidebarView
+{
     /**
-     * @return string
+     * Rend la barre latérale droite.
+     *
+     * @return string HTML de la barre latérale droite.
      */
-    public static function show() {
+    public static function show()
+    {
         ob_start();
         ?>
 

@@ -1,11 +1,30 @@
 <?php
-class SearchController {
-    public function showSearchPage() {
+
+declare(strict_types=1);
+
+/**
+ * Recherche : page de recherche et affichage des résultats.
+ */
+class SearchController
+{
+    /**
+     * Affiche la page de recherche (formulaire vide).
+     *
+     * @return void
+     */
+    public function showSearchPage()
+    {
         $view = new SearchView();
-        echo $view->render();
+        $view->render();
     }
 
-    public function searchResults() {
+    /**
+     * Affiche les résultats de recherche pour le terme « query » (GET).
+     *
+     * @return void
+     */
+    public function searchResults()
+    {
         $query = $_GET['query'] ?? '';
 
         $searchModel = new SearchModel();
@@ -16,7 +35,6 @@ class SearchController {
         $users = UserModel::getUsersByIds($userIds);
 
         $searchView = new SearchView();
-        echo $searchView->renderResults($results, $users);
+        $searchView->renderResults($results, $users);
     }
-
 }

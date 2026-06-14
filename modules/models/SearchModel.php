@@ -1,13 +1,30 @@
 <?php
 
-class SearchModel {
+declare(strict_types=1);
+
+/**
+ * Recherche de posts et d'utilisateurs (page de recherche + back-office admin).
+ */
+class SearchModel
+{
     protected $db;
 
-    public function __construct() {
+    /**
+     * Ouvre la connexion à la base partagée.
+     */
+    public function __construct()
+    {
         $this->db = Database::getConnection();
     }
 
-    public function search($query) {
+    /**
+     * Recherche les posts dont l'auteur ou le contenu correspond au terme.
+     *
+     * @param string $query Terme recherché.
+     * @return PostModel[] Posts correspondants (les plus récents d'abord).
+     */
+    public function search($query)
+    {
         $query = '%' . $query . '%';
 
         $sql = '
@@ -46,7 +63,14 @@ class SearchModel {
         return $posts; // Retourner les objets PostModel
     }
 
-    public function searchPosts($query) {
+    /**
+     * Recherche les posts par contenu uniquement (back-office admin).
+     *
+     * @param string $query Terme recherché.
+     * @return PostModel[] Posts correspondants (les plus récents d'abord).
+     */
+    public function searchPosts($query)
+    {
         $query = '%' . $query . '%';
 
         $sql = '
@@ -85,7 +109,14 @@ class SearchModel {
         return $posts; // Retourner les objets PostModel
     }
 
-    public function searchUsers($query) {
+    /**
+     * Recherche les utilisateurs par nom (back-office admin).
+     *
+     * @param string $query Terme recherché.
+     * @return UserModel[] Utilisateurs correspondants (ordre alphabétique).
+     */
+    public function searchUsers($query)
+    {
         $query = '%' . $query . '%';
 
         $sql = '

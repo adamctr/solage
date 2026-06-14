@@ -1,5 +1,12 @@
 <?php
-class UserModel {
+
+declare(strict_types=1);
+
+/**
+ * Modèle d'un utilisateur et de ses accès en base.
+ */
+class UserModel
+{
     protected $db;
     protected $id;
     protected $name;
@@ -8,8 +15,15 @@ class UserModel {
     protected $role;
     protected $image;
 
-    public function __construct($userData = null) {
-        $this->db = DataBase::getConnection();
+    /**
+     * Hydrate le modèle depuis une ligne SQL (objet), ou crée une instance vide
+     * servant de fabrique (ex. pour appeler getUserById).
+     *
+     * @param object|null $userData Ligne utilisateur (PDO FETCH_OBJ), ou null.
+     */
+    public function __construct($userData = null)
+    {
+        $this->db = Database::getConnection();
         if ($userData) {
             $this->id = $userData->id;
             $this->name = $userData->name;
@@ -20,34 +34,69 @@ class UserModel {
         }
     }
 
-    public function getUserById($userId) {
+    /**
+     * Récupère un utilisateur par son identifiant.
+     *
+     * @param int $userId Identifiant de l'utilisateur.
+     * @return UserModel|null L'utilisateur, ou null s'il n'existe pas.
+     */
+    public function getUserById($userId)
+    {
         $statement = $this->db->prepare('SELECT id, name, email, password, role, image FROM users WHERE id = :id');
         $statement->execute(['id' => $userId]);
         $row = $statement->fetch(PDO::FETCH_OBJ);
         return $row ? new UserModel($row) : null;
     }
 
-    public function getId(): int {
-        return $this->id;
+    /**
+     * @return int Identifiant de l'utilisateur.
+     */
+    public function getId(): int
+    {
+        return (int) $this->id;
     }
 
-    public function getName(): string {
+    /**
+     * @return string Nom d'affichage.
+     */
+    public function getName(): string
+    {
         return $this->name;
     }
 
-    public function getEmail(): string {
+    /**
+     * @return string Adresse email.
+     */
+    public function getEmail(): string
+    {
         return $this->email;
     }
 
-    public function getPassword(): string {
+    /**
+     * @return string Hash du mot de passe.
+     */
+    public function getPassword(): string
+    {
         return $this->password;
     }
 
-    public function getRole(): ?string {
-        return $this->role;
+    /**
+     * @return string|null Identifiant du rôle (FK roles.id) en chaîne, ou null.
+     */
+    public function getRole(): ?string
+    {
+        // La colonne role est un entier (FK vers roles.id) ; on respecte le
+        // type de retour ?string déclaré, en mode strict.
+        return $this->role === null ? null : (string) $this->role;
     }
 
-    public function getRoleName(): ?string {
+    /**
+     * Résout le libellé du rôle (table roles) à partir de l'id de rôle.
+     *
+     * @return string|null Nom du rôle (ex. « Admin »), ou null si sans rôle.
+     */
+    public function getRoleName(): ?string
+    {
         if ($this->role === null) {
             return null;
         }
@@ -57,12 +106,23 @@ class UserModel {
         return $name === false ? null : $name;
     }
 
-    public function getImage() {
+    /**
+     * @return string|null Emoji/avatar de l'utilisateur, ou null.
+     */
+    public function getImage()
+    {
         return $this->image;
     }
 
-    static public function getNameFromId($id) {
-        $statement = DataBase::getConnection()->prepare('SELECT name FROM users WHERE id = :id');
+    /**
+     * Récupère le nom d'un utilisateur à partir de son identifiant.
+     *
+     * @param int $id Identifiant de l'utilisateur.
+     * @return string Nom de l'utilisateur.
+     */
+    public static function getNameFromId($id)
+    {
+        $statement = Database::getConnection()->prepare('SELECT name FROM users WHERE id = :id');
         $statement->execute(['id' => $id]);
         $row = $statement->fetch(PDO::FETCH_OBJ);
         return $row->name;
@@ -75,12 +135,13 @@ class UserModel {
      * @param int[] $ids
      * @return array<int, UserModel>
      */
-    public static function getUsersByIds(array $ids): array {
+    public static function getUsersByIds(array $ids): array
+    {
         if (empty($ids)) {
             return [];
         }
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = DataBase::getConnection()->prepare(
+        $stmt = Database::getConnection()->prepare(
             "SELECT id, name, email, password, role, image FROM users WHERE id IN ($placeholders)"
         );
         $stmt->execute(array_values($ids));
@@ -92,7 +153,14 @@ class UserModel {
         return $users;
     }
 
-    public function getUserByEmail($email) {
+    /**
+     * Récupère un utilisateur par son email.
+     *
+     * @param string $email Adresse email recherchée.
+     * @return UserModel|null L'utilisateur, ou null s'il n'existe pas.
+     */
+    public function getUserByEmail($email)
+    {
         $sql = "SELECT * FROM users WHERE email = :email";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':email', $email, PDO::PARAM_STR);
@@ -101,7 +169,16 @@ class UserModel {
         return $row ? new UserModel($row) : null;
     }
 
-    public function createUser($name, $email, $password) {
+    /**
+     * Crée un utilisateur (mot de passe hashé, avatar emoji aléatoire).
+     *
+     * @param string $name     Nom d'affichage.
+     * @param string $email    Adresse email.
+     * @param string $password Mot de passe en clair (hashé avant insertion).
+     * @return bool true si l'insertion a réussi.
+     */
+    public function createUser($name, $email, $password)
+    {
         include 'assets/emojiList.php';
         $randomEmoji = $emojiList[array_rand($emojiList)];
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
@@ -115,7 +192,16 @@ class UserModel {
         return $stmt->execute();
     }
 
-    public function updateUser($userId, $name, $password) {
+    /**
+     * Met à jour le nom et le mot de passe d'un utilisateur.
+     *
+     * @param int    $userId   Identifiant de l'utilisateur.
+     * @param string $name     Nouveau nom d'affichage.
+     * @param string $password Nouveau mot de passe en clair (hashé avant écriture).
+     * @return bool true si la mise à jour a réussi.
+     */
+    public function updateUser($userId, $name, $password)
+    {
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         $sql = "UPDATE users SET name = :name, password = :password WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -126,7 +212,14 @@ class UserModel {
         return $stmt->execute();
     }
 
-    public function deleteUser($userId) {
+    /**
+     * Supprime un utilisateur par son identifiant.
+     *
+     * @param int $userId Identifiant de l'utilisateur.
+     * @return bool true si la suppression a réussi.
+     */
+    public function deleteUser($userId)
+    {
         $sql = "DELETE FROM users WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
@@ -134,5 +227,4 @@ class UserModel {
 
         return $stmt->execute();
     }
-
 }

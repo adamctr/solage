@@ -1,10 +1,14 @@
 <?php
 
-class Database {
+declare(strict_types=1);
+
+class Database
+{
     private static $instance = null;
     private $connection;
 
-    private function __construct() {
+    private function __construct()
+    {
         $envPath = dirname(__DIR__);
         if (file_exists($envPath . '/.env')) {
             $dotenv = Dotenv\Dotenv::createImmutable($envPath);
@@ -40,7 +44,8 @@ class Database {
     /**
      * @return PDO
      */
-    public static function getConnection() {
+    public static function getConnection()
+    {
         if (self::$instance === null) {
             self::$instance = new Database();
         }

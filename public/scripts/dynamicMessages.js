@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
       })
-        .then(response => response.json())
+        .then(response => response.json() )
         .then(data => {
           if (data.success) {
             window.location.href = '/';

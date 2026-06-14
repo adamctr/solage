@@ -1,6 +1,12 @@
 <?php
 
-class LikeModel {
+declare(strict_types=1);
+
+/**
+ * Accès aux « likes » : un like associe un utilisateur à un post.
+ */
+class LikeModel
+{
     protected $id;
     protected $user;
     protected $post;
@@ -8,7 +14,15 @@ class LikeModel {
     protected $created_at;
     protected $db;
 
-    function __construct($id, $user, $post, $response, $created_at) {
+    /**
+     * @param int|null    $id         Identifiant du like (null tant qu'il n'est pas enregistré).
+     * @param int         $user       Identifiant de l'utilisateur qui like.
+     * @param int         $post       Identifiant du post liké.
+     * @param int|null    $response   Identifiant de la réponse likée, ou null.
+     * @param string|null $created_at Date de création (format SQL), ou null.
+     */
+    public function __construct($id, $user, $post, $response, $created_at)
+    {
         $this->db = Database::getConnection();
         $this->id = $id;
         $this->user = $user;
@@ -18,11 +32,17 @@ class LikeModel {
     }
 
     /**
-     * @return false|int
+     * Enregistre le like en base.
+     *
+     * @return int|false Identifiant du like créé, ou false en cas d'erreur.
      */
-    function create() {
+    public function create()
+    {
         try {
-            $statement = $this->db->prepare('INSERT INTO likes (user_id, post, response, created_at) VALUES (:user_id, :post, :response, :created_at)');
+            $statement = $this->db->prepare(
+                'INSERT INTO likes (user_id, post, response, created_at)
+                 VALUES (:user_id, :post, :response, :created_at)'
+            );
             $statement->bindValue(':user_id', $this->user);
             $statement->bindValue(':post', $this->post);
             $statement->bindValue(':response', $this->response);
@@ -42,9 +62,12 @@ class LikeModel {
     }
 
     /**
-     * @return bool
+     * Supprime le like (couple utilisateur/post) de la base.
+     *
+     * @return bool true si la requête s'est exécutée, false en cas d'erreur.
      */
-    function delete() {
+    public function delete()
+    {
         try {
             $statement = $this->db->prepare('DELETE FROM likes WHERE user_id = :user_id AND post = :post');
             $statement->bindValue(':user_id', $this->user);
@@ -62,9 +85,12 @@ class LikeModel {
     }
 
     /**
+     * Indique si l'utilisateur a déjà liké ce post.
+     *
      * @return bool
      */
-    function likeAlreadyExist() {
+    public function likeAlreadyExist()
+    {
         try {
             $statement = $this->db->prepare('SELECT * FROM likes WHERE user_id = :user_id AND post = :post LIMIT 1');
             $statement->bindValue(':user_id', $this->user);
@@ -73,8 +99,9 @@ class LikeModel {
             $result = $statement->fetch(PDO::FETCH_ASSOC);
             if (!$result === false) {
                 return true;
-
-            } else return false;
+            } else {
+                return false;
+            }
         } catch (PDOException $e) {
             Logger::get()->warning('like.exists.check_failed', [
                 'user_id' => $this->user,
@@ -83,41 +110,45 @@ class LikeModel {
             ]);
             return false;
         }
-
     }
 
     /**
-     * @return int
+     * @return int|null Identifiant du like.
      */
-    function getId() {
+    public function getId()
+    {
         return $this->id;
     }
 
     /**
-     * @return int
+     * @return int Identifiant de l'utilisateur.
      */
-    function getUser() {
+    public function getUser()
+    {
         return $this->user;
     }
 
     /**
-     * @return mixed
+     * @return int Identifiant du post liké.
      */
-    function getPost() {
+    public function getPost()
+    {
         return $this->post;
     }
 
     /**
-     * @return mixed
+     * @return int|null Identifiant de la réponse likée.
      */
-    function getResponse() {
+    public function getResponse()
+    {
         return $this->response;
     }
 
     /**
-     * @return dateTime
+     * @return string|null Date de création (format SQL).
      */
-    function getCreatedAt() {
+    public function getCreatedAt()
+    {
         return $this->created_at;
     }
 }

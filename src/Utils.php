@@ -1,14 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  *
  */
-class Utils {
-
+class Utils
+{
     /**
-     * Fonction utilitaire pour envoyer une réponse JSON
+     * Envoie une réponse JSON (encodée) au client.
+     *
+     * @param bool       $success Succès de l'opération.
+     * @param string     $message Message à afficher côté client.
+     * @param mixed|null $data    Données additionnelles éventuelles.
+     * @return void
      */
-    static function sendResponse($success, $message, $data = null)
+    public static function sendResponse($success, $message, $data = null)
     {
         $response = ['success' => $success, 'message' => $message];
 
@@ -19,7 +26,13 @@ class Utils {
         echo json_encode($response);
     }
 
-    public static function isAjax() {
+    /**
+     * Indique si la requête courante est une requête AJAX.
+     *
+     * @return bool
+     */
+    public static function isAjax()
+    {
         return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
     }
 
@@ -27,7 +40,8 @@ class Utils {
      * HTML-escape user-controlled content for safe output in views.
      * Always use this when rendering anything that could come from user input.
      */
-    public static function e(?string $value): string {
+    public static function e(?string $value): string
+    {
         return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 }

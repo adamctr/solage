@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 // CLI entry point for database migrations.
 // Run via `docker compose run --rm migrate` or as part of `docker compose up`.
 

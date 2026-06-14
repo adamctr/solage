@@ -1,17 +1,32 @@
 <?php
-class HomepageView {
+
+declare(strict_types=1);
+
+/**
+ * Vue du fil d'accueil : liste des posts récents.
+ */
+class HomepageView
+{
     protected $posts;
     protected $users;
 
-    public function __construct($posts, array $users) {
+    /**
+     * @param PostModel[]           $posts Posts à afficher.
+     * @param array<int, UserModel> $users Auteurs indexés par identifiant.
+     */
+    public function __construct($posts, array $users)
+    {
         $this->posts = $posts;
         $this->users = $users;
     }
 
     /**
+     * Rend le fil (formulaire de création + liste de posts) dans le layout.
+     *
      * @return void
      */
-    public function show() {
+    public function show()
+    {
         $postView = new PostView($this->posts, $this->users);
         ob_start();
         ?>

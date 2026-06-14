@@ -1,42 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 use MatthiasMullie\Minify;
 
-class MinificationController {
-  public function minifyAssets() {
-    $this->minifyCss();
-    $this->minifyJs();
-  }
+class MinificationController
+{
+    public function minifyAssets()
+    {
+        $this->minifyCss();
+        $this->minifyJs();
+    }
 
-  private function minifyCss() {
-    // Définissez les fichiers CSS à minifier
-    $cssFiles = [
+    private function minifyCss()
+    {
+      // Définissez les fichiers CSS à minifier
+        $cssFiles = [
         __DIR__ . '/../../public/style/style.css',
-    ];
-    $minifiedCss = new Minify\CSS();
+        ];
+        $minifiedCss = new Minify\CSS();
 
-    // Ajoutez chaque fichier CSS à minifier
-    foreach ($cssFiles as $cssFile) {
-      $minifiedCss->add($cssFile);
+      // Ajoutez chaque fichier CSS à minifier
+        foreach ($cssFiles as $cssFile) {
+            $minifiedCss->add($cssFile);
+        }
+
+      // Enregistrez le fichier minifié
+        $minifiedCss->minify(__DIR__ . '/../../public/assets/minified/style.min.css');
     }
 
-    // Enregistrez le fichier minifié
-    $minifiedCss->minify(__DIR__ . '/../../public/assets/minified/style.min.css');
-  }
-
-  private function minifyJs() {
-    // Définissez les fichiers JS à minifier
-    $jsFiles = [
+    private function minifyJs()
+    {
+      // Définissez les fichiers JS à minifier
+        $jsFiles = [
         __DIR__ . '/../../public/scripts/index.js',
-    ];
-    $minifiedJs = new Minify\JS();
+        ];
+        $minifiedJs = new Minify\JS();
 
-    // Ajoutez chaque fichier JS à minifier
-    foreach ($jsFiles as $jsFile) {
-      $minifiedJs->add($jsFile);
+      // Ajoutez chaque fichier JS à minifier
+        foreach ($jsFiles as $jsFile) {
+            $minifiedJs->add($jsFile);
+        }
+
+      // Enregistrez le fichier minifié
+        $minifiedJs->minify(__DIR__ . '/../../public/assets/minified/index.min.js');
     }
-
-    // Enregistrez le fichier minifié
-    $minifiedJs->minify(__DIR__ . '/../../public/assets/minified/index.min.js');
-  }
 }

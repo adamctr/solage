@@ -1,9 +1,19 @@
 <?php
 
-use Couchbase\View;
+declare(strict_types=1);
 
-class page404View {
-    public static function show() {
+/**
+ * Page d'erreur 404.
+ */
+class Page404View
+{
+    /**
+     * Rend la page « 404 — page non trouvée ».
+     *
+     * @return void
+     */
+    public static function show()
+    {
         $config = Config::getInstance();
         $cssPath = $config->getCssPath();
 
@@ -22,7 +32,7 @@ class page404View {
             <h1>404</h1>
             <h2>Page non trouvée</h2>
             <p>Désolé, la page que vous cherchez n'existe pas.</p>
-            <?php echo file_get_contents('assets/ghost.svg' ); ?>
+            <?php echo file_get_contents('assets/ghost.svg'); ?>
 
             <a href="/" class="btn">Retour à l'accueil</a>
 

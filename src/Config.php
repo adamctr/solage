@@ -1,11 +1,15 @@
 <?php
 
-class Config {
+declare(strict_types=1);
+
+class Config
+{
     private static $instance = null;
     private $cssPath;
     private $jsPath;
 
-    private function __construct() {
+    private function __construct()
+    {
 
         if (APP_ENV === 'production') {
             $this->cssPath = 'assets/minified/style.min.css';
@@ -16,18 +20,21 @@ class Config {
         }
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance === null) {
             self::$instance = new Config();
         }
         return self::$instance;
     }
 
-    public function getCssPath() {
+    public function getCssPath()
+    {
         return $this->cssPath;
     }
 
-    public function getJsPath() {
+    public function getJsPath()
+    {
         return $this->jsPath;
     }
 }

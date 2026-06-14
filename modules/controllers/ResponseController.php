@@ -1,19 +1,29 @@
 <?php
 
-/**
- *
- */
-class ResponseController {
+declare(strict_types=1);
 
+/**
+ * Page d'un post : affiche le post ciblé et ses réponses.
+ */
+class ResponseController
+{
     protected $postId;
-    function __construct($postId) {
+
+    /**
+     * @param int|string $postId Identifiant du post (paramètre d'URL).
+     */
+    public function __construct($postId)
+    {
         $this->postId = $postId;
     }
 
     /**
+     * Affiche le post ciblé et ses réponses.
+     *
      * @return void
      */
-    function execute() {
+    public function execute()
+    {
         $postId = (int) $this->postId;
         $post = PostModel::getPostById($postId);
         $responses = $post->getResponses();

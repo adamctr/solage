@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
@@ -12,8 +14,8 @@ use Psr\Log\LogLevel;
  *   Logger::get()->info('user.login', ['user_id' => 42]);
  *   Logger::get()->error('db.insert.failed', ['error' => $e->getMessage()]);
  */
-class Logger extends AbstractLogger {
-
+class Logger extends AbstractLogger
+{
     private static ?Logger $instance = null;
 
     /**
@@ -27,14 +29,16 @@ class Logger extends AbstractLogger {
         LogLevel::EMERGENCY,
     ];
 
-    public static function get(): Logger {
+    public static function get(): Logger
+    {
         if (self::$instance === null) {
             self::$instance = new Logger();
         }
         return self::$instance;
     }
 
-    public function log($level, string|\Stringable $message, array $context = []): void {
+    public function log($level, string|\Stringable $message, array $context = []): void
+    {
         $record = [
             'ts'    => date('c'),
             'level' => (string) $level,
@@ -47,13 +51,15 @@ class Logger extends AbstractLogger {
         // STDOUT/STDERR constants exist only in CLI SAPI; php://* streams
         // work in CLI, HTTP and FrankenPHP alike.
         $target = in_array($level, self::STDERR_LEVELS, true) ? 'php://stderr' : 'php://stdout';
-        file_put_contents($target, json_encode($record, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND);
+        $line = json_encode($record, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+        file_put_contents($target, $line, FILE_APPEND);
     }
 
     /**
      * PSR-3 placeholder interpolation: replace {key} in $message with $context[key].
      */
-    private function interpolate(string $message, array $context): string {
+    private function interpolate(string $message, array $context): string
+    {
         if (!str_contains($message, '{')) {
             return $message;
         }
@@ -69,7 +75,8 @@ class Logger extends AbstractLogger {
     /**
      * Make exceptions JSON-serialisable; pass everything else through.
      */
-    private function serializeContext(array $context): array {
+    private function serializeContext(array $context): array
+    {
         if (isset($context['exception']) && $context['exception'] instanceof \Throwable) {
             $e = $context['exception'];
             $context['exception'] = [

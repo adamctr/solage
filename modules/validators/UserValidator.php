@@ -1,8 +1,22 @@
 <?php
 
-class UserValidator {
+declare(strict_types=1);
 
-    static public function login($email, $password): array {
+/**
+ * Validation des données de connexion et d'inscription.
+ */
+class UserValidator
+{
+    /**
+     * Valide une tentative de connexion : champs présents, email existant,
+     * mot de passe correct.
+     *
+     * @param string $email    Email saisi.
+     * @param string $password Mot de passe en clair saisi.
+     * @return array{ok: bool, type: string, message: string} Résultat de validation.
+     */
+    public static function login($email, $password): array
+    {
         if (empty($email) || empty($password)) {
             return ['ok' => false, 'type' => 'error', 'message' => "Merci de renseigner vos informations"];
         }
@@ -20,7 +34,15 @@ class UserValidator {
         return ['ok' => true, 'type' => 'success', 'message' => "Vous vous êtes bien connecté !"];
     }
 
-    static public function register($email, $password): array {
+    /**
+     * Valide une inscription : champs présents et email pas déjà utilisé.
+     *
+     * @param string $email    Email saisi.
+     * @param string $password Mot de passe en clair saisi.
+     * @return array{ok: bool, type: string, message: string} Résultat de validation.
+     */
+    public static function register($email, $password): array
+    {
         if (empty($email) || empty($password)) {
             return ['ok' => false, 'type' => 'error', 'message' => "Merci de renseigner vos informations"];
         }

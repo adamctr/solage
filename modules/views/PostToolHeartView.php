@@ -1,14 +1,23 @@
 <?php
 
-class PostToolHeartView {
+declare(strict_types=1);
+
+/**
+ * Bouton « like » d'un post (cœur + compteur, état actif/inactif).
+ */
+class PostToolHeartView
+{
     public $active;
 
     /**
-     * @param $post
-     * @param $user
-     * @return false|string
+     * Rend le bouton de like, marqué actif si l'utilisateur a déjà liké.
+     *
+     * @param PostModel       $post Post concerné.
+     * @param int|string|null $user Identifiant de l'utilisateur courant.
+     * @return string HTML du bouton.
      */
-    static public function show($post, $user) {
+    public static function show($post, $user)
+    {
         // Instancier la classe pour vérifier si le like existe
         $view = new self();
         $isActive = $view->isActive($post, $user);
@@ -31,12 +40,15 @@ class PostToolHeartView {
 
 
 
-    /** Vérifier si l'utilisateur a déjà liké le post
-     * @param $post
-     * @param $user
-     * @return bool
+    /**
+     * Vérifie si l'utilisateur a déjà liké le post.
+     *
+     * @param PostModel       $post Post concerné.
+     * @param int|string|null $user Identifiant de l'utilisateur courant.
+     * @return bool true si un like existe déjà.
      */
-    public function isActive($post, $user) {
+    public function isActive($post, $user)
+    {
         $likeModel = new LikeModel(null, $user, $post->getId(), null, null);
         return $likeModel->likeAlreadyExist();
     }
