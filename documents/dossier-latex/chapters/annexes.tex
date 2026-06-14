@@ -1,0 +1,159 @@
+\chapter{Annexes}
+\label{ch:annexes}
+
+Les annexes (40 pages maximum) rassemblent les éléments de la fonctionnalité la plus
+représentative : maquettes, captures et code, code des composants métier et d'accès aux données,
+code des autres composants, et jeux de tests complets.
+
+\section{Script de création de la base de données}
+\label{ann:sql}
+
+Script complet \file{solage.pg.sql}, chargé à l'initialisation du conteneur PostgreSQL.
+
+\begin{lstlisting}[style=sql]
+BEGIN;
+
+CREATE TABLE roles (
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+INSERT INTO roles (id, name) VALUES (1,'Admin'), (2,'Utilisateur'), (3,'Moderateur');
+
+CREATE TABLE users (
+    id        SERIAL PRIMARY KEY,
+    name      VARCHAR(255) NOT NULL,
+    firstname VARCHAR(255) NULL,
+    email     VARCHAR(255) NOT NULL UNIQUE,
+    password  VARCHAR(255) NOT NULL,
+    role      INT NULL REFERENCES roles(id) ON DELETE SET NULL,
+    image     VARCHAR(255) NULL
+);
+CREATE INDEX users_role_idx ON users(role);
+
+CREATE TABLE posts (
+    id              SERIAL PRIMARY KEY,
+    user_id         INT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date            TIMESTAMP NOT NULL,
+    likes           INT DEFAULT 0,
+    content         TEXT NULL,
+    reply_to        INT NULL,
+    reply_to_parent INT NULL,
+    image           TEXT NULL
+);
+CREATE INDEX posts_user_idx ON posts(user_id);
+
+CREATE TABLE responses (
+    id       SERIAL PRIMARY KEY,
+    post     INT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id  INT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date     TIMESTAMP NOT NULL,
+    likes    INT DEFAULT 0,
+    content  TEXT NULL,
+    reply_to INT NULL REFERENCES responses(id) ON DELETE SET NULL
+);
+CREATE INDEX responses_post_idx     ON responses(post);
+CREATE INDEX responses_user_idx     ON responses(user_id);
+CREATE INDEX responses_reply_to_idx ON responses(reply_to);
+
+CREATE TABLE likes (
+    id         SERIAL PRIMARY KEY,
+    user_id    INT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post       INT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    response   INT NULL REFERENCES responses(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX likes_user_idx     ON likes(user_id);
+CREATE INDEX likes_post_idx     ON likes(post);
+CREATE INDEX likes_response_idx ON likes(response);
+
+CREATE TABLE users_favorites_posts (
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post    INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, post)
+);
+CREATE INDEX users_favorites_posts_post_idx ON users_favorites_posts(post);
+
+COMMIT;
+\end{lstlisting}
+
+\section{Code d'un autre composant : le routeur}
+\label{ann:router}
+
+Routeur complet \file{src/Router.php} : correspondance d'URL, exécution des middlewares, armement
+du CSRF sur les requêtes POST, et instanciation du contrôleur.
+
+\begin{lstlisting}[style=php]
+class Router {
+    protected $routes = [];
+
+    public function addRoute($method, $path, $target, $middleware = null) {
+        $this->routes[] = ['method' => $method, 'path' => $path,
+                           'target' => $target, 'middleware' => $middleware];
+    }
+
+    public function match() {
+        $requestUri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $requestMethod = $_SERVER['REQUEST_METHOD'];
+
+        foreach ($this->routes as $route) {
+            $pathRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9_]+)', $route['path']);
+            $pathRegex = '#^' . $pathRegex . '$#';
+
+            if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
+                if ($route['middleware']) {
+                    (new $route['middleware']())->handle();
+                }
+                if ($route['method'] === 'POST') {
+                    (new CsrfMiddleware())->handle();
+                }
+                $routeArray = explode('#', $route['target']);
+                if (count($routeArray) < 2) {
+                    throw new Exception("Le 'target' doit etre au format 'Controller#Method'");
+                }
+                [$controller, $functionController] = $routeArray;
+                if (isset($matches[1])) {
+                    $instance = new $controller($matches[1]);
+                    call_user_func_array([$instance, $functionController], $matches);
+                    return;
+                }
+                (new $controller())->$functionController();
+                return;
+            }
+        }
+        http_response_code(404);
+        page404View::show();
+    }
+}
+\end{lstlisting}
+
+\section{Jeux de tests complets}
+\label{ann:tests}
+
+\begin{todo}{Jeux de tests (unitaires, intégration, sécurité)}
+Annexer ici l'intégralité des jeux de tests de la fonctionnalité la plus représentative, avec
+pour chaque test la \textbf{donnée d'entrée}, la \textbf{donnée attendue} et la \textbf{donnée
+obtenue} :
+\begin{itemize}
+  \item code source des classes de test PHPUnit ;
+  \item sortie complète de l'exécution (\texttt{vendor/bin/phpunit}) ;
+  \item jeux de tests unitaires, d'intégration et de sécurité.
+\end{itemize}
+\end{todo}
+
+\section{Maquettes et captures d'écran}
+\label{ann:maquettes}
+
+\begin{todo}{Maquettes et captures d'interfaces}
+Annexer :
+\begin{itemize}
+  \item les \textbf{maquettes} (Figma) de l'ensemble des écrans ;
+  \item les \textbf{captures d'écran} des interfaces réelles, mises en regard du code de la vue
+        correspondante (au-delà de celles déjà présentées dans le corps du dossier).
+\end{itemize}
+\end{todo}
+
+\begin{info}
+Le code source complet de \projet{} (contrôleurs, modèles, vues, middlewares, configuration
+Docker) est disponible dans le dépôt Git du projet. Les extraits présentés dans ce dossier sont
+les plus significatifs au regard des compétences évaluées.
+\end{info}

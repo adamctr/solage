@@ -1,0 +1,117 @@
+\chapter{Environnement technique}
+\label{ch:environnement}
+
+\section{Vue d'ensemble de la pile technique}
+
+\projet{} repose sur une pile volontairement légère, dont je maîtrise chaque brique.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.4cm} L{4.2cm} X@{}}
+\toprule
+\textbf{Couche} & \textbf{Technologie} & \textbf{Rôle} \\
+\midrule
+Langage & PHP 8.3 (\texttt{declare(strict\_types=1)}) & Logique applicative \\
+SGBD & PostgreSQL 16 via PDO & Persistance relationnelle \\
+Serveur applicatif & FrankenPHP (Caddy intégré) & Exécution de PHP, service du statique \\
+Reverse proxy / edge & Traefik v3 & Routage, terminaison TLS (Let's Encrypt) \\
+Conteneurisation & Docker, \texttt{docker compose} & Reproductibilité dev = prod \\
+Dépendances & Composer & \texttt{minify}, \texttt{phpdotenv}, \texttt{psr/log} \\
+Front-end & HTML, CSS, JavaScript vanilla & Interfaces et appels AJAX (\texttt{fetch}) \\
+Gestion de versions & Git & Historique et traçabilité \\
+\bottomrule
+\end{tabularx}
+\caption{Pile technique de \projet{}.}
+\label{tab:stack}
+\end{table}
+
+\section{Justification des choix techniques}
+
+Chaque choix est un compromis explicite, formulé selon le schéma « X plutôt que Y parce que Z,
+en acceptant le coût W ».
+
+\begin{description}
+  \item[MVC maison plutôt qu'un framework (Symfony, Laravel).] Objectif pédagogique :
+        \emph{comprendre et posséder} le routeur, l'autoloader et le cycle requête / réponse,
+        plutôt que de déléguer à de la « magie » non maîtrisée. Coût assumé : réécrire des
+        briques qu'un framework fournirait. En contexte professionnel, un framework serait
+        retenu.
+  \item[PostgreSQL plutôt que MariaDB.] Typage strict, séquences (\texttt{SERIAL}), robustesse
+        et conformité SQL. Le projet a d'ailleurs été \emph{migré} de MariaDB vers PostgreSQL,
+        ce qui a imposé d'adapter le schéma (\texttt{AUTO\_INCREMENT} $\to$ \texttt{SERIAL},
+        \texttt{datetime} $\to$ \texttt{TIMESTAMP}).
+  \item[FrankenPHP plutôt qu'Apache ou Nginx + PHP-FPM.] Un seul binaire embarquant Caddy,
+        terminaison TLS automatique, image Docker simple.
+  \item[Traefik plutôt que Nginx en reverse proxy.] Configuration \emph{par labels Docker},
+        certificats Let's Encrypt automatiques, découverte dynamique des services.
+  \item[PDO plutôt qu'une extension native.] Abstraction portable et, surtout, \textbf{requêtes
+        préparées} qui neutralisent l'injection SQL (section~\ref{sec:acces}).
+\end{description}
+
+\section{Poste de travail et outils}
+
+L'environnement de développement réunit : un IDE, \textbf{Git} pour la gestion de versions
+(historique de \emph{commits} conventionnels, une fonctionnalité par série de commits),
+\textbf{Composer} pour les dépendances (\file{composer.json} / \file{composer.lock}), et une
+gestion rigoureuse des \textbf{secrets}. Les identifiants de base de données ne figurent jamais
+dans le code : ils sont chargés depuis un fichier \file{.env} (ignoré par Git) au moyen de la
+bibliothèque \texttt{vlucas/phpdotenv}, un gabarit \file{.env.example} documentant les variables
+attendues.
+
+\begin{lstlisting}[style=php, caption={Chargement des secrets et connexion PDO — \file{includes/database.php}}]
+$envPath = dirname(__DIR__);
+if (file_exists($envPath . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable($envPath);
+    $dotenv->load();
+}
+// ... lecture de DB_HOST, DB_NAME, DB_USER, DB_PASSWORD ...
+$dsn = "pgsql:host={$host};port={$port};dbname={$dbname};options='--client_encoding=UTF8'";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,   // vraies requêtes préparées côté serveur
+];
+$this->connection = new PDO($dsn, $user, $password, $options);
+\end{lstlisting}
+
+La désactivation de \texttt{ATTR\_EMULATE\_PREPARES} force de \emph{vraies} requêtes préparées
+côté serveur PostgreSQL, renforçant la protection contre l'injection SQL.
+
+\section{Conteneurisation (Docker)}
+
+L'application est décrite par deux piles \texttt{docker compose} : l'une pour le développement,
+l'autre pour la production.
+
+\paragraph{Développement.} Traefik en HTTP, FrankenPHP en \emph{bind-mount} du code (rechargement
+à chaud), PostgreSQL exposé sur le port 5432 (pour les outils locaux), et un service
+\texttt{migrate} exécuté une seule fois avant le démarrage de l'application. Un \emph{healthcheck}
+PostgreSQL garantit l'ordre de démarrage.
+
+\begin{lstlisting}[style=yaml, caption={Extrait du \file{docker-compose.yml} (développement) : service applicatif et base}]
+  app:
+    build: { context: ., dockerfile: Dockerfile }
+    image: solage-app
+    volumes:
+      - ./:/app          # rechargement du code à chaud en dev
+      - /app/vendor      # vendor/ provient de l'image
+    depends_on:
+      postgres: { condition: service_healthy }
+      migrate:  { condition: service_completed_successfully }
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.solage.rule=Host(`localhost`)
+
+  postgres:
+    image: postgres:16-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+\end{lstlisting}
+
+\paragraph{Production.} Traefik en HTTPS (Let's Encrypt, redirection HTTP $\to$ HTTPS), en-tête
+HSTS, FrankenPHP servi depuis l'image (sans \emph{bind-mount}), et PostgreSQL \emph{non exposé}
+(accessible uniquement sur le réseau interne). Le détail figure en
+section~\ref{sec:deploiement} (préparation du déploiement).
+

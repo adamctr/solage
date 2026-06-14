@@ -1,0 +1,105 @@
+\chapter{Réalisations}
+\label{ch:realisations}
+
+Ce chapitre, cœur du dossier, présente les réalisations qui mettent en œuvre les compétences :
+l'architecture logicielle, la gestion de projet, la conception (maquettes, modèle de données,
+diagrammes UML), le développement (interfaces, composants métier, accès aux données), la
+sécurité, puis les tests et la veille.
+
+\section{Architecture logicielle multicouche}
+\label{sec:archi}
+
+\projet{} suit une architecture \textbf{MVC multicouche}, où chaque couche porte une
+responsabilité unique \emph{et} un rôle de sécurité. La figure~\ref{fig:archi} en donne la vue
+d'ensemble.
+
+\begin{figure}[h]
+\centering
+\input{figures/architecture}
+\caption{Architecture multicouche de \projet{} : du navigateur au SGBD.}
+\label{fig:archi}
+\end{figure}
+
+\subsection{Règles de séparation des couches}
+
+Le découpage est imposé par des règles strictes que je me suis fixées, vérifiables à la lecture du code :
+
+\begin{itemize}
+  \item \textbf{aucun SQL hors de \file{modules/models/}} : un contrôleur appelle une méthode de
+        modèle, il n'écrit jamais de requête ;
+  \item \textbf{aucune sortie (\texttt{echo}) hors de \file{modules/views/}} et de l'entrée
+        \file{public/index.php} ;
+  \item \textbf{aucun accès à \texttt{\$\_POST} / \texttt{\$\_GET} / \texttt{\$\_SESSION} hors
+        des contrôleurs et de \texttt{SessionManager}} ;
+  \item \textbf{aucun appel direct à \texttt{Database::getConnection()} hors des modèles}, de
+        \texttt{Migrations} et du \emph{bootstrap}.
+\end{itemize}
+
+Le dossier \file{src/} regroupe le code « framework » (le routeur, les middlewares, le logger,
+les utilitaires, le gestionnaire de session, les migrations), distinct du code « métier »
+(\file{modules/}). Cette séparation entre infrastructure réutilisable et domaine applicatif est
+un marqueur d'architecture mûre.
+
+\subsection{Rôle de sécurité de chaque couche (DICP)}
+
+La stratégie de sécurité se lit couche par couche selon les quatre indicateurs de l'ANSSI :
+\textbf{D}isponibilité, \textbf{I}ntégrité, \textbf{C}onfidentialité, \textbf{P}reuve.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3cm} X X@{}}
+\toprule
+\textbf{Couche} & \textbf{Mécanisme de sécurité} & \textbf{Indicateur DICP} \\
+\midrule
+Edge (Traefik) & TLS / HTTPS, HSTS, isolation réseau & Intégrité, Confidentialité \\
+Bootstrap (\file{index.php}) & En-têtes CSP / nosniff, cookie \texttt{HttpOnly} / \texttt{Secure} / \texttt{SameSite} & Intégrité, Confidentialité \\
+Middlewares (\file{src/}) & Jeton CSRF, authentification, autorisation ; refus journalisé & Intégrité, Confidentialité, Preuve \\
+Contrôleurs & Validation des entrées, contrôle d'accès par ressource (anti-IDOR) & Intégrité, Confidentialité \\
+Modèles (PDO) & Requêtes préparées (anti-injection SQL), transactions & Intégrité \\
+Vues & Échappement systématique \texttt{Utils::e()} (anti-XSS) & Intégrité \\
+SGBD (PostgreSQL) & Contraintes, clés étrangères, index, comptes \& droits & Disponibilité, Intégrité \\
+\bottomrule
+\end{tabularx}
+\caption{Rôle de sécurité de chaque couche, selon les indicateurs DICP.}
+\label{tab:dicp}
+\end{table}
+
+\subsection{Patrons mis en œuvre}
+
+L'architecture mobilise plusieurs patrons de conception : \emph{Front Controller}
+(\file{public/index.php}, point d'entrée unique), \emph{MVC} (séparation modèle / vue /
+contrôleur), \emph{Middleware} (chaîne de traitement transverse pour l'authentification,
+l'autorisation et le CSRF) et \emph{Injection de dépendance} (le \texttt{SessionManager} reçoit
+son \texttt{UserModel} par constructeur, ce qui le rend testable).
+
+\section{Gestion de projet}
+\label{sec:gestion}
+
+Le projet a été mené en autonomie selon une démarche \textbf{itérative légère} (proche de
+Kanban), structurée en phases successives : hygiène et sécurisation, conception, développement,
+tests, déploiement.
+
+\paragraph{Planification et suivi.} La feuille de route du projet (\file{ROADMAP\_DETAILLEE.md})
+décrit les phases, leur état d'avancement et les priorités au regard du risque d'échec par CCP.
+Git matérialise le suivi : chaque fonctionnalité correspond à une série de commits traçables, ce
+qui permet de rapprocher le réalisé du planifié.
+
+\paragraph{Comptes rendus et décisions.} Un journal de décisions techniques
+(\file{Probleme-Solution.md}) consigne, pour chaque choix structurant, le contexte, le problème,
+les options envisagées, la solution retenue et sa justification. Ce journal tient lieu de
+comptes rendus de session et alimente la préparation de l'entretien technique.
+
+\begin{todo}{Gestion de projet — outil collaboratif et planning visuel}
+À intégrer pour compléter la compétence C4 :
+\begin{itemize}
+  \item une capture d'un \textbf{outil collaboratif} (GitHub Projects / Trello) montrant le
+        découpage en tâches et leur avancement ;
+  \item un \textbf{planning visuel} (diagramme de Gantt ou feuille de route datée) confrontant
+        le \emph{planifié} au \emph{réalisé} ;
+  \item trois à quatre \textbf{comptes rendus} de sessions de travail (date, objectif, réalisé,
+        reste à faire).
+\end{itemize}
+\end{todo}
+

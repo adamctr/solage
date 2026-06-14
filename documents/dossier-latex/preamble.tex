@@ -1,0 +1,174 @@
+% =============================================================================
+%  preamble.tex — packages, styles, couleurs, commandes et boîtes personnalisées
+%  Dossier de projet Solage — Titre professionnel CDA (RNCP37873)
+%  Compilation : pdflatex (2 à 3 passes pour la table des matières et les liens)
+% =============================================================================
+
+% --- Langue & encodage -------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+
+% --- Mise en page ------------------------------------------------------------
+\usepackage[a4paper,margin=2.5cm,headheight=14pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{microtype}
+% Absorbe les rares débordements dus aux longs tokens monospace (\texttt, URL…)
+\setlength{\emergencystretch}{2em}
+
+% --- Graphisme & couleurs ----------------------------------------------------
+\usepackage{graphicx}
+\usepackage{xcolor}
+\definecolor{solageBlue}{HTML}{1D4ED8}
+\definecolor{solageDark}{HTML}{0F172A}
+\definecolor{solageGray}{HTML}{475569}
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{codeframe}{HTML}{D0D7DE}
+\definecolor{juryGreen}{HTML}{15803D}
+\definecolor{juryBg}{HTML}{F0FDF4}
+\definecolor{todoOrange}{HTML}{C2410C}
+\definecolor{todoBg}{HTML}{FFF7ED}
+\definecolor{infoBlue}{HTML}{1D4ED8}
+\definecolor{infoBg}{HTML}{EFF6FF}
+\definecolor{keywordBlue}{HTML}{0550AE}
+\definecolor{commentGreen}{HTML}{116329}
+\definecolor{stringRed}{HTML}{A31515}
+
+% --- TikZ (tous les schémas : archi, MCD, MLD, UML) --------------------------
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.misc,shapes.multipart,arrows.meta,
+                positioning,fit,calc,backgrounds,chains,decorations.pathreplacing}
+
+% --- Tableaux ----------------------------------------------------------------
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{colortbl}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% --- Listes ------------------------------------------------------------------
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.4em}
+
+% --- En-têtes / pieds de page ------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape Solage — Dossier de projet}
+\fancyhead[R]{\small\itshape CDA · RNCP37873}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% --- Boîtes (réponse jury, à développer, info) -------------------------------
+% Le libellé est inséré via « before upper » (robuste) plutôt que par la clé
+% « title » + « attach title », plus capricieuse.
+\usepackage[most]{tcolorbox}
+
+% Réponse défendable devant le jury
+\newtcolorbox{jury}{%
+  enhanced, breakable, colback=juryBg, colframe=juryGreen,
+  boxrule=0.6pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  before upper={\textbf{\textcolor{juryGreen}{Réponse jury.}}\ }
+}
+
+% Zone à compléter (parties manquantes : tests, CI/CD, maquettes…)
+\newtcolorbox{todo}[1]{%
+  enhanced, breakable, colback=todoBg, colframe=todoOrange,
+  boxrule=0.8pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  before upper={\textbf{\textcolor{todoOrange}{À DÉVELOPPER — #1}}\par\smallskip}
+}
+
+% Note / information
+\newtcolorbox{info}{%
+  enhanced, breakable, colback=infoBg, colframe=infoBlue,
+  boxrule=0.6pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  before upper={\textbf{\textcolor{infoBlue}{Note.}}\ }
+}
+
+% --- Code source (listings) --------------------------------------------------
+\usepackage{listings}
+
+% Carte des caractères accentués pour que le code UTF-8 compile dans listings.
+\lstset{
+  inputencoding=utf8,
+  extendedchars=true,
+  literate=
+    {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {ë}{{\"e}}1
+    {à}{{\`a}}1 {â}{{\^a}}1 {ä}{{\"a}}1
+    {ù}{{\`u}}1 {û}{{\^u}}1 {ü}{{\"u}}1
+    {î}{{\^i}}1 {ï}{{\"i}}1
+    {ô}{{\^o}}1 {ö}{{\"o}}1
+    {ç}{{\c c}}1
+    {É}{{\'E}}1 {È}{{\`E}}1 {Ê}{{\^E}}1 {À}{{\`A}}1 {Ç}{{\c C}}1
+    {«}{{\guillemotleft{}}}1 {»}{{\guillemotright{}}}1
+    {’}{{'}}1 {‘}{{'}}1 {“}{{"}}1 {”}{{"}}1
+    {–}{{--}}1 {—}{{---}}1 {…}{{...}}3 {→}{{$\rightarrow$}}1
+    {€}{{\texteuro{}}}1 {²}{{\textsuperscript{2}}}1
+}
+
+\lstdefinestyle{base}{
+  basicstyle=\ttfamily\footnotesize,
+  numbers=left, numberstyle=\tiny\color{solageGray}, numbersep=8pt,
+  breaklines=true, breakatwhitespace=false,
+  frame=single, framerule=0.4pt, rulecolor=\color{codeframe},
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{keywordBlue}\bfseries,
+  commentstyle=\color{commentGreen}\itshape,
+  stringstyle=\color{stringRed},
+  showstringspaces=false, tabsize=2, captionpos=b,
+  xleftmargin=2.2em, framexleftmargin=1.8em,
+  aboveskip=1em, belowskip=1em,
+}
+
+\lstdefinestyle{php}{style=base, language=PHP}
+\lstdefinestyle{sql}{style=base, language=SQL,
+  morekeywords={SERIAL,BIGSERIAL,TIMESTAMP,BOOLEAN,REFERENCES,CASCADE,TEXT}}
+\lstdefinestyle{bash}{style=base, language=bash}
+
+% JavaScript n'est pas natif dans listings : on le définit.
+\lstdefinelanguage{JavaScript}{
+  keywords={break,case,catch,const,continue,default,delete,do,else,export,
+            false,finally,for,function,if,import,in,instanceof,let,new,null,
+            return,switch,this,throw,true,try,typeof,var,void,while,async,await,of},
+  ndkeywords={class,document,window,fetch,Headers,FormData,console},
+  sensitive=true,
+  comment=[l]{//}, morecomment=[s]{/*}{*/},
+  morestring=[b]', morestring=[b]", morestring=[b]`,
+}
+\lstdefinestyle{js}{style=base, language=JavaScript,
+  ndkeywordstyle=\color{solageBlue}}
+
+% YAML (docker compose, CI)
+\lstdefinelanguage{yaml}{
+  keywords={true,false,null,name,services,image,build,command,environment,
+            ports,volumes,depends_on,condition,networks,labels,healthcheck,
+            restart,on,jobs,steps,uses,run,with},
+  sensitive=true,
+  comment=[l]{\#},
+  morestring=[b]', morestring=[b]",
+}
+\lstdefinestyle{yaml}{style=base, language=yaml}
+\lstdefinestyle{docker}{style=base, morekeywords={FROM,RUN,COPY,WORKDIR,ARG,
+  EXPOSE,CMD,ENTRYPOINT,ENV,AS}}
+\lstdefinestyle{text}{style=base, numbers=none}
+
+% --- Légendes ----------------------------------------------------------------
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+
+% --- Liens & métadonnées -----------------------------------------------------
+\usepackage[colorlinks=true,linkcolor=solageBlue,urlcolor=solageBlue,
+            citecolor=solageBlue,linktoc=all]{hyperref}
+\usepackage{bookmark}
+
+% --- Raccourcis --------------------------------------------------------------
+\newcommand{\file}[1]{\texttt{\small #1}}              % chemin de fichier
+\newcommand{\code}[1]{\texttt{\small #1}}              % bout de code inline
+\newcommand{\comp}[1]{\textbf{\color{solageBlue}#1}}   % badge de compétence (C3…)
+\newcommand{\projet}{\textsc{Solage}}

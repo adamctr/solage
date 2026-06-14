@@ -1,0 +1,189 @@
+\section{Maquettes et enchaînement des écrans}
+\label{sec:maquettes}
+
+L'application comporte neuf écrans : connexion, inscription, fil d'actualité, détail d'un
+message, profil utilisateur, édition de profil, recherche, administration et page d'erreur 404.
+Leur enchaînement est formalisé par la figure~\ref{fig:enchainement}.
+
+\begin{figure}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/enchainement}}
+\caption{Enchaînement des écrans (storyboard). En vert l'écran protégé par authentification,
+en orange l'écran réservé à l'administrateur.}
+\label{fig:enchainement}
+\end{figure}
+
+La charte graphique retenue est minimaliste, conforme aux principes ergonomiques du référentiel
+(simplicité, minimalité des affichages). Le parcours nominal mène de la connexion au fil
+d'actualité, depuis lequel l'utilisateur accède au détail d'un message, aux profils, à la
+recherche et — s'il est administrateur — à la modération.
+
+\begin{todo}{Maquettes des interfaces (Figma)}
+Insérer ici les \textbf{maquettes} réalisées avec un outil de maquettage (Figma), au minimum
+pour les écrans \emph{connexion}, \emph{fil d'actualité} et \emph{détail d'un message}. Pour
+chaque maquette : une capture, et un court paragraphe justifiant les choix d'ergonomie et de
+charte graphique (placement des actions, hiérarchie visuelle, accessibilité). Les maquettes des
+autres écrans iront en annexe. \emph{Critère C5 : « les maquettes sont réalisées conformément au
+cahier des charges » et « l'enchaînement est formalisé par un schéma » (déjà fourni
+ci-dessus).}
+\end{todo}
+
+\section{Conception de la base de données}
+\label{sec:bdd}
+
+\subsection{Modèle conceptuel des données (MCD)}
+
+Le modèle conceptuel (figure~\ref{fig:mcd}) recense trois entités principales :
+\textsc{Utilisateur}, \textsc{Role} et \textsc{Post}. Les réponses sont modélisées par une
+association \emph{réflexive} « répond à » sur \textsc{Post} : une réponse \emph{est} un message
+qui en référence un autre. Les « j'aime » et les favoris sont des associations entre
+\textsc{Utilisateur} et \textsc{Post}, l'association « aime » portant l'attribut
+\texttt{created\_at}.
+
+\begin{figure}[h]
+\centering
+\resizebox{0.95\textwidth}{!}{\input{figures/mcd}}
+\caption{Modèle conceptuel des données (formalisme Merise).}
+\label{fig:mcd}
+\end{figure}
+
+\begin{info}
+Le schéma physique conserve une table \texttt{responses} héritée d'une première version, alors
+que le mécanisme de réponse effectivement utilisé par l'application repose sur les colonnes
+\texttt{reply\_to} / \texttt{reply\_to\_parent} de la table \texttt{posts}. Cette redondance est
+identifiée comme une dette à résorber : c'est un point que je signale plutôt que de le masquer.
+\end{info}
+
+\subsection{Modèle logique / physique (MLD, MPD)}
+
+Le passage au modèle logique transforme les associations en clés étrangères. La règle de
+nommage notable : le mot \texttt{user} étant \emph{réservé} en PostgreSQL, les colonnes de clé
+étrangère se nomment \texttt{user\_id}. La figure~\ref{fig:mld} présente le schéma relationnel
+et ses clés étrangères.
+
+\begin{figure}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/mld}}
+\caption{Modèle logique des données : tables physiques et clés étrangères (\texttt{\#}).}
+\label{fig:mld}
+\end{figure}
+
+Le modèle physique est concrétisé par le script de création \file{solage.pg.sql}, chargé une
+seule fois à l'initialisation du conteneur PostgreSQL. L'extrait suivant en montre les tables
+principales ; le script complet figure en annexe~\ref{ann:sql}.
+
+\begin{lstlisting}[style=sql, caption={Extrait du script de création — \file{solage.pg.sql}}]
+CREATE TABLE roles (
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE users (
+    id        SERIAL PRIMARY KEY,
+    name      VARCHAR(255) NOT NULL,
+    email     VARCHAR(255) NOT NULL UNIQUE,
+    password  VARCHAR(255) NOT NULL,
+    role      INT NULL REFERENCES roles(id) ON DELETE SET NULL,
+    image     VARCHAR(255) NULL
+);
+CREATE INDEX users_role_idx ON users(role);
+
+CREATE TABLE posts (
+    id              SERIAL PRIMARY KEY,
+    user_id         INT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date            TIMESTAMP NOT NULL,
+    content         TEXT NULL,
+    reply_to        INT NULL,
+    reply_to_parent INT NULL,
+    image           TEXT NULL
+);
+CREATE INDEX posts_user_idx ON posts(user_id);
+
+CREATE TABLE likes (
+    id         SERIAL PRIMARY KEY,
+    user_id    INT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post       INT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    response   INT NULL REFERENCES responses(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL
+);
+\end{lstlisting}
+
+L'\textbf{intégrité} est garantie par les contraintes : \texttt{NOT NULL},
+\texttt{UNIQUE(email)}, clés étrangères avec \texttt{ON DELETE CASCADE} (suppression en cascade
+des messages d'un utilisateur supprimé) ou \texttt{SET NULL}. Des \textbf{index} accélèrent les
+accès fréquents (clés étrangères, fil d'actualité).
+
+\subsection{Évolution du schéma : migrations idempotentes}
+
+Les évolutions additives ne sont pas appliquées à la main : elles passent par un système de
+\textbf{migrations idempotentes} (\file{src/Migrations.php}), qui interroge
+\texttt{information\_schema} avant d'agir et peut donc être rejoué sans risque.
+
+\begin{lstlisting}[style=php, caption={Migration idempotente — \file{src/Migrations.php}}]
+protected function columnExists(string $table, string $column): bool {
+    $sql = "SELECT 1 FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = :table AND column_name = :column LIMIT 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':table' => $table, ':column' => $column]);
+    return $stmt->fetchColumn() !== false;
+}
+
+public function migrate(): void {
+    $this->addColumnIfNotExists('posts', 'reply_to', 'INT', 'NULL');
+    $this->addColumnIfNotExists('posts', 'reply_to_parent', 'INT', 'NULL');
+    $this->addColumnIfNotExists('posts', 'image', 'TEXT', 'NULL');
+}
+\end{lstlisting}
+
+\paragraph{Jeu d'essai et restauration.} Un jeu d'essai reproductible
+(\file{seed.sql}) peuple une base de test (utilisateurs, messages, « j'aime », réponses).
+
+\begin{todo}{Procédure de sauvegarde / restauration}
+Documenter et illustrer la procédure de sauvegarde et de restauration de la base
+(\texttt{pg\_dump} / \texttt{pg\_restore}), exigée par le critère C7 (« la base de test peut
+être restaurée en cas d'incident ») : commande de \emph{dump}, emplacement de stockage,
+commande de restauration, et test de restauration sur une base vierge.
+\end{todo}
+
+\section{Diagrammes UML}
+\label{sec:uml}
+
+\subsection{Diagramme de cas d'utilisation}
+
+La figure~\ref{fig:usecase} formalise le comportement attendu : les trois acteurs et leurs cas
+d'usage, avec la généralisation Administrateur $\rightarrow$ Utilisateur $\rightarrow$ Visiteur.
+
+\begin{figure}[h]
+\centering
+\resizebox{0.92\textwidth}{!}{\input{figures/usecase}}
+\caption{Diagramme de cas d'utilisation de \projet{}.}
+\label{fig:usecase}
+\end{figure}
+
+\subsection{Diagramme de séquence : « Publier un message »}
+
+Le cas le plus significatif est la publication d'un message : il traverse toutes les couches et
+mobilise les protections de sécurité. La figure~\ref{fig:sequence} en détaille le déroulé, de
+l'appel \texttt{fetch} du navigateur jusqu'à l'insertion en base et au rendu optimiste.
+
+\begin{figure}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/sequence-post}}
+\caption{Diagramme de séquence : publication d'un message (avec passage par les middlewares
+CSRF et authentification).}
+\label{fig:sequence}
+\end{figure}
+
+\subsection{Diagramme de classes (couche modèle)}
+
+La figure~\ref{fig:classes} présente un extrait de la couche modèle et le gestionnaire de
+session, avec leurs principales méthodes et dépendances.
+
+\begin{figure}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/classes}}
+\caption{Diagramme de classes (extrait) : modèles et gestion de session.}
+\label{fig:classes}
+\end{figure}
+

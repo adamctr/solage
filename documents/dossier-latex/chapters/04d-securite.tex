@@ -1,0 +1,127 @@
+\section{Sécurité de l'application}
+\label{sec:securite}
+
+La sécurité est traitée \textbf{faille par faille}, en référence à l'OWASP Top~10 et aux
+recommandations de l'ANSSI. Le tableau~\ref{tab:owasp} résume les menaces couvertes et leur
+parade dans \projet{}.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{4.2cm} X L{3.4cm}@{}}
+\toprule
+\textbf{Menace (OWASP)} & \textbf{Parade dans \projet{}} & \textbf{Fichier(s)} \\
+\midrule
+XSS stocké (A03) & Échappement à la sortie : \texttt{Utils::e()} (serveur) + \texttt{escapeHtml()} (client) & vues, \file{index.js} \\
+CSRF & Jeton de synchronisation armé sur tout POST, comparaison à temps constant & \file{CsrfMiddleware}, \file{CsrfHelper} \\
+Injection SQL (A03) & Requêtes préparées PDO partout & \file{modules/models/} \\
+Contrôle d'accès / IDOR (A01) & Vérification « propriétaire ou administrateur » + 403 + journal & \file{PostController}, \file{UserController} \\
+Mots de passe & \texttt{password\_hash} / \texttt{password\_verify} (bcrypt) & \file{UserModel} \\
+En-têtes & CSP, \texttt{nosniff}, \texttt{Referrer-Policy}, HSTS (prod) & \file{index.php}, prod \\
+Cookie de session & \texttt{HttpOnly} + \texttt{SameSite=Lax} + \texttt{Secure} (prod) & \file{index.php} \\
+\bottomrule
+\end{tabularx}
+\caption{Couverture des principales failles web.}
+\label{tab:owasp}
+\end{table}
+
+\subsection{XSS : échappement à la sortie}
+
+Le choix d'architecture est d'échapper \textbf{à la sortie}, pas à l'entrée : on conserve la
+donnée originale (un utilisateur peut légitimement écrire « \texttt{<} ») et on neutralise au
+moment de l'affichage. Côté serveur, \texttt{Utils::e()} encapsule \texttt{htmlspecialchars} ;
+côté client, \texttt{escapeHtml()} en est le miroir, requis car le JavaScript reconstruit du DOM.
+
+\begin{lstlisting}[style=php, caption={Échappement côté serveur — \file{src/Utils.php}}]
+public static function e(?string $value): string {
+    return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+}
+\end{lstlisting}
+
+\subsection{CSRF : jeton de synchronisation}
+
+La protection CSRF suit le patron \emph{Synchronizer Token} : un secret par session, généré par
+un générateur cryptographique (\texttt{random\_bytes}), exposé dans une balise \texttt{<meta>} et
+renvoyé par le client dans l'en-tête \texttt{X-CSRF-Token}. La vérification compare en
+\textbf{temps constant} (\texttt{hash\_equals}), ce qui protège des attaques temporelles.
+
+\begin{lstlisting}[style=php, caption={Génération et vérification du jeton CSRF — \file{src/CsrfHelper.php}}]
+public static function getToken(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));   // CSPRNG, pas uniqid()/rand()
+    }
+    return $_SESSION['csrf_token'];
+}
+public static function verifyToken(?string $token): bool {
+    return !empty($_SESSION['csrf_token'])
+        && hash_equals($_SESSION['csrf_token'], (string) $token);   // temps constant
+}
+\end{lstlisting}
+
+Le jeton est armé par le routeur sur \emph{toutes} les requêtes POST (section~\ref{sec:framework}),
+et injecté automatiquement dans chaque \texttt{fetch} par une enveloppe unique côté client :
+
+\begin{lstlisting}[style=js, caption={Injection automatique du jeton dans tout \texttt{fetch} — \file{public/scripts/index.js}}]
+const token = document.querySelector('meta[name="csrf-token"]')?.content;
+const nativeFetch = window.fetch.bind(window);
+window.fetch = function (resource, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const safe = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+    if (token && !safe) {
+        const headers = new Headers(options.headers || {});
+        headers.set('X-CSRF-Token', token);
+        options = { ...options, headers };
+    }
+    return nativeFetch(resource, options);
+};
+\end{lstlisting}
+
+\begin{info}
+La protection est de la \emph{défense en profondeur} : le cookie de session est déjà en
+\texttt{SameSite=Lax} (protection \emph{navigateur}), et le jeton de synchronisation ajoute une
+protection \emph{applicative}, indépendante du navigateur. On garde les deux.
+\end{info}
+
+\subsection{En-têtes de sécurité et cookie de session}
+
+Le point d'entrée \file{public/index.php} pose les en-têtes applicatifs et durcit le cookie de
+session \emph{avant} tout démarrage de session (les paramètres du cookie se figent au démarrage).
+
+\begin{lstlisting}[style=php, caption={En-têtes et cookie de session — \file{public/index.php}}]
+session_set_cookie_params([
+    'httponly' => true,                      // inaccessible au JS (anti-vol de session par XSS)
+    'samesite' => 'Lax',                     // anti-CSRF de base
+    'secure'   => APP_ENV === 'production',  // HTTPS uniquement en production
+]);
+header("X-Content-Type-Options: nosniff");                       // anti MIME-sniffing
+header("Referrer-Policy: strict-origin-when-cross-origin");      // pas de fuite d'URL
+header("Content-Security-Policy: default-src 'self'; img-src 'self' data:;");
+session_start();
+\end{lstlisting}
+
+L'en-tête \textbf{HSTS} (\texttt{Strict-Transport-Security}) est posé à la couche TLS, par
+Traefik en production, car c'est lui qui termine le HTTPS — et non PHP, qui ne voit que du HTTP
+interne.
+
+\subsection{IDOR et contrôle d'accès}
+
+La parade à l'IDOR (\emph{Insecure Direct Object Reference}, OWASP A01) est détaillée en
+section~\ref{sec:metier} : un utilisateur ne peut modifier ou supprimer que ses propres
+ressources. Cette faille — et le cheminement qui a conduit à la corriger — est documentée dans la
+veille de sécurité (section~\ref{sec:veille}).
+
+\begin{todo}{Renforcements de sécurité planifiés}
+Honnêteté assumée : trois renforcements restent à mettre en œuvre et seront présentés comme axes
+d'amélioration.
+\begin{itemize}
+  \item \textbf{Validation serveur systématique} : durcir \texttt{UserValidator} (format de
+        l'email, robustesse du mot de passe : longueur, majuscule, chiffre) — aujourd'hui
+        partielle.
+  \item \textbf{Anti-fixation de session} : appeler \texttt{session\_regenerate\_id(true)} après
+        la connexion.
+  \item \textbf{Validation d'upload par type MIME réel} (\texttt{finfo} + \texttt{getimagesize})
+        en complément de l'extension, et limitation de la taille.
+\end{itemize}
+\end{todo}
+

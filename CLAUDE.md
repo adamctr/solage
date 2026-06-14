@@ -100,7 +100,7 @@ includes/         → bootstrap (Database, Autoloader)
 
 - **No SQL outside `modules/models/`.** Controllers must call model methods, not write queries. If a needed query doesn't exist, add a method to the relevant model first.
 - **No `echo` / output outside `modules/views/`** (and entrypoint). Controllers return data or invoke views.
-- **No `$_POST` / `$_GET` / `$_SESSION` outside controllers and `SessionController`.** Models receive data via parameters.
+- **No `$_POST` / `$_GET` / `$_SESSION` outside controllers and `SessionManager`.** Models receive data via parameters.
 - **No direct `Database::getConnection()` outside models, `Migrations`, and the bootstrap.** Controllers go through models.
 
 ### PostgreSQL conventions

@@ -1,0 +1,33 @@
+% Enchaînement des écrans (storyboard / plan de navigation)
+\begin{tikzpicture}[
+  node distance=10mm and 14mm,
+  screen/.style={draw=solageBlue!70, fill=infoBg, rounded corners=2pt,
+    align=center, font=\scriptsize, minimum width=2.4cm, minimum height=0.9cm},
+  guard/.style={draw=juryGreen!70, fill=juryBg, rounded corners=2pt,
+    align=center, font=\scriptsize, minimum width=2.4cm, minimum height=0.9cm},
+  admin/.style={draw=todoOrange!70, fill=todoBg, rounded corners=2pt,
+    align=center, font=\scriptsize, minimum width=2.4cm, minimum height=0.9cm},
+  flow/.style={-{Stealth[length=2mm]}, semithick, solageGray}
+]
+\node[screen] (login)    {/login\\{\scriptsize Connexion}};
+\node[screen, below=of login] (register) {/register\\{\scriptsize Inscription}};
+\node[guard, right=24mm of login] (feed) {/\\{\scriptsize Fil d'actualité}};
+
+\node[screen, right=of feed] (post) {/post/\{id\}\\{\scriptsize Détail + réponses}};
+\node[screen, above=of post] (search) {/search\\{\scriptsize Recherche}};
+\node[screen, below=of feed] (user) {/user/\{id\}\\{\scriptsize Profil}};
+\node[screen, below=of user] (edit) {/edituser/\{id\}\\{\scriptsize Édition profil}};
+\node[admin, below=of post] (admin) {/admin\\{\scriptsize Modération}};
+\node[screen, draw=solageGray, fill=gray!10, right=of search] (e404) {404\\{\scriptsize Page inconnue}};
+
+\draw[flow] (login) -- (register) node[midway,left,font=\scriptsize]{lien};
+\draw[flow] (login) -- (feed) node[midway,above,font=\scriptsize]{auth OK};
+\draw[flow] (register.east) to[out=0,in=-135] (feed);
+\draw[flow] (feed) -- (post);
+\draw[flow] (feed) -- (search);
+\draw[flow] (feed) -- (user);
+\draw[flow] (user) -- (edit);
+\draw[flow] (feed) -- (admin) node[midway,right,font=\scriptsize]{si Admin};
+\draw[flow] (post.north) -- (search.south);
+\draw[flow, dashed] (feed) to[out=45,in=180] (e404);
+\end{tikzpicture}

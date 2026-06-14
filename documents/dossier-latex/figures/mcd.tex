@@ -1,0 +1,50 @@
+% MCD (Merise) — modèle conceptuel des données de Solage
+\begin{tikzpicture}[
+  entity/.style={draw=solageBlue!75, fill=infoBg, rounded corners=1pt,
+    align=left, font=\small, inner sep=5pt},
+  assoc/.style={draw=juryGreen!70, fill=juryBg, ellipse,
+    align=center, font=\footnotesize\itshape, inner sep=1pt, minimum width=2cm, minimum height=1cm},
+  card/.style={font=\scriptsize, text=solageDark, fill=white, inner sep=1pt},
+  link/.style={solageGray, semithick}
+]
+% --- Entités ---
+\node[entity] (role) at (0,0)
+  {\textbf{ROLE}\\[2pt]\underline{id}\\ name};
+\node[entity] (user) at (5.2,-0.3)
+  {\textbf{UTILISATEUR}\\[2pt]\underline{id}\\ name\\ firstname\\ email\\ password\\ image};
+\node[entity] (post) at (11,-0.3)
+  {\textbf{POST}\\[2pt]\underline{id}\\ content\\ date\\ image\\ reply\_to\\ reply\_to\_parent};
+
+% --- Associations ---
+\node[assoc] (appart) at (2.6,0) {appartient};
+\node[assoc] (publie) at (8.1,2.1) {publie};
+\node[assoc] (aime)   at (8.1,-2.6) {aime\\{\scriptsize\underline{created\_at}}};
+\node[assoc] (favori) at (8.1,-4.6) {met en\\ favori};
+\node[assoc] (repond) at (12.6,3) {répond à};
+
+% --- Liens + cardinalités ---
+\draw[link] (role) -- (appart)
+  node[card,pos=0.45,above]{0,n};
+\draw[link] (appart) -- (user)
+  node[card,pos=0.55,above]{1,1};
+
+\draw[link] (user.north) |- (publie)
+  node[card,pos=0.85,above]{0,n};
+\draw[link] (publie) -| (post.north)
+  node[card,pos=0.2,above]{1,1};
+
+\draw[link] (user.south) |- (aime)
+  node[card,pos=0.85,below]{0,n};
+\draw[link] (aime) -| (post.south)
+  node[card,pos=0.2,below]{0,n};
+
+\draw[link] (user.south) |- (favori)
+  node[card,pos=0.9,below]{0,n};
+\draw[link] (favori) -| ([xshift=-4mm]post.south)
+  node[card,pos=0.2,below]{0,n};
+
+\draw[link] (post.north) to[out=110,in=20] (repond)
+  node[card,pos=0.85,right]{0,n};
+\draw[link] (repond) to[out=200,in=70] ([xshift=-6mm]post.north)
+  node[card,pos=0.15,left]{0,1};
+\end{tikzpicture}

@@ -19,3 +19,9 @@ Notes pour la soutenance. Anecdotes, déclics, et points à glisser dans le disc
 - **Cycle vertueux** : incident réel public → veille → audit du code maison → fix → documentation → réponse jury prête.
 
 ---
+
+
+## Projections pour la suite :
+
+Factoriser/Séparés les css et js 
+Loader le js dynamiquement en fonction du layout

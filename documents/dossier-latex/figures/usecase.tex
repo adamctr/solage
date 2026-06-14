@@ -1,0 +1,49 @@
+% Diagramme de cas d'utilisation
+\begin{tikzpicture}[
+  uc/.style={draw=solageBlue!70, fill=infoBg, ellipse, align=center,
+    font=\scriptsize, minimum width=3cm, minimum height=0.85cm, inner sep=1pt},
+  lnk/.style={solageGray, thin},
+  gen/.style={-{Triangle[open,length=3mm,width=3mm]}, solageDark, semithick},
+  actorlbl/.style={font=\scriptsize\bfseries, align=center},
+  actor/.pic={
+    \draw[thick] (0,0) circle (3mm);
+    \draw[thick] (0,-3mm) -- (0,-1.2);
+    \draw[thick] (-5mm,-0.75) -- (5mm,-0.75);
+    \draw[thick] (0,-1.2) -- (-5mm,-1.8);
+    \draw[thick] (0,-1.2) -- (5mm,-1.8);
+  }
+]
+% --- Acteurs ---
+\pic at (0,2) {actor};      \node[actorlbl] at (0,-0.2) {Visiteur};
+\pic at (0,-2.6) {actor};   \node[actorlbl] at (0,-4.8) {Utilisateur};
+\pic at (0,-7.2) {actor};   \node[actorlbl] at (0,-9.4) {Administrateur};
+
+% --- Frontière du système ---
+\node[draw=solageDark, rounded corners, minimum width=7cm, minimum height=12.4cm,
+      label={[font=\bfseries]north:Solage}] (sys) at (7.3,-3.2) {};
+
+% --- Cas d'utilisation ---
+\node[uc] (inscr)  at (7.3,2.1)  {S'inscrire};
+\node[uc] (conn)   at (7.3,1.1)  {Se connecter};
+\node[uc] (fil)    at (7.3,0.1)  {Consulter le fil};
+\node[uc] (pub)    at (7.3,-0.9) {Publier un message};
+\node[uc] (rep)    at (7.3,-1.9) {Répondre à un message};
+\node[uc] (aime)   at (7.3,-2.9) {Aimer un message};
+\node[uc] (rech)   at (7.3,-3.9) {Rechercher};
+\node[uc] (prof)   at (7.3,-4.9) {Éditer son profil};
+\node[uc] (suppr)  at (7.3,-5.9) {Supprimer son contenu};
+\node[uc] (moder)  at (7.3,-8.6) {Modérer (tout contenu)};
+
+% --- Associations acteur / cas ---
+\draw[lnk] (0,1.3) -- (inscr.west);
+\draw[lnk] (0,1.3) -- (conn.west);
+\foreach \c in {fil,pub,rep,aime,rech,prof,suppr}
+  \draw[lnk] (0,-3.3) -- (\c.west);
+\draw[lnk] (0,-7.9) -- (moder.west);
+
+% --- Généralisations entre acteurs (décalées à gauche pour ne pas recouvrir) ---
+\draw[gen] (-1.2,-4.4) -- (-1.2,0.0);          % Utilisateur -> Visiteur
+\draw[gen] (-1.2,-9.0) -- (-1.2,-4.8);         % Admin -> Utilisateur
+\node[font=\tiny,text=solageGray,rotate=90] at (-1.5,-2.2) {généralise};
+\node[font=\tiny,text=solageGray,rotate=90] at (-1.5,-6.9) {généralise};
+\end{tikzpicture}

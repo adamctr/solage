@@ -1,0 +1,45 @@
+% Diagramme de classes (extrait : couche modèle + session)
+\begin{tikzpicture}[
+  class/.style={draw=solageBlue!75, fill=infoBg, rectangle split,
+    rectangle split parts=3, align=left, font=\scriptsize, inner sep=3pt,
+    text width=4.3cm},
+  assoc/.style={-{Stealth[length=2mm]}, semithick, solageGray},
+  dep/.style={-{Stealth[length=2mm]}, semithick, dashed, solageGray},
+  albl/.style={font=\scriptsize\itshape, text=solageDark, fill=white, inner sep=1pt}
+]
+\node[class] (user) at (0,0) {
+  \textbf{UserModel}
+  \nodepart{second}
+  - id, name, email\\ - password, role, image
+  \nodepart{third}
+  + getUserById(id)\\ + getUserByEmail(email)\\ + getUsersByIds(ids[]): map\\ + createUser(...)\\ + getRoleName(): string
+};
+\node[class] (post) at (-5.6,-0.2) {
+  \textbf{PostModel}
+  \nodepart{second}
+  - id, user, content\\ - date, image, replyTo
+  \nodepart{third}
+  + getPosts(): array\\ + getPostById(id)\\ + createPost(...)\\ + getResponses(): array\\ + delete(id): bool
+};
+\node[class] (like) at (-5.6,-5.4) {
+  \textbf{LikeModel}
+  \nodepart{second}
+  - id, userId\\ - post, response
+  \nodepart{third}
+  + create(...)\\ + isLikedBy(...): bool\\ + countForPost(id): int
+};
+\node[class] (sess) at (5.6,-0.6) {
+  \textbf{SessionManager}
+  \nodepart{second}
+  - user: UserModel
+  \nodepart{third}
+  + login(id)\\ + isLoggedIn(): bool\\ + isAdmin(): bool\\ + getUserId(): int
+};
+
+\draw[assoc] (sess) -- (user) node[albl,midway,above]{utilise};
+\draw[dep] (post.north west) to[out=120,in=60] (user.north)
+  node[albl,pos=0.5,above]{user\_id};
+\draw[dep] (like.east) -- (post.south east|-like.east)
+  node[albl,midway,below]{post};
+\draw[dep] (like.north) -- (post.south) node[albl,midway,right]{};
+\end{tikzpicture}

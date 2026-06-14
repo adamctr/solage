@@ -1,0 +1,49 @@
+\chapter{Liste des compétences mises en œuvre}
+\label{ch:competences}
+
+Ce dossier rend compte de la réalisation du projet \projet{}, une application web de
+microblogging développée en formation, support de la mise en œuvre des \textbf{onze
+compétences professionnelles} du titre \emph{Concepteur Développeur d'Applications}
+(RNCP\,37873), réparties sur les trois certificats de compétences professionnelles (CCP).
+
+Le tableau~\ref{tab:competences} constitue la \emph{grille de lecture} du jury : chaque
+compétence y est reliée à la preuve concrète qui la démontre dans \projet{} et au chapitre
+où elle est développée.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\small
+\begin{tabularx}{\textwidth}{@{}c L{4.3cm} c X c@{}}
+\toprule
+\textbf{\#} & \textbf{Compétence} & \textbf{CCP} & \textbf{Preuve principale dans \projet{}} & \textbf{Statut} \\
+\midrule
+C1 & Installer et configurer son environnement de travail & 1 & Docker (FrankenPHP, Caddy, Traefik, PostgreSQL), Git, Composer, conteneurs dev = prod & \textcolor{juryGreen}{\textbf{OK}} \\
+C2 & Développer des interfaces utilisateur & 1 & Vues \file{modules/views/}, JS vanilla, AJAX, échappement XSS, CSP & \textcolor{juryGreen}{\textbf{OK}} \\
+C3 & Développer des composants métier & 1 & Contrôleurs \file{modules/controllers/}, autorisation, contrôle IDOR, CSRF & \textcolor{juryGreen}{\textbf{OK}} \\
+C4 & Contribuer à la gestion d'un projet informatique & 1 & Git, feuille de route, journal de décisions & \textcolor{todoOrange}{\textbf{Partiel}} \\
+C5 & Analyser les besoins et maquetter une application & 2 & Expression des besoins (ch.~\ref{ch:besoins}), maquettes \& enchaînement & \textcolor{todoOrange}{\textbf{Partiel}} \\
+C6 & Définir l'architecture logicielle d'une application & 2 & MVC multicouche, Router, middlewares, schéma DICP & \textcolor{juryGreen}{\textbf{OK}} \\
+C7 & Concevoir et mettre en place une base de données relationnelle & 2 & \file{solage.pg.sql}, migrations idempotentes, \file{seed.sql} & \textcolor{juryGreen}{\textbf{OK}} \\
+C8 & Développer des composants d'accès aux données SQL et NoSQL & 2 & \file{modules/models/}, PDO requêtes préparées, anti-injection & \textcolor{juryGreen}{\textbf{OK}} \\
+C9 & Préparer et exécuter les plans de tests & 3 & Plan de tests + tests unitaires / sécurité (PHPUnit) & \textcolor{red}{\textbf{À développer}} \\
+C10 & Préparer et documenter le déploiement & 3 & \file{docker-compose.prod.yml}, Traefik HTTPS, procédure & \textcolor{todoOrange}{\textbf{Partiel}} \\
+C11 & Contribuer à la mise en production (DevOps) & 3 & Conteneurs, migrations, intégration continue (CI) & \textcolor{todoOrange}{\textbf{Partiel}} \\
+\bottomrule
+\end{tabularx}
+\caption{Cartographie des onze compétences professionnelles et de leur preuve dans \projet{}.}
+\label{tab:competences}
+\end{table}
+
+\paragraph{Compétences transversales.} Elles sont évaluées \emph{à travers} les compétences
+professionnelles :
+\begin{itemize}
+  \item \textbf{Communiquer en français et en anglais} : dossier et présentation structurés,
+        commentaires de code et vocabulaire technique en anglais (niveau B1) ;
+  \item \textbf{Mettre en œuvre une démarche de résolution de problème} : voir le
+        chapitre~\ref{ch:bilan} (bugs diagnostiqués et résolus : \texttt{STDOUT} CLI,
+        \emph{headers already sent}, requête N+1) ;
+  \item \textbf{Apprendre en continu} : veille de sécurité ayant conduit à la correction
+        d'une faille IDOR (section~\ref{sec:veille}).
+\end{itemize}
+

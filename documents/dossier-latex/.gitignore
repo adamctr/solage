@@ -1,0 +1,15 @@
+# Fichiers de compilation LaTeX
+*.aux
+*.log
+*.toc
+*.out
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+compile*.out
+# Le PDF généré (décommenter pour le versionner)
+# main.pdf

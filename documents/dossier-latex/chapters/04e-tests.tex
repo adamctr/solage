@@ -1,0 +1,162 @@
+\section{Plan de tests}
+\label{ch:tests}
+
+La stratégie de tests couvre quatre niveaux : tests \textbf{unitaires} (composants isolés),
+tests d'\textbf{intégration} (parcours traversant plusieurs couches), tests de
+\textbf{sécurité} (rejouant les failles corrigées) et tests de \textbf{non-régression}. Le
+tableau~\ref{tab:plantests} présente le plan, dérivé des fonctionnalités et des \emph{user
+stories} de la section~\ref{sec:acteurs}.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.6cm} L{2.6cm} X@{}}
+\toprule
+\textbf{Fonctionnalité} & \textbf{Type de test} & \textbf{Objet du test} \\
+\midrule
+Connexion & Unitaire & \texttt{UserValidator::login} (champs vides, email inconnu, mauvais mot de passe) \\
+Échappement & Unitaire & \texttt{Utils::e()} neutralise \texttt{<script>} \\
+Accès données & Unitaire & \texttt{PostModel} : création, lecture, suppression \\
+Routage & Unitaire & \texttt{Router} : correspondance d'URL et paramètres \\
+Publier un message & Intégration & Parcours complet : \texttt{fetch} $\to$ contrôleur $\to$ modèle $\to$ base \\
+Injection SQL & Sécurité & Recherche avec charge utile : la requête préparée neutralise \\
+XSS & Sécurité & Message \texttt{<script>} : rendu échappé, non exécuté \\
+CSRF & Sécurité & POST sans jeton $\to$ \texttt{403} \\
+IDOR & Sécurité & Suppression d'un message d'autrui $\to$ \texttt{403} \\
+\bottomrule
+\end{tabularx}
+\caption{Plan de tests de \projet{}.}
+\label{tab:plantests}
+\end{table}
+
+\begin{todo}{Implémentation et exécution des tests (PHPUnit)}
+Cette section doit être complétée par l'implémentation réelle — c'est la priorité du projet, la
+compétence C9 étant \textbf{obligatoire}. À produire :
+\begin{enumerate}
+  \item installer \textbf{PHPUnit} (dépendance de développement Composer) ;
+  \item créer un \textbf{environnement de test} : conteneur PostgreSQL dédié (ou SQLite en
+        mémoire via un adaptateur) ;
+  \item écrire les \textbf{tests unitaires} listés ci-dessus et capturer la sortie verte ;
+  \item écrire les \textbf{quatre tests de sécurité} (injection SQL, XSS, CSRF, IDOR) ;
+  \item insérer une \textbf{capture du rapport d'exécution} (nombre de tests, assertions,
+        verts / rouges) ;
+  \item renseigner la colonne « résultat obtenu » du jeu d'essai (section suivante).
+\end{enumerate}
+Code de test, sorties complètes et jeux de données iront en annexe~\ref{ann:tests}.
+\end{todo}
+
+\section{Jeu d'essai de la fonctionnalité la plus représentative}
+\label{sec:jeuessai}
+
+La fonctionnalité retenue est « \textbf{Publier un message} » : elle traverse toutes les couches
+(interface, contrôleur, validation, téléversement, modèle, SQL, réponse, rendu) et concentre les
+protections de sécurité. Le tableau~\ref{tab:jeuessai} en présente le jeu d'essai.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.6cm} L{3.2cm} X L{2.2cm}@{}}
+\toprule
+\textbf{Cas} & \textbf{Donnée d'entrée} & \textbf{Résultat attendu} & \textbf{Obtenu} \\
+\midrule
+Nominal & Contenu « Bonjour » & Message créé, \texttt{id} retourné, HTTP 200 & \textit{(à exécuter)} \\
+Contenu vide & \texttt{""} & Refus « contenu vide », pas d'insertion & \textit{(à exécuter)} \\
+Image trop lourde & Fichier > limite & Refus « image trop lourde » & \textit{(à exécuter)} \\
+Extension interdite & Fichier \texttt{.php} & Refus « type de fichier non autorisé » & \textit{(à exécuter)} \\
+Charge XSS & \texttt{<script>\dots} & Stocké brut, \textbf{rendu échappé} & \textit{(à exécuter)} \\
+Non authentifié & Aucune session & Redirection / \texttt{403} (AuthMiddleware) & \textit{(à exécuter)} \\
+Sans jeton CSRF & POST sans jeton & \texttt{403} (CsrfMiddleware) & \textit{(à exécuter)} \\
+\bottomrule
+\end{tabularx}
+\caption{Jeu d'essai de la fonctionnalité « Publier un message ».}
+\label{tab:jeuessai}
+\end{table}
+
+\begin{todo}{Colonne « résultat obtenu » et analyse des écarts}
+Après exécution, renseigner la colonne « Obtenu » pour chaque cas et ajouter, sous le tableau,
+l'\textbf{analyse des écarts} éventuels (cas où l'obtenu diffère de l'attendu, cause, correctif).
+Le référentiel exige cette analyse, même en l'absence d'écart (« analyse des écarts éventuels »).
+\end{todo}
+
+\section{Préparation et documentation du déploiement}
+\label{sec:deploiement}
+
+La mise en production s'appuie sur la pile \file{docker-compose.prod.yml} : Traefik termine le
+HTTPS (Let's Encrypt), redirige HTTP vers HTTPS et pose l'en-tête HSTS ; le service
+\texttt{migrate} applique les migrations \emph{avant} le démarrage de l'application ; PostgreSQL
+n'est pas exposé hors du réseau interne.
+
+\begin{lstlisting}[style=yaml, caption={Routage HTTPS et HSTS en production — \file{docker-compose.prod.yml}}]
+labels:
+  - traefik.http.routers.solage.entrypoints=websecure
+  - traefik.http.routers.solage.tls.certresolver=le
+  - traefik.http.middlewares.solage-hsts.headers.stsSeconds=31536000
+  - traefik.http.middlewares.solage-hsts.headers.stsIncludeSubdomains=true
+  - traefik.http.routers.solage.middlewares=solage-hsts
+\end{lstlisting}
+
+\begin{todo}{Procédure de déploiement (\file{DEPLOYMENT.md})}
+Rédiger une procédure de déploiement documentée (critère C10) :
+\begin{itemize}
+  \item \textbf{pré-requis} (serveur, Docker, variables d'environnement, nom de domaine, DNS) ;
+  \item \textbf{étapes} de mise en production (build de l'image, \texttt{docker compose up},
+        migrations, vérification) ;
+  \item procédure de \textbf{retour arrière} (\emph{rollback}) en cas d'incident ;
+  \item description des \textbf{environnements} (développement local, pré-production, production)
+        et de leurs différences.
+\end{itemize}
+\end{todo}
+
+\section{Contribution à la mise en production (DevOps)}
+\label{sec:devops}
+
+Plusieurs briques DevOps sont déjà en place : conteneurisation complète (\texttt{docker
+compose}), images reproductibles, migrations \textbf{idempotentes} rejouables sans risque, et
+journalisation structurée adaptée à une collecte par l'orchestrateur. Il manque l'automatisation
+par intégration continue.
+
+\begin{todo}{Pipeline d'intégration continue (CI/CD)}
+Mettre en place un pipeline \textbf{GitHub Actions} déclenché à chaque \emph{push}, et y joindre
+une capture d'un rapport d'exécution. Étapes cibles : analyse statique (PHPStan), tests
+(PHPUnit), \emph{lint} JavaScript (ESLint), construction de l'image Docker. Squelette de départ à
+adapter :
+\end{todo}
+
+\begin{lstlisting}[style=yaml, caption={Squelette de pipeline CI proposé — \file{.github/workflows/ci.yml} (à implémenter)}]
+name: CI
+on: [push]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3' }
+      - run: composer install --no-interaction
+      - run: vendor/bin/phpstan analyse src modules   # analyse statique
+      - run: vendor/bin/phpunit                        # tests unitaires + securite
+      - run: docker build -t solage-app .              # construction du livrable
+\end{lstlisting}
+
+\section{Veille de sécurité}
+\label{sec:veille}
+
+\paragraph{Sources suivies.} La veille s'appuie sur l'OWASP (Top~10 et guides de test), les
+publications de l'ANSSI, les bulletins de sécurité de PHP et les bases de vulnérabilités (CVE).
+
+\paragraph{Le déclic IDOR.} Un article sur la fuite de données ayant touché l'URSSAF (accès aux
+données d'autres assurés en modifiant un identifiant dans l'URL — une faille \textbf{IDOR}) a
+déclenché un audit de \projet{}. Il a révélé que les routes \texttt{/edituser/\{id\}},
+\texttt{/api/users/delete} et \texttt{/api/posts/delete} vérifiaient l'\emph{authentification}
+(\texttt{AuthMiddleware}) mais pas la \emph{propriété} de la ressource : un utilisateur
+authentifié pouvait modifier ou supprimer le contenu d'autrui en changeant l'identifiant. Le
+correctif (contrôle « propriétaire ou administrateur » + \texttt{403} + journalisation) est
+décrit en section~\ref{sec:metier}.
+
+\begin{todo}{Journal de veille}
+Compléter par un \textbf{journal de veille} daté : pour chaque entrée, la source, la date, ce qui
+a été appris, la vulnérabilité éventuellement détectée dans \projet{} et le correctif apporté.
+Viser au moins deux à trois entrées en plus de l'IDOR.
+\end{todo}

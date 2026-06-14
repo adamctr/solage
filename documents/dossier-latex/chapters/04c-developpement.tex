@@ -1,0 +1,222 @@
+\section{Composants d'interface utilisateur}
+\label{sec:interfaces}
+
+Les interfaces sont rendues par la couche \file{modules/views/}. Une vue ne contient aucune
+logique d'accès aux données : elle reçoit des données déjà préparées par le contrôleur et se
+contente de produire du HTML, en \textbf{échappant systématiquement} tout contenu issu de
+l'utilisateur via \texttt{Utils::e()}.
+
+\begin{lstlisting}[style=php, caption={Vue du formulaire de publication (extrait) — \file{modules/views/CreatePostView.php}}]
+<div class="createPost">
+    <div class="postAvatar"><?= Utils::e($userImage) ?></div>
+    <div class="postInsideContainer">
+        <div class="postNameDate"><?= Utils::e($username) ?></div>
+        <span id="postContent" aria-label="Contenu du post"
+              role="textbox" contenteditable="true"></span>
+        <input id="file-input" accept="image/*" type="file" class="hidden" />
+        <button id="postCreateButton" class="postCreateButton">Publier</button>
+    </div>
+</div>
+\end{lstlisting}
+
+\paragraph{Asynchronisme (AJAX).} Les actions (publier, aimer, supprimer, se connecter) sont
+réalisées sans rechargement de page, par \texttt{fetch}. Après création d'un message, le DOM est
+mis à jour de façon \emph{optimiste} : le message est injecté immédiatement, sans attendre un
+rechargement. Comme cette injection passe par \texttt{innerHTML}, un échappement \emph{côté
+client} (\texttt{escapeHtml}), miroir de \texttt{Utils::e()}, est indispensable (voir la
+section~\ref{sec:securite}).
+
+\begin{lstlisting}[style=js, caption={Création d'un message par \texttt{fetch} — \file{public/scripts/index.js}}]
+const content = document.getElementById("postContent").innerText.trim();
+if (!content) { alert("Le contenu du post ne peut pas être vide !"); return; }
+
+const formData = new FormData();
+formData.append('data', JSON.stringify({ content, replyTo, replyToParent }));
+if (selectedImage) formData.append('image', selectedImage);
+
+fetch("/api/post", { method: "POST", body: formData })  // le jeton CSRF est injecté
+  .then(response => response.json())                    // automatiquement (cf. ch. securite)
+  .then(data => { if (data.success) { /* rendu optimiste via escapeHtml */ } });
+\end{lstlisting}
+
+\begin{todo}{Captures d'écran des interfaces}
+Insérer ici une à deux \textbf{captures d'écran} des interfaces réelles (le fil d'actualité et
+le formulaire de publication), mises en regard du code de la vue correspondante. Le référentiel
+(C2) attend explicitement « les captures d'écran d'interfaces utilisateur et le code
+correspondant ». Les autres captures iront en annexe.
+\end{todo}
+
+\section{Composants métier}
+\label{sec:metier}
+
+Les composants métier vivent dans \file{modules/controllers/}. Ils orchestrent la requête,
+valident les entrées et — point essentiel — vérifient l'\textbf{autorisation sur la ressource},
+et non la seule authentification.
+
+\subsection{Contrôle d'accès : la parade à l'IDOR}
+
+La suppression d'un message illustre le contrôle d'accès. Avant toute suppression, le contrôleur
+vérifie que l'utilisateur courant est \emph{propriétaire} de la ressource ou administrateur ;
+sinon, il répond \texttt{403} et journalise la tentative.
+
+\begin{lstlisting}[style=php, caption={Contrôle d'autorisation anti-IDOR — \file{modules/controllers/PostController.php}}]
+$session = new SessionManager(new UserModel());
+$userId  = $session->getUserId();
+$post    = PostModel::getPostById($postId);
+
+if ($post->getUserId() !== $userId && !$session->isAdmin()) {
+    Logger::get()->warning('post.delete.forbidden', [
+        'current_user_id' => $userId,
+        'post_owner_id'   => $post->getUserId(),
+        'post_id'         => $postId,
+    ]);
+    http_response_code(403);
+    Utils::sendResponse(false, "Vous n'avez pas la permission de supprimer ce post.");
+    return;
+}
+$result = PostModel::delete($postId);
+\end{lstlisting}
+
+\subsection{Authentification \emph{vs} autorisation}
+
+La distinction est portée par le \texttt{SessionManager} : \texttt{isLoggedIn()} répond à « qui
+es-tu ? » (authentification), \texttt{isAdmin()} répond à « qu'as-tu le droit de faire ? »
+(autorisation, résolue par le \emph{libellé} du rôle et non par un identifiant numérique
+magique).
+
+\begin{lstlisting}[style=php, caption={Authentification et autorisation — \file{src/SessionManager.php}}]
+public function isLoggedIn(): bool {
+    return isset($_SESSION['user_id']);
+}
+public function isAdmin(): bool {
+    return $this->user !== null && $this->user->getRoleName() === 'Admin';
+}
+\end{lstlisting}
+
+\subsection{Validation pure, découplée de la sortie HTTP}
+
+Le validateur (\file{modules/validators/UserValidator.php}) \emph{décide} sans produire de
+sortie : il retourne un tableau structuré. C'est le contrôleur qui décide ensuite quoi en faire.
+Ce découplage rend le validateur \textbf{testable} (il n'émet ni \texttt{echo} ni en-tête).
+
+\begin{lstlisting}[style=php, caption={Validation pure (retourne un tableau) — \file{UserValidator.php}}]
+public static function login($email, $password): array {
+    if (empty($email) || empty($password)) {
+        return ['ok' => false, 'type' => 'error', 'message' => "Merci de renseigner vos informations"];
+    }
+    $user = (new UserModel())->getUserByEmail($email);
+    if (!$user) {
+        return ['ok' => false, 'type' => 'error', 'message' => "L'email n'existe pas"];
+    }
+    if (!password_verify($password, $user->getPassword())) {
+        return ['ok' => false, 'type' => 'error', 'message' => "Le mot de passe ne correspond pas"];
+    }
+    return ['ok' => true, 'type' => 'success', 'message' => "Vous vous êtes bien connecté !"];
+}
+\end{lstlisting}
+
+\section{Composants d'accès aux données}
+\label{sec:acces}
+
+Toute la persistance vit dans \file{modules/models/}. Les requêtes sont \textbf{préparées} : les
+valeurs utilisateur partent en paramètres liés, jamais concaténées dans la requête — l'injection
+SQL est structurellement impossible.
+
+\begin{lstlisting}[style=php, caption={Insertion par requête préparée — \file{modules/models/PostModel.php}}]
+public function createPost(?int $replyTo = null, ?int $replyToParent = null) {
+    try {
+        $statement = $this->db->prepare(
+            'INSERT INTO posts (user_id, content, date, reply_to, image, reply_to_parent)
+             VALUES (:user_id, :content, :date, :reply_to, :image, :reply_to_parent)');
+        $statement->bindValue(':user_id', $this->user);
+        $statement->bindValue(':content', $this->content);
+        $statement->bindValue(':date', $this->date);
+        $statement->bindValue(':reply_to', $replyTo, PDO::PARAM_INT);
+        $statement->bindValue(':image', $this->image);
+        $statement->bindValue(':reply_to_parent', $replyToParent, PDO::PARAM_INT);
+        $statement->execute();
+        return $this->db->lastInsertId('posts_id_seq');
+    } catch (PDOException $e) {
+        Logger::get()->error('post.create.failed', ['user_id' => $this->user, 'exception' => $e]);
+        return false;
+    }
+}
+\end{lstlisting}
+
+\paragraph{Optimisation : suppression d'une requête N+1.} Afficher l'auteur de chaque message
+provoquait, à l'origine, une requête par message (21 requêtes pour 20 messages). La méthode
+\texttt{getUsersByIds} précharge tous les auteurs en \emph{une} requête \texttt{IN}, ramenant le
+coût à deux requêtes. Le cas \texttt{IN ()} vide — une erreur SQL en PostgreSQL — est court-circuité.
+
+\begin{lstlisting}[style=php, caption={Préchargement des auteurs en une requête — \file{modules/models/UserModel.php}}]
+public static function getUsersByIds(array $ids): array {
+    if (empty($ids)) {                     // IN () est une erreur SQL en PostgreSQL
+        return [];
+    }
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = Database::getConnection()->prepare(
+        "SELECT id, name, email, password, role, image FROM users WHERE id IN ($placeholders)");
+    $stmt->execute(array_values($ids));    // valeurs liées : pas d'injection possible
+    $users = [];
+    while ($row = $stmt->fetch(PDO::FETCH_OBJ)) {
+        $users[(int)$row->id] = new UserModel($row);
+    }
+    return $users;
+}
+\end{lstlisting}
+
+\section{Autres composants : le socle « framework »}
+\label{sec:framework}
+
+Le dossier \file{src/} contient le socle que j'ai écrit : routeur, middlewares, logger,
+utilitaires. C'est la preuve de maîtrise architecturale — chaque ligne est défendable.
+
+\paragraph{Routeur.} Le routeur associe une URL (avec paramètres en expression régulière) à un
+\texttt{Controller\#method}, exécute le middleware de route, puis \textbf{arme le contrôle CSRF
+sur toute requête POST} — sécurité par défaut plutôt que sur option.
+
+\begin{lstlisting}[style=php, caption={Dispatch et armement du CSRF sur les POST — \file{src/Router.php}}]
+if ($route['method'] === $requestMethod && preg_match($pathRegex, $requestUri, $matches)) {
+    if ($route['middleware']) {
+        (new $route['middleware']())->handle();      // Auth ou Admin, selon la route
+    }
+    if ($route['method'] === 'POST') {
+        (new CsrfMiddleware())->handle();             // CSRF armé sur TOUTES les mutations
+    }
+    // ... instanciation du contrôleur et appel de la méthode ...
+}
+\end{lstlisting}
+
+\paragraph{Middlewares : authentification \emph{vs} autorisation.} Deux classes distinctes
+séparent explicitement « être connecté » et « être administrateur ». Le refus d'accès
+administrateur est journalisé (indicateur de \emph{preuve} du DICP).
+
+\begin{lstlisting}[style=php, caption={Middleware d'autorisation administrateur — \file{src/AdminMiddleware.php}}]
+public function handle() {
+    $session = new SessionManager(new UserModel());
+    if (!$session->isLoggedIn()) { header('Location: /login'); exit; }
+    if (!$session->isAdmin()) {
+        Logger::get()->warning('admin.access.denied', [
+            'user_id' => $session->getUserId(), 'uri' => $_SERVER['REQUEST_URI'] ?? '']);
+        http_response_code(403);
+        echo "403 — accès réservé aux administrateurs."; exit;
+    }
+}
+\end{lstlisting}
+
+\paragraph{Journalisation PSR-3.} Le logger (\file{src/Logger.php}) implémente le standard
+PSR-3 et écrit des enregistrements \emph{JSON-line} sur la sortie standard (et la sortie d'erreur
+pour les niveaux \texttt{warning} et au-delà), conformément aux conventions Docker : c'est
+l'orchestrateur qui collecte les journaux, l'application ne gère pas de fichiers de log.
+
+\begin{lstlisting}[style=php, caption={Logger PSR-3, sortie JSON sur \texttt{php://stdout} — \file{src/Logger.php}}]
+public function log($level, string|\Stringable $message, array $context = []): void {
+    $record = ['ts' => date('c'), 'level' => (string) $level,
+               'msg' => $this->interpolate((string) $message, $context)];
+    if ($context !== []) { $record['context'] = $this->serializeContext($context); }
+    // STDOUT/STDERR n'existent qu'en CLI ; les flux php://* marchent partout (CLI, HTTP, FrankenPHP)
+    $target = in_array($level, self::STDERR_LEVELS, true) ? 'php://stderr' : 'php://stdout';
+    file_put_contents($target, json_encode($record, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+}
+\end{lstlisting}
+

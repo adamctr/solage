@@ -1,0 +1,45 @@
+% =============================================================================
+%  DOSSIER DE PROJET — Solage
+%  Titre professionnel Concepteur Développeur d'Applications (CDA) — RNCP37873
+%
+%  Compilation :  pdflatex main  →  pdflatex main  →  pdflatex main
+%  (3 passes : table des matières + références + signets PDF)
+%
+%  Arborescence :
+%    main.tex            ← ce fichier (racine)
+%    preamble.tex        ← packages, styles, boîtes
+%    titlepage.tex       ← page de garde
+%    chapters/*.tex      ← contenu
+%    figures/*.tex       ← schémas TikZ (archi, MCD, MLD, UML…)
+% =============================================================================
+\documentclass[11pt,a4paper,oneside]{report}
+\input{preamble}
+
+\begin{document}
+
+% --- Page de garde -----------------------------------------------------------
+\input{titlepage}
+
+% --- Table des matières ------------------------------------------------------
+\cleardoublepage
+\pagenumbering{roman}
+\tableofcontents
+\cleardoublepage
+\pagenumbering{arabic}
+
+% --- Corps du dossier (40–60 pages hors garde / sommaire / annexes) -----------
+\input{chapters/01-competences}
+\input{chapters/02-besoins}
+\input{chapters/03-environnement}
+\input{chapters/04a-architecture}
+\input{chapters/04b-conception}
+\input{chapters/04c-developpement}
+\input{chapters/04d-securite}
+\input{chapters/04e-tests}
+\input{chapters/05-bilan}
+
+% --- Annexes (≤ 40 pages) ----------------------------------------------------
+\appendix
+\input{chapters/annexes}
+
+\end{document}

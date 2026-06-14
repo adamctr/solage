@@ -1,0 +1,43 @@
+% Diagramme de séquence — « Publier un message »
+\begin{tikzpicture}[
+  font=\scriptsize,
+  ll/.style={draw=solageBlue!70, fill=infoBg, rounded corners=1pt,
+    minimum width=1.9cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+  msg/.style={-{Stealth[length=2mm]}, semithick},
+  ret/.style={-{Stealth[length=2mm]}, semithick, dashed, solageGray},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt},
+  slbl/.style={font=\scriptsize, anchor=west, inner sep=1.5pt}
+]
+% --- Lignes de vie ---
+\node[ll] (nav)  at (0,0)    {Navigateur\\[-1pt]{\scriptsize index.js}};
+\node[ll] (rt)   at (2.9,0)  {Router};
+\node[ll] (mw)   at (5.8,0)  {Middlewares\\[-1pt]{\scriptsize CSRF · Auth}};
+\node[ll] (ctrl) at (8.9,0)  {PostController};
+\node[ll] (mdl)  at (11.7,0) {PostModel};
+\node[ll] (db)   at (14.2,0) {PostgreSQL};
+\foreach \n in {nav,rt,mw,ctrl,mdl,db} \draw[dashed,solageGray!55] (\n.south) -- ++(0,-11.4);
+
+% --- Messages (yshift en mm depuis l'ancre .south des en-têtes) ---
+\draw[msg] ([yshift=-9mm]nav.south) -- ([yshift=-9mm]rt.south)
+  node[lbl,midway,above]{POST /api/post {\scriptsize(FormData + X-CSRF-Token)}};
+\draw[msg] ([yshift=-18mm]rt.south) -- ([yshift=-18mm]mw.south)
+  node[lbl,midway,above]{handle() : jeton CSRF puis session};
+\draw[ret] ([yshift=-26mm]mw.south) -- ([yshift=-26mm]rt.south)
+  node[lbl,midway,above]{OK {\scriptsize(sinon 403 / redirection)}};
+\draw[msg] ([yshift=-35mm]rt.south) -- ([yshift=-35mm]ctrl.south)
+  node[lbl,midway,above]{create()};
+\draw[msg] ([yshift=-43mm]ctrl.south) to[out=-35,in=35] ([yshift=-50mm]ctrl.south);
+\node[slbl] at ([xshift=6mm,yshift=-46mm]ctrl.south) {valider upload + contenu};
+\draw[msg] ([yshift=-58mm]ctrl.south) -- ([yshift=-58mm]mdl.south)
+  node[lbl,midway,above]{createPost()};
+\draw[msg] ([yshift=-67mm]mdl.south) -- ([yshift=-67mm]db.south)
+  node[lbl,midway,above]{INSERT {\scriptsize(requête préparée)}};
+\draw[ret] ([yshift=-75mm]db.south) -- ([yshift=-75mm]mdl.south)
+  node[lbl,midway,above]{id du post};
+\draw[ret] ([yshift=-83mm]mdl.south) -- ([yshift=-83mm]ctrl.south)
+  node[lbl,midway,above]{id};
+\draw[ret] ([yshift=-91mm]ctrl.south) -- ([yshift=-91mm]nav.south)
+  node[lbl,midway,above]{JSON \{success, data\}};
+\draw[msg] ([yshift=-99mm]nav.south) to[out=-35,in=35] ([yshift=-106mm]nav.south);
+\node[slbl] at ([xshift=6mm,yshift=-102mm]nav.south) {rendu optimiste {\scriptsize(escapeHtml)}};
+\end{tikzpicture}

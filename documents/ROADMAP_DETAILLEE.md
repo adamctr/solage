@@ -54,9 +54,9 @@ Dernière mise à jour : 2026-05-12
 - [x] **IDOR suppression post** (`PostController::delete`) : check ownership ou admin, 403 + log warning
 - [x] **IDOR suppression user** (`UserController::delete`) : check ownership ou admin, 403 + log warning
 - [x] **AuthMiddleware** appliqué sur `/api/posts/delete` et `/api/users/delete` (auparavant sans aucun middleware)
-- [ ] **CSRF** : implémenter un token CSRF en session, vérifié sur tous les POST (`/api/post`, `/api/like`, `/api/posts/delete`, `/api/users/delete`, `/edituser/{id}`, `/login`, `/register`, `/logout`)
+- [x] **CSRF** : implémenter un token CSRF en session, vérifié sur tous les POST (`/api/post`, `/api/like`, `/api/posts/delete`, `/api/users/delete`, `/edituser/{id}`, `/login`, `/register`, `/logout`)
 - [ ] **Upload d'images** : valider via `getimagesize()` + MIME réel (`finfo`), pas seulement l'extension ; bloquer SVG/PHP ; renommer (déjà fait via `uniqid`) ; limiter la taille en plus de la directive PHP
-- [ ] **Headers de sécurité** : `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Strict-Transport-Security` (prod), cookies `HttpOnly` + `Secure` (prod) + `SameSite=Lax`
+- [x] **Headers de sécurité** : `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Strict-Transport-Security` (prod), cookies `HttpOnly` + `Secure` (prod) + `SameSite=Lax`
 - [ ] **Régénération d'ID de session** : appeler `session_regenerate_id(true)` après login et logout (anti-fixation)
 - [ ] **Brute-force login** : rate-limit ou compteur d'échecs sur `/login` (table `login_attempts` ou cache)
 

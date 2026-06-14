@@ -1,0 +1,32 @@
+% Architecture logicielle multicouche de Solage
+\begin{tikzpicture}[
+  node distance=4.5mm and 0mm,
+  layer/.style={draw=solageBlue!55, fill=infoBg, rounded corners=2pt,
+    text width=9.2cm, align=center, minimum height=0.85cm, font=\small, inner sep=3pt},
+  boot/.style={layer, fill=juryBg, draw=juryGreen!65},
+  infra/.style={layer, fill=gray!10, draw=solageGray!70},
+  db/.style={layer, fill=solageBlue!12, draw=solageBlue!75},
+  arr/.style={-{Stealth[length=2.5mm]}, semithick, solageGray}
+]
+\node[layer] (nav) {\textbf{Couche cliente — Navigateur}\\{\scriptsize HTML / CSS / JS vanilla · \texttt{fetch} · rendu optimiste · \texttt{escapeHtml()}}};
+\node[infra, below=of nav] (edge) {\textbf{Traefik} {\scriptsize(reverse proxy, TLS)} $\;\Rightarrow\;$ \textbf{FrankenPHP / Caddy} {\scriptsize(serveur HTTP)}};
+\node[boot, below=of edge] (boot) {\textbf{public/index.php} {\scriptsize— \emph{front controller}}\\{\scriptsize autoload · \texttt{session\_start} · en-têtes CSP/nosniff · cookie HttpOnly · jeton CSRF}};
+\node[layer, below=of boot] (routes) {\textbf{routes/} {\scriptsize— URL $\to$ \texttt{Controller\#method} + middleware}};
+\node[layer, below=of routes] (ctrl) {\textbf{modules/controllers/} {\scriptsize— orchestration, autorisation, validation}};
+\node[layer, below=of ctrl] (valid) {\textbf{modules/validators/} {\scriptsize— validation métier pure}};
+\node[layer, below=of valid] (model) {\textbf{modules/models/} {\scriptsize— \textbf{tout le SQL} : PDO, requêtes préparées}};
+\node[db, below=of model] (db) {\textbf{PostgreSQL} {\scriptsize— SGBD relationnel : contraintes, FK, index}};
+
+% Vues (présentation) sur le côté
+\node[layer, right=7mm of ctrl, text width=2.7cm, fill=solageBlue!8, font=\scriptsize]
+  (views) {\textbf{modules/views/}\\ sortie HTML/JSON\\ \texttt{Utils::e()}};
+
+\foreach \a/\b in {nav/edge, edge/boot, boot/routes, routes/ctrl, ctrl/valid, valid/model, model/db}
+  \draw[arr] (\a) -- (\b);
+\draw[arr, dashed] (ctrl.east) -- (views.west);
+
+% étiquette src/ (framework) à gauche
+\node[rotate=90, anchor=south, font=\scriptsize\itshape, text=solageGray]
+  at ($(routes.west)!0.5!(model.west) + (-5mm,0)$)
+  {src/ : Router · Middlewares · Logger · Utils · SessionManager · Migrations};
+\end{tikzpicture}
