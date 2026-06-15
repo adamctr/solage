@@ -28,6 +28,13 @@ grâce à la chaîne Docker.
 - **Objectif vs fonctionnalité** : « Un objectif est *mesurable* (permettre la publication d'un
   message) ; la fonctionnalité en est la traduction technique. Et je n'oublie pas les *limites* —
   c'est ce qui montre que j'ai cadré le projet. »
+- **Maquettes (inspiration d'un produit existant, type X/Twitter)** : « J'ai réutilisé
+  volontairement des conventions d'interface éprouvées du microblogging plutôt que d'inventer une
+  UI nouvelle — c'est un choix d'apprenabilité et de simplicité, pas un manque de travail. Ma
+  conception, c'est l'adaptation : périmètre réduit, charte minimaliste propre à Solage,
+  enchaînement de mes écrans. » → Si on me demande si j'ai maquetté *avant* de coder : « J'ai
+  travaillé avec un produit existant comme référence vivante ; j'ai ensuite formalisé les
+  maquettes de mes propres écrans pour le dossier. »
 
 ---
 
@@ -50,9 +57,11 @@ grâce à la chaîne Docker.
   contrôleurs et les middlewares. La sécurité n'est pas un module, c'est une propriété transverse
   à l'architecture. »
 - **DICP** (savoir réciter) : Disponibilité, Intégrité, Confidentialité, Preuve.
-- **Gestion de projet** : « Ma feuille de route est ma planification, mon journal de décisions
-  tient lieu de comptes rendus, et Git matérialise le suivi : chaque fonctionnalité est une série
-  de commits traçables. Même seul, je distingue planification, suivi et restitution. »
+- **Gestion de projet** : « J'ai réalisé l'essentiel du projet — un binôme a contribué au tout
+  début, en 2024. J'ai planifié avec ma feuille de route et suivi mes tâches au fil des commits
+  Git (chaque tâche = un commit daté), consolidés dans un fichier `SUIVI.md`. J'ai aussi fixé mes
+  règles de qualité et tenu un journal de décisions. Le projet s'est fait en deux temps :
+  construction en 2024, puis reprise sécurité / industrialisation en 2026. »
 
 ---
 

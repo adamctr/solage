@@ -77,29 +77,37 @@ son \texttt{UserModel} par constructeur, ce qui le rend testable).
 \section{Gestion de projet}
 \label{sec:gestion}
 
-Le projet a été mené en autonomie selon une démarche \textbf{itérative légère} (proche de
-Kanban), structurée en phases successives : hygiène et sécurisation, conception, développement,
-tests, déploiement.
+J'ai réalisé l'essentiel de ce projet — un binôme a contribué ponctuellement à l'amorçage, en
+2024. Je l'ai mené selon une démarche \textbf{itérative légère} (proche de Kanban), en deux
+temps : une \textbf{construction initiale} (2024), puis une \textbf{reprise} dédiée à la
+sécurisation et à l'industrialisation (2026 : conteneurisation, migration PostgreSQL, sécurité,
+refonte MVC). Sur un projet de cette taille, j'ai assumé l'ensemble des rôles : planification,
+suivi et qualité.
 
-\paragraph{Planification et suivi.} La feuille de route du projet (\file{ROADMAP\_DETAILLEE.md})
-décrit les phases, leur état d'avancement et les priorités au regard du risque d'échec par CCP.
-Git matérialise le suivi : chaque fonctionnalité correspond à une série de commits traçables, ce
-qui permet de rapprocher le réalisé du planifié.
+\paragraph{Planification.} Ma feuille de route (\file{ROADMAP\_DETAILLEE.md}) découpe le travail
+en phases, fixe leurs priorités au regard du risque par bloc de compétences, et me sert de
+\emph{backlog} de référence.
 
-\paragraph{Comptes rendus et décisions.} Un journal de décisions techniques
+\paragraph{Suivi des tâches.} J'ai suivi mes tâches au fil des commits \textbf{Git} — chaque
+tâche correspond à un ou plusieurs commits datés — et j'en ai consolidé la trace dans un fichier
+\file{SUIVI.md} (tâche, phase, date). Cette trace, vérifiable, me tient lieu de tableau de bord
+et permet de rapprocher le réalisé du planifié.
+
+\paragraph{Qualité.} Je me suis fixé des règles de qualité — séparation stricte des couches,
+requêtes préparées systématiques, échappement systématique des sorties — et je les ai fait
+respecter en me relisant à chaque fonctionnalité, comme une revue de code à une personne.
+
+\paragraph{Journal de décisions.} Un journal des décisions techniques
 (\file{Probleme-Solution.md}) consigne, pour chaque choix structurant, le contexte, le problème,
-les options envisagées, la solution retenue et sa justification. Ce journal tient lieu de
-comptes rendus de session et alimente la préparation de l'entretien technique.
+les options envisagées, la solution retenue et sa justification. Il me tient lieu de comptes
+rendus de session.
 
-\begin{todo}{Gestion de projet — outil collaboratif et planning visuel}
-À intégrer pour compléter la compétence C4 :
+\begin{todo}{Gestion de projet — artefacts à joindre}
+Pour étayer la compétence C4, joindre :
 \begin{itemize}
-  \item une capture d'un \textbf{outil collaboratif} (GitHub Projects / Trello) montrant le
-        découpage en tâches et leur avancement ;
-  \item un \textbf{planning visuel} (diagramme de Gantt ou feuille de route datée) confrontant
-        le \emph{planifié} au \emph{réalisé} ;
-  \item trois à quatre \textbf{comptes rendus} de sessions de travail (date, objectif, réalisé,
-        reste à faire).
+  \item un \textbf{extrait du fichier de suivi} (liste de tâches cochées au fil du projet) ;
+  \item \textbf{trois à quatre entrées} de comptes rendus de session (date, objectif, réalisé,
+        reste à faire), tirées du fichier de suivi et de l'historique Git.
 \end{itemize}
 \end{todo}
 
