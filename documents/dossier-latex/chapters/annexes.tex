@@ -5,6 +5,74 @@ Les annexes (40 pages maximum) rassemblent les éléments de la fonctionnalité 
 représentative : maquettes, captures et code, code des composants métier et d'accès aux données,
 code des autres composants, et jeux de tests complets.
 
+\section{Gestion de projet : suivi et comptes rendus}
+\label{ann:gestion}
+
+\subsection{Extrait du fichier de suivi}
+
+Le fichier \file{SUIVI.md}, consolidé depuis l'historique Git, recense les tâches du projet par
+phase (tâche, phase, date). Le projet s'est déroulé en deux temps : une construction initiale
+(2024), puis une reprise dédiée à la sécurisation et à l'industrialisation (2026).
+
+\paragraph{Phase 1 — Construction initiale (sept.–nov. 2024).}
+\begin{itemize}\setlength{\itemsep}{0pt}
+  \item page d'accueil et fil d'actualité (front) ;
+  \item « j'aime » (likes) et appels AJAX ;
+  \item routeur et gestion des utilisateurs \emph{(amorce contribuée par un binôme, depuis
+        entièrement reprise)} ;
+  \item module de réponses imbriquées, navigation et routes ;
+  \item minification des assets, comptage récursif des réponses.
+\end{itemize}
+
+\paragraph{Phase 2 — Reprise : sécurisation \& industrialisation (mai–juin 2026).}
+\begin{itemize}\setlength{\itemsep}{0pt}
+  \item conteneurisation (Docker) et migration de la base vers PostgreSQL ;
+  \item gestion des secrets (\file{.env}) et logger PSR-3 ;
+  \item \texttt{AdminMiddleware} et protection des routes d'administration ;
+  \item échappement anti-XSS et contrôle d'accès anti-IDOR sur la suppression ;
+  \item refonte MVC (correction du N+1, découplage du validateur, unification JSON) ;
+  \item protection CSRF, en-têtes de sécurité, injection de dépendance de session ;
+  \item jeu d'essai (\file{seed.sql}), PHP\_CodeSniffer (PSR-12), refonte de la feuille de style.
+\end{itemize}
+
+\subsection{Comptes rendus de session}
+
+Reconstitués depuis l'historique Git et le journal de décisions (\file{Probleme-Solution.md}).
+Chaque session est rattachée à un ensemble de commits datés.
+
+\paragraph{6 mai 2026 — Industrialisation de l'environnement.}
+\textbf{Objectif} : rendre l'environnement reproductible et conforme à la production.
+\textbf{Réalisé} : conteneurisation (FrankenPHP, Caddy, Traefik) ; migration de MariaDB vers
+PostgreSQL ; sortie des identifiants de connexion vers \file{.env} (phpdotenv) ; logger PSR-3 ;
+ajout d'\texttt{AdminMiddleware} et durcissement de la gestion d'erreurs.
+\textbf{Reste à faire} : valider le type MIME réel des téléversements ; régénérer l'identifiant
+de session après connexion (anti-fixation).
+
+\paragraph{12 mai 2026 — Audit MVC et failles applicatives.}
+\textbf{Objectif} : remettre la couche présentation à sa place et corriger les failles
+identifiées. \textbf{Réalisé} : échappement systématique du contenu utilisateur (anti-XSS) ;
+contrôle d'accès « propriétaire ou administrateur » sur la suppression (anti-IDOR) ; préchargement
+des auteurs en une requête (correction du N+1, 21 requêtes ramenées à 2 sur le fil) ; extraction
+du validateur dans \file{modules/validators/} ; suppression de \texttt{DynamicMessageController}
+et unification du format de réponse JSON ; correction de quatre bugs préexistants.
+\textbf{Reste à faire} : doubler systématiquement la validation côté serveur (format e-mail,
+robustesse du mot de passe) ; mettre en place des tests automatisés.
+
+\paragraph{13 mai 2026 — Jeu d'essai et charte graphique.}
+\textbf{Objectif} : disposer d'un jeu de données reproductible et d'une interface cohérente.
+\textbf{Réalisé} : extraction des données de démonstration dans \file{seed.sql} (utilisateurs,
+messages, « j'aime », réponses) ; refonte de la feuille de style.
+\textbf{Reste à faire} : documenter et tester la procédure de sauvegarde / restauration de la base
+(\texttt{pg\_dump} / \texttt{pg\_restore}).
+
+\paragraph{15 juin 2026 — Durcissement de la sécurité et outillage qualité.}
+\textbf{Objectif} : compléter la défense en profondeur et industrialiser le contrôle de qualité.
+\textbf{Réalisé} : protection CSRF par jeton de synchronisation armé sur tout POST ; en-têtes de
+sécurité (CSP, \texttt{nosniff}, HSTS) ; injection de dépendance du gestionnaire de session ; mise
+en place de PHP\_CodeSniffer (PSR-12) et reformatage de la base de code.
+\textbf{Reste à faire} : automatiser l'analyse statique et les tests via une chaîne d'intégration
+continue ; constituer une couverture de tests (PHPUnit).
+
 \section{Script de création de la base de données}
 \label{ann:sql}
 
@@ -129,28 +197,166 @@ class Router {
 \section{Jeux de tests complets}
 \label{ann:tests}
 
-\begin{todo}{Jeux de tests (unitaires, intégration, sécurité)}
-Annexer ici l'intégralité des jeux de tests de la fonctionnalité la plus représentative, avec
-pour chaque test la \textbf{donnée d'entrée}, la \textbf{donnée attendue} et la \textbf{donnée
-obtenue} :
-\begin{itemize}
-  \item code source des classes de test PHPUnit ;
-  \item sortie complète de l'exécution (\texttt{vendor/bin/phpunit}) ;
-  \item jeux de tests unitaires, d'intégration et de sécurité.
-\end{itemize}
-\end{todo}
+Les tests sont écrits avec PHPUnit~11 et organisés en trois niveaux (unitaire, intégration,
+sécurité). Ils se trouvent sous \file{tests/} et s'exécutent en une commande
+(\code{php vendor/bin/phpunit}).
+
+\begin{lstlisting}[style=text, caption={Arborescence des tests}]
+tests/
+  bootstrap.php             autoloader maison + Database
+  UtilsTest.php             echappement XSS, AJAX, reponse JSON      (11)
+  CsrfHelperTest.php        jeton CSRF : generation, verification     (8)
+  SessionManagerTest.php    login / isAdmin au mock (DI, zero BDD)    (3)
+  Integration/
+    DatabaseTestCase.php    transaction + rollback par test
+    UserModelTest.php       CRUD, hachage, UserValidator            (10)
+    PostModelTest.php       creation, lecture, suppression           (6)
+    SqlInjectionTest.php    charge d'injection inerte                (2)
+\end{lstlisting}
+
+\paragraph{Exemple — test d'intégration sécurité (injection SQL).}
+
+\begin{lstlisting}[style=php, caption={\file{tests/Integration/SqlInjectionTest.php} (extrait)}]
+final class SqlInjectionTest extends DatabaseTestCase
+{
+    // setUp() insere 1 utilisateur + 1 post au contenu unique (MARQUEUR),
+    // le tout dans la transaction annulee au teardown.
+
+    public function une_charge_d_injection_reste_inerte(): void
+    {
+        // "%' OR '1'='1%" est cherche litteralement : 0 resultat, sans exception.
+        $r = (new SearchModel())->searchPosts("' OR '1'='1");
+        $this->assertCount(0, $r);
+    }
+
+    public function une_recherche_normale_fonctionne(): void
+    {
+        $r = (new SearchModel())->searchPosts(self::MARQUEUR);
+        $this->assertCount(1, $r);
+    }
+}
+\end{lstlisting}
+
+\paragraph{Sortie complète d'exécution.}
+
+\begin{lstlisting}[style=text, caption={\code{php vendor/bin/phpunit --testdox}}]
+Csrf Helper
+ OK GetToken genere 64 caracteres hexadecimaux
+ OK GetToken est stable dans une meme session
+ OK VerifyToken accepte le bon token
+ OK VerifyToken rejette un mauvais token
+ OK VerifyToken rejette une chaine vide
+ OK VerifyToken rejette null
+ OK VerifyToken rejette quand aucun token en session
+ OK Field rend un input cache avec le token
+Post Model
+ OK CreatePost insere et renvoie un id
+ OK GetPostById lit le post cree
+ OK GetPostById retourne null si inconnu
+ OK Delete supprime le post
+ OK Delete retourne false si post inexistant
+ OK GetAllPostsByUserId ne retourne que les posts de l auteur
+Session Manager
+ OK Login peuple la session depuis le modele
+ OK IsAdmin vrai pour le role admin
+ OK IsAdmin faux pour un role non admin
+Sql Injection
+ OK Une charge d injection reste inerte
+ OK Une recherche normale fonctionne
+User Model
+ OK GetUserByEmail retourne l utilisateur existant
+ OK GetUserByEmail retourne null si inconnu
+ OK Le mot de passe est stocke hashe
+ OK CreateUser stocke un mot de passe hashe
+ OK Login valide avec les bons identifiants
+ OK Login refuse un mauvais mot de passe
+ OK Login refuse un email inexistant
+ OK Login refuse des champs vides
+ OK Register refuse un email deja utilise
+ OK Register accepte un email libre
+Utils
+ OK E neutralise une balise script
+ OK E encode les chevrons
+ OK E encode les guillemets doubles
+ OK E encode l apostrophe en apos
+ OK E encode l esperluette
+ OK E transforme null en chaine vide
+ OK IsAjax vrai avec l entete xmlhttprequest
+ OK IsAjax faux sans l entete
+ OK SendResponse serialise success et message
+ OK SendResponse inclut data quand non vide
+ OK SendResponse omet data quand falsy
+
+OK (40 tests, 62 assertions)
+\end{lstlisting}
+
+\paragraph{Démonstrations de sécurité fonctionnelles.} Rejouées en \code{curl}, application
+lancée ; preuve = statut HTTP + ligne de journal (le \emph{logger} écrit les avertissements sur
+\code{stderr}, collectés par Docker).
+
+\begin{lstlisting}[style=text, caption={CSRF (POST sans jeton) et IDOR (Bob supprime un message d'Alice)}]
+$ curl -i -X POST http://localhost/login
+HTTP/1.1 403 Forbidden
+403 - Token CSRF refuse.
+  journal: {"level":"warning","msg":"csrf.token.rejected","context":{"uri":"/login"}}
+
+$ curl -i -X POST .../api/posts/delete   (session Bob, postId d'Alice = 1)
+HTTP/1.1 403 Forbidden
+{"success":false,"message":"Vous n'avez pas la permission de supprimer ce post."}
+  journal: {"level":"warning","msg":"post.delete.forbidden",
+           "context":{"current_user_id":2,"post_owner_id":1,"post_id":1}}
+\end{lstlisting}
+
+\paragraph{Jeu d'essai « Publier un message » — données obtenues (16 juin 2026).}
+
+\begin{lstlisting}[style=text, caption={Réponses obtenues pour les sept cas}]
+Nominal            -> success=true, id=53, HTTP 200
+Contenu vide       -> success=false, "Donnees invalides ou contenu vide"
+Image trop lourde  -> success=false, "Image trop lourde (max 2M)."
+Extension .php     -> success=false, "Type de fichier non autorise."
+Charge XSS         -> stocke brut "<script>...", rendu "&lt;script&gt;" (echappe)
+Non authentifie    -> HTTP 302 -> /login   (AuthMiddleware)
+Sans jeton CSRF    -> HTTP 403             (CsrfMiddleware)
+\end{lstlisting}
 
 \section{Maquettes et captures d'écran}
 \label{ann:maquettes}
 
-\begin{todo}{Maquettes et captures d'interfaces}
-Annexer :
-\begin{itemize}
-  \item les \textbf{maquettes} (Figma) de l'ensemble des écrans ;
-  \item les \textbf{captures d'écran} des interfaces réelles, mises en regard du code de la vue
-        correspondante (au-delà de celles déjà présentées dans le corps du dossier).
-\end{itemize}
-\end{todo}
+Maquettes des écrans de \projet{} réalisées sous Penpot (versions bureau et mobile), complétant
+les trois écrans structurants présentés dans le corps du dossier (section~\ref{sec:maquettes}).
+
+\subsection{Écrans bureau}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{desktop-inscription.png}
+\caption{Inscription (bureau) : même gabarit que la connexion, étendu aux champs du compte.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{desktop-admin.png}
+\caption{Vue bureau avec barre latérale de navigation persistante (accueil, recherche, profil,
+administration) : recherche d'utilisateurs et de messages, et résultats assortis de l'action de
+modération « Supprimer ».}
+\end{figure}
+
+\subsection{Écrans mobiles}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=7.2cm]{mobile-connexion.png}\hfill
+\includegraphics[height=7.2cm]{mobile-inscription.png}\hfill
+\includegraphics[height=7.2cm]{mobile-profil.png}
+\caption{Mobile : connexion, inscription et profil utilisateur.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=7.2cm]{mobile-recherche.png}\hfill
+\includegraphics[height=7.2cm]{mobile-admin.png}
+\caption{Mobile : recherche et administration. La barre de navigation inférieure reste constante.}
+\end{figure}
 
 \begin{info}
 Le code source complet de \projet{} (contrôleurs, modèles, vues, middlewares, configuration

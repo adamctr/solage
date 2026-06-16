@@ -5,7 +5,7 @@ L'application comporte neuf écrans : connexion, inscription, fil d'actualité, 
 message, profil utilisateur, édition de profil, recherche, administration et page d'erreur 404.
 Leur enchaînement est formalisé par la figure~\ref{fig:enchainement}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \resizebox{\textwidth}{!}{\input{figures/enchainement}}
 \caption{Enchaînement des écrans (storyboard). En vert l'écran protégé par authentification,
@@ -23,13 +23,52 @@ l'\textbf{adaptation} : un périmètre réduit et cohérent, une charte graphiqu
 connexion au fil d'actualité, depuis lequel l'utilisateur accède au détail d'un message, aux
 profils, à la recherche et — s'il est administrateur — à la modération.
 
-\begin{todo}{Maquettes des interfaces (Figma)}
-Insérer ici les \textbf{maquettes} des écrans \emph{de Solage} — mes propres écrans, sans logo ni
-élément de marque tiers — au minimum \emph{connexion}, \emph{fil d'actualité} et \emph{détail
-d'un message}, réalisées avec un outil de maquettage (Figma). Pour chaque maquette : une capture
-et un court paragraphe sur les choix d'ergonomie (placement des actions, hiérarchie visuelle,
-accessibilité). Les maquettes des autres écrans iront en annexe.
-\end{todo}
+J'ai formalisé ces écrans sous forme de \textbf{maquettes}, réalisées avec \textbf{Penpot} (outil
+de maquettage \emph{open source}). Ce sont mes propres écrans — identité visuelle, charte et
+libellés propres à \projet{},
+sans aucun élément de marque tiers. Chaque écran est décliné en version \textbf{bureau} et
+\textbf{mobile}, actant une conception \emph{responsive}. Les trois écrans les plus structurants
+sont présentés ici ; les autres figurent en annexe~\ref{ann:maquettes}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{desktop-connexion.png}
+\caption{Maquette de l'écran de connexion (bureau).}
+\label{fig:maq-connexion}
+\end{figure}
+
+\paragraph{Connexion — focaliser sur une tâche unique.} L'écran de connexion isole sa seule
+tâche dans une \textbf{carte centrée} : logo et accroche au-dessus, deux champs étiquetés
+explicitement (« Email », « Mot de passe »), et un \textbf{unique appel à l'action} mis en avant
+par la couleur d'accent violette. L'absence de tout élément concurrent réduit la charge cognitive
+et guide l'œil vers l'action attendue.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.45\textwidth}\centering
+  \includegraphics[height=8.6cm]{mobile-accueil.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.45\textwidth}\centering
+  \includegraphics[height=8.6cm]{mobile-detail-post.png}
+\end{minipage}
+\caption{Maquettes mobiles : le fil d'actualité (à gauche) et le détail d'un message avec sa zone
+de réponse (à droite).}
+\label{fig:maq-mobile}
+\end{figure}
+
+\paragraph{Fil et détail — hiérarchie visuelle et constance.} Sur le fil comme sur le détail, la
+\textbf{zone de composition} reste en haut, immédiatement accessible. Chaque message suit la même
+\textbf{hiérarchie visuelle} : nom de l'auteur en gras, horodatage atténué en gris, contenu en
+corps de texte, puis les actions (« répondre », « j'aime ») alignées sous le message. Sur mobile,
+une \textbf{barre de navigation inférieure} (accueil, recherche, profil) reste constante d'un
+écran à l'autre, et un bouton de retour ramène du détail vers le fil — deux repères de navigation
+qui ne bougent jamais.
+
+\paragraph{Choix d'accessibilité (RGAA).} Les maquettes intègrent les repères d'accessibilité
+visés par le projet : libellés de formulaire explicites associés à chaque champ, contraste
+suffisant entre le texte et le fond, et zones d'action (boutons, icônes) dimensionnées pour le
+tactile. Ces choix de conception se traduisent dans le code par des attributs \texttt{alt},
+\texttt{aria-label} et des libellés \texttt{<label>} (cf. chapitre~\ref{ch:realisations}).
 
 \section{Conception de la base de données}
 \label{sec:bdd}
@@ -43,7 +82,7 @@ qui en référence un autre. Les « j'aime » et les favoris sont des associatio
 \textsc{Utilisateur} et \textsc{Post}, l'association « aime » portant l'attribut
 \texttt{created\_at}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \resizebox{0.95\textwidth}{!}{\input{figures/mcd}}
 \caption{Modèle conceptuel des données (formalisme Merise).}
@@ -64,7 +103,7 @@ nommage notable : le mot \texttt{user} étant \emph{réservé} en PostgreSQL, le
 étrangère se nomment \texttt{user\_id}. La figure~\ref{fig:mld} présente le schéma relationnel
 et ses clés étrangères.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \resizebox{\textwidth}{!}{\input{figures/mld}}
 \caption{Modèle logique des données : tables physiques et clés étrangères (\texttt{\#}).}
@@ -157,7 +196,7 @@ commande de restauration, et test de restauration sur une base vierge.
 La figure~\ref{fig:usecase} formalise le comportement attendu : les trois acteurs et leurs cas
 d'usage, avec la généralisation Administrateur $\rightarrow$ Utilisateur $\rightarrow$ Visiteur.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \resizebox{0.92\textwidth}{!}{\input{figures/usecase}}
 \caption{Diagramme de cas d'utilisation de \projet{}.}
@@ -170,7 +209,7 @@ Le cas le plus significatif est la publication d'un message : il traverse toutes
 mobilise les protections de sécurité. La figure~\ref{fig:sequence} en détaille le déroulé, de
 l'appel \texttt{fetch} du navigateur jusqu'à l'insertion en base et au rendu optimiste.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \resizebox{\textwidth}{!}{\input{figures/sequence-post}}
 \caption{Diagramme de séquence : publication d'un message (avec passage par les middlewares
@@ -183,7 +222,7 @@ CSRF et authentification).}
 La figure~\ref{fig:classes} présente un extrait de la couche modèle et le gestionnaire de
 session, avec leurs principales méthodes et dépendances.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \resizebox{\textwidth}{!}{\input{figures/classes}}
 \caption{Diagramme de classes (extrait) : modèles et gestion de session.}

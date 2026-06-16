@@ -20,6 +20,8 @@
 
 % --- Graphisme & couleurs ----------------------------------------------------
 \usepackage{graphicx}
+\graphicspath{{maquettes/}}   % images des maquettes (PNG)
+\usepackage{float}            % placement [H] : épingle une figure à sa position exacte
 \usepackage{xcolor}
 \definecolor{solageBlue}{HTML}{1D4ED8}
 \definecolor{solageDark}{HTML}{0F172A}
@@ -161,6 +163,11 @@
 % --- Légendes ----------------------------------------------------------------
 \usepackage{caption}
 \captionsetup{font=small,labelfont=bf}
+
+% --- Confinement des flottants -----------------------------------------------
+% Barrière implicite au début de chaque section : un flottant ne peut jamais
+% déborder dans la section suivante (évite qu'une figure flotte hors contexte).
+\usepackage[section]{placeins}
 
 % --- Liens & métadonnées -----------------------------------------------------
 \usepackage[colorlinks=true,linkcolor=solageBlue,urlcolor=solageBlue,

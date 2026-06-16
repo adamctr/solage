@@ -35,6 +35,13 @@ grâce à la chaîne Docker.
   enchaînement de mes écrans. » → Si on me demande si j'ai maquetté *avant* de coder : « J'ai
   travaillé avec un produit existant comme référence vivante ; j'ai ensuite formalisé les
   maquettes de mes propres écrans pour le dossier. »
+- **Outil de maquettage (Penpot, open source)** : « J'utilise Figma au quotidien, mais j'ai voulu
+  éprouver Penpot, l'alternative libre — même logique que mon MVC maison : comprendre l'outil
+  plutôt que le subir. » → relie à la compétence transversale *apprendre en continu*.
+- **Mon passé d'intégrateur / web designer** : « Mon expérience d'intégrateur et web designer en
+  alternance m'a donné le réflexe de penser hiérarchie visuelle, contraste et responsive dès la
+  maquette — la conception d'interface n'est pas une case que je coche, c'est un métier que j'ai
+  pratiqué. »
 
 ---
 
@@ -116,10 +123,16 @@ grâce à la chaîne Docker.
   traverse toute l'architecture et concentre toutes les protections : validation, téléversement,
   anti-XSS, autorisation, CSRF. Mon jeu d'essai couvre le cas nominal *et* les cas limites et
   malveillants. »
-- **Veille (le déclic IDOR)** : « Ma veille n'est pas décorative : un article sur l'IDOR de
-  l'URSSAF m'a fait auditer mes propres routes et y trouver la même classe de faille. Veille →
-  audit → correctif → documentation : c'est un cycle que je tiens, et il démontre à la fois la
-  résolution de problème et l'apprentissage continu. »
+- **Veille (le déclic IDOR)** : « Ma veille n'est pas décorative : un article sur les fuites de
+  données dans le secteur de la santé, revenant sur la faille IDOR de l'URSSAF, m'a fait auditer
+  mes propres routes et y trouver la même classe de faille. Veille → audit → correctif →
+  documentation : c'est un cycle que je tiens, et il démontre à la fois la résolution de problème
+  et l'apprentissage continu. »
+  - **Si on creuse** : « L'IDOR, c'est l'OWASP A01 — *Broken Access Control* — n°1 du Top 10
+    2021, la faille la plus répandue du web. La leçon : **authentification ≠ autorisation**.
+    Être loggé ne suffit jamais ; je revérifie les droits sur *la ressource demandée*, pas
+    seulement l'identité. » (les trois routes concernées : `/edituser/{id}`,
+    `/api/users/delete`, `/api/posts/delete`).
 
 ---
 

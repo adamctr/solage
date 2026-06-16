@@ -41,8 +41,11 @@ Les axes d'amélioration, déjà identifiés dans le dossier, sont :
         continue} (chapitre~\ref{ch:realisations}) ;
   \item le \textbf{durcissement de la validation serveur} et du téléversement (contrôle MIME
         réel), ainsi que l'anti-fixation de session ;
-  \item une passe d'\textbf{accessibilité} (RGAA) plus poussée et la factorisation des feuilles
-        de style et scripts ;
+  \item une passe d'\textbf{accessibilité} (RGAA) plus poussée ;
+  \item la \textbf{maintenabilité du front-end} : séparation et factorisation des feuilles de
+        style et des scripts, \textbf{chargement conditionnel du JavaScript} selon le gabarit
+        (\emph{layout}) plutôt qu'un script global, et mise en place d'un \emph{lint} JavaScript
+        (ESLint) ;
   \item la résorption de la \textbf{dette de schéma} (table \texttt{responses} héritée
         \emph{vs} mécanisme \texttt{reply\_to}).
 \end{itemize}

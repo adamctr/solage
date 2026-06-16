@@ -1,301 +1,313 @@
-# Roadmap détaillée — Titre Pro CDA (RNCP37873)
+# Roadmap détaillée — Titre Pro CDA (RNCP37873) — projet Solage
 
-> Le projet **solage** (réseau social type X/Twitter) sert de support à l'examen du Titre Professionnel **Concepteur Développeur d'Applications** (niveau 6, arrêté du 26/04/2023).
+> Le projet **Solage** (réseau social type X/Twitter) sert de support à l'examen du Titre
+> Professionnel **Concepteur Développeur d'Applications** (niveau 6, arrêté du 26/04/2023).
 >
-> Il faut couvrir **les 11 compétences professionnelles** réparties sur **3 CCP**, produire un **dossier de projet (40-60 p. + 40 p. d'annexes)**, un **diaporama (40 min)** et passer **entretien technique + questionnaire (anglais B1)**.
+> Il faut couvrir **les 11 compétences professionnelles** réparties sur **3 CCP**, produire un
+> **dossier de projet (40-60 p. + 40 p. d'annexes)**, un **diaporama (≈ 40 min)**, un **dossier
+> professionnel (DP)**, et passer **entretien technique + questionnaire (anglais B1)**.
 
-Dernière mise à jour : 2026-05-12
+**Dernière mise à jour : 2026-06-16** (réécriture complète après audit du dépôt — code, dossier,
+infra, git — et vérification croisée des statuts).
 
----
-
-## État des lieux
-
-### Stack technique (actuelle)
-- PHP 7.4+ / **PostgreSQL** via PDO (anciennement MariaDB, migré)
-- MVC custom (`Router`, `Autoloader`, `Migrations`, `AuthMiddleware`, `AdminMiddleware`) avec une couche `modules/validators/` parallèle à `controllers/models/views`
-- Composer : `matthiasmullie/minify`, `vlucas/phpdotenv`, `psr/log`
-- Logger PSR-3 maison (`src/Logger.php`) → JSON-line sur stdout/stderr
-- Sessions PHP, vanilla JS, CSS pur
-- **Dockerisé** : FrankenPHP + Caddy + Traefik + Postgres (`docker-compose.yml` dev / `docker-compose.prod.yml` prod TLS Let's Encrypt)
-
-### Fonctionnalités existantes
-- Auth : login / register / logout
-- Posts : CRUD + upload image
-- Réponses imbriquées (`reply_to` / `reply_to_parent`)
-- Likes (posts & réponses)
-- Profil utilisateur + édition
-- Recherche (users, posts)
-- Page admin avec recherche
-- Minification d'assets (en prod)
-- Messages dynamiques (toast)
+> **Légende** : ✅ fait/validé · 🟠 partiel · 🔴 à développer · ⚪ non commencé.
+> Le **statut faisant autorité** des compétences est le tableau de `01-competences.tex`. Cette
+> roadmap s'y aligne ; les nuances « partiel » relevées dans le code/dossier sont signalées comme
+> **dette assumée** ou **artefact dossier à produire**, sans changer le statut officiel.
 
 ---
 
-## PHASE 0 — Hygiène immédiate ✅ **TERMINÉE**
+## 0. L'enjeu n°1 à comprendre avant tout — le bloc CCP3
 
-- [x] Credentials BDD sortis du code → `.env` + `vlucas/phpdotenv` (`includes/database.php`)
-- [x] `.gitignore` complété (`.env`, `.idea/`, `.DS_Store`, `public/log.txt`, uploads)
-- [x] Credentials Alwaysdata rotés (mot de passe compromis purgé)
-- [x] Dump SQL avec hashes réels remplacé par schéma PostgreSQL propre (`solage.pg.sql`)
-- [x] `public/log.txt` supprimé du repo (logs redirigés vers stdout/stderr via `Logger` PSR-3)
-- [x] Bug `isAdmin()` corrigé (`SessionController.php:69` → comparaison sur `getRoleName() === 'Admin'`)
+Le titre se valide **par blocs de CCP**. Les 11 compétences se répartissent ainsi :
 
----
-
-## PHASE 1 — Sécurité & robustesse du code (CCP1) 🟠 **EN COURS**
-
-> Couvre : *Développer des composants métier sécurisés*, *Développer des interfaces sécurisées*, recommandations ANSSI / OWASP.
-
-### 1.1 Failles à corriger (XSS / IDOR / CSRF / Auth)
-
-- [x] **XSS stocké** : helper `Utils::e()` (`htmlspecialchars` + `ENT_QUOTES | ENT_HTML5` + UTF-8) appliqué sur toutes les vues affichant du contenu user-controlled (`PostView`, `MainPostView`, `UserView`, `AdminView`, `CreatePostView`). Le markup du message dynamique (login/register) est désormais construit côté JS via `escapeHtml()` après la suppression de `DynamicMessageView`.
-- [x] **XSS côté JS** : `escapeHtml()` miroir dans `index.js` pour les interpolations `${post.*}` injectées via `innerHTML` (affichage optimiste après création de post)
-- [x] **IDOR édition profil** (`UserController::update`) : check `current_user_id === target_user_id || isAdmin()` + 403 + log warning
-- [x] **IDOR suppression post** (`PostController::delete`) : check ownership ou admin, 403 + log warning
-- [x] **IDOR suppression user** (`UserController::delete`) : check ownership ou admin, 403 + log warning
-- [x] **AuthMiddleware** appliqué sur `/api/posts/delete` et `/api/users/delete` (auparavant sans aucun middleware)
-- [x] **CSRF** : implémenter un token CSRF en session, vérifié sur tous les POST (`/api/post`, `/api/like`, `/api/posts/delete`, `/api/users/delete`, `/edituser/{id}`, `/login`, `/register`, `/logout`)
-- [ ] **Upload d'images** : valider via `getimagesize()` + MIME réel (`finfo`), pas seulement l'extension ; bloquer SVG/PHP ; renommer (déjà fait via `uniqid`) ; limiter la taille en plus de la directive PHP
-- [x] **Headers de sécurité** : `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Strict-Transport-Security` (prod), cookies `HttpOnly` + `Secure` (prod) + `SameSite=Lax`
-- [ ] **Régénération d'ID de session** : appeler `session_regenerate_id(true)` après login et logout (anti-fixation)
-- [ ] **Brute-force login** : rate-limit ou compteur d'échecs sur `/login` (table `login_attempts` ou cache)
-
-### 1.2 Validation à la volée
-
-- [ ] **Côté JS** : étendre `dynamicMessages.js` avec écouteurs `input`/`blur` sur login, register, edit profil, post → règles : email valide, password ≥ 8 + 1 maj + 1 chiffre, contenu post ≤ N caractères
-- [ ] **Côté PHP** : doubler systématiquement la validation dans `UserValidator` (`modules/validators/`) — actuellement `register()` ne vérifie ni format email ni robustesse du mot de passe
-- [ ] **Messages d'erreur dynamiques** liés à chaque champ (pas seulement un toast global)
-
-### 1.3 Middleware Admin ✅ **TERMINÉE**
-
-- [x] `AdminMiddleware` créé (`src/AdminMiddleware.php`), distinct d'`AuthMiddleware` (authentification ≠ autorisation)
-- [x] Appliqué sur `/admin`, `/admin/search/results/users`, `/admin/search/results/posts`
-- [x] Refus → 403 + `Logger::warning('admin.access.denied', …)`
-- [x] Suppression cross-user (post / user) déjà couverte par check d'ownership dans les contrôleurs (cf 1.1)
-
-### 1.4 Qualité de code
-
-- [ ] **PHPDoc** systématique (controllers, models, views) : `@param`, `@return`, `@throws`
-- [ ] **Convention de nommage** homogène (corriger mix `DataBase`/`Database`)
-- [ ] **Indentation** cohérente, supprimer code mort (echo "Requête URI" debug dans `Router.php` si encore présent, blocs commentés résiduels)
-- [ ] **`declare(strict_types=1)`** en tête de chaque fichier PHP
-- [ ] **PHP_CodeSniffer PSR-12** : faire passer la base à 0 violation
-
-### 1.5 Audit MVC & nettoyage architectural ✅ **TERMINÉE**
-
-> Passe d'audit MVC : la couche présentation ne parle plus à la base, les helpers sont rangés selon leur rôle réel, la réponse JSON est unique pour toute l'app. Voir `documents/Probleme-Solution.md` pour le détail de chaque décision et `documents/Workflow.md` pour le schéma du cycle AJAX.
-
-- [x] **N+1 query** sur les vues corrigé via `UserModel::getUsersByIds` ; `PostView` / `MainPostView` reçoivent une map `[user_id => UserModel]` préchargée par le contrôleur (21 requêtes → 2 sur la page d'accueil avec 20 posts)
-- [x] **Helpers déplacés** hors de `modules/controllers/` vers `src/` : `Utils` (escape + sendResponse) et `MinificationController` (build d'assets)
-- [x] **`UserValidator` extrait** vers `modules/validators/` (renommé depuis `ValidatorController`) — la validation devient pure (retourne un array, ne fait plus d'echo)
-- [x] **`DynamicMessageController` + `DynamicMessageView` supprimés** ; unification de la réponse JSON sur `Utils::sendResponse` (`{success: bool, message: string, data?: object}`) — un seul format pour login/register/API
-- [x] **Code mort supprimé** : `PostResponsesView` (aucun appelant), `$type = $_GET['type']` (lu sans usage), méthodes `showAdminInDesktopSidebar`/`InMobileSidebar` (inlinées)
-- [x] **Bugs préexistants corrigés** : `PostToolHeartView` recevait l'ID de l'auteur du post au lieu du user courant ; `session_start()` déplacé dans le bootstrap pour éviter `headers already sent` au login
-
----
-
-## PHASE 2 — Conception & documentation projet (CCP2) ⚪ **À FAIRE**
-
-> Couvre : *Analyser les besoins et maquetter*, *Définir l'architecture logicielle*, *Concevoir et mettre en place une BDD relationnelle*.
-
-### 2.1 Expression des besoins
-- [ ] Cahier des charges / expression de besoins (objectifs et limites — projet de formation)
-- [ ] Liste des **user stories** ou **cas d'usage** (visiteur s'inscrit, utilisateur poste, like, répond, supprime, admin modère…)
-- [ ] Identifier les contraintes : RGPD, RGAA, éco-conception
-
-### 2.2 Maquettes
-- [ ] Maquettes Figma de toutes les pages : login, register, home (feed), post détail, profil user, édition profil, admin, recherche, 404
-- [ ] **Schéma d'enchaînement** des écrans (storyboard / sitemap)
-- [ ] Justifier la charte graphique et les choix UX
-
-### 2.3 Diagrammes UML (obligatoires CCP2)
-- [ ] **Diagramme de cas d'utilisation** (acteurs : Visiteur, Utilisateur, Admin)
-- [ ] **Diagrammes de séquence** sur 1-2 cas significatifs (ex : « Poster un post avec image », « Répondre à un post »)
-- [ ] **Diagramme de classes** (PostModel, UserModel, LikeModel, etc.)
-- [ ] **MCD** (modèle conceptuel) de la base
-- [ ] **MPD** (modèle physique) — partir de `solage.pg.sql`
-- [ ] **Schéma d'architecture multicouche** (Présentation / Contrôleur / Métier / Accès données / SGBD) + rôle sécurité de chaque couche (DICP)
-
-### 2.4 Spécifications techniques
-- [ ] Justifier les choix : PHP vanilla MVC vs framework, PostgreSQL vs MariaDB, FrankenPHP vs Apache/Nginx-FPM, Traefik vs Nginx
-- [ ] Documenter le routeur, l'autoloader, le système de migrations
-- [ ] Documenter la stratégie de sécurité couche par couche
-
-### 2.5 Améliorations BDD
-- [x] Système de migrations idempotent (`src/Migrations.php` + `bin/migrate.php` lancé via service Docker)
-- [x] `roles.id` fiabilisé par jointure (`getRoleName()`) au lieu d'une comparaison numérique magique
-- [x] FK utilisant `user_id` (mot `user` réservé en PostgreSQL → documenté dans `CLAUDE.md`)
-- [ ] Ajouter des index manquants si pertinent (audit `EXPLAIN` sur les requêtes feed/recherche)
-- [ ] Documenter la sauvegarde / restauration (`pg_dump` / `pg_restore`)
-- [ ] Créer un **jeu d'essai** reproductible (seed SQL : 10 users, 30 posts, 50 likes, 20 réponses)
-
----
-
-## PHASE 3 — Tests & qualité (CCP3 — compétence n°9) ⚪ **À FAIRE**
-
-> C'est un **gros trou actuel** du projet (aucun test).
-
-### 3.1 Tests unitaires
-- [ ] Installer **PHPUnit** via Composer (dev dependency)
-- [ ] Couvrir : `UserValidator`, `UserModel`, `PostModel`, `LikeModel`, `Router`, `Utils::e()`
-- [ ] BDD de test : conteneur Postgres dédié ou SQLite en mémoire (avec adaptateur)
-
-### 3.2 Tests d'intégration
-- [ ] Tester les routes (login → poste un post → like → delete) en simulant HTTP
-- [ ] Outil : PHPUnit + client HTTP, ou Playwright / Cypress pour le bout-en-bout
-
-### 3.3 Tests de sécurité
-- [ ] 1 test d'**injection SQL** sur la recherche (vérifier que les prepared statements neutralisent)
-- [ ] 1 test **XSS** sur création de post (payload `<script>` → rendu en `&lt;script&gt;`)
-- [ ] 1 test **CSRF** sur action critique (POST sans token → refus)
-- [ ] 1 test **IDOR** (Bob essaie d'éditer le profil d'Alice → 403)
-- [ ] Audit OWASP ZAP en local + checklist OWASP Top 10 manuelle
-
-### 3.4 Plan de tests rédigé
-- [ ] Document listant toutes les fonctionnalités + cas testés (entrée / attendu / obtenu) + écarts
-- [ ] Tests d'**acceptation** (parcours utilisateur complet)
-- [ ] **Test de charge léger** (Apache Bench ou k6) sur le feed
-
-### 3.5 Qualité de code (statique)
-- [ ] **PHPStan** ou **Psalm** niveau 5+ → rapport propre
-- [ ] **PHP_CodeSniffer** PSR-12
-- [ ] **ESLint** sur les fichiers JS
-
----
-
-## PHASE 4 — Déploiement & DevOps (CCP3 — compétences n°10 & 11) 🟠 **EN COURS**
-
-> *Nouveauté du référentiel 2023*.
-
-### 4.1 Conteneurisation ✅ **TERMINÉE**
-
-- [x] `Dockerfile` (FrankenPHP + Composer install + extensions PHP)
-- [x] `docker-compose.yml` (dev) : Traefik HTTP + FrankenPHP bind-mount + Postgres exposé sur 5432 + service `migrate` one-shot
-- [x] `docker-compose.prod.yml` (prod) : Traefik HTTPS via Let's Encrypt + FrankenPHP image (pas de mount) + Postgres non exposé
-- [x] Volumes pour les uploads (`./` bind-mount en dev) et la BDD (`postgres-data`)
-- [x] Variables d'env via `.env` (template `.env.example`)
-- [x] Healthcheck Postgres + `depends_on: condition: service_healthy`
-- [x] Caddyfile dédié dans `docker/Caddyfile`
-
-### 4.2 Procédure de déploiement
-- [ ] Document `DEPLOYMENT.md` : pré-requis, étapes, rollback
-- [ ] Scripts de déploiement (`Makefile`) : `make deploy`, `make rollback`
-- [ ] Documenter 3 environnements : dev (Docker local), staging (VPS test ?), prod
-- [ ] Documenter la commande `docker compose restart traefik` (cf `CLAUDE.md` — le provider Docker manque parfois les recreations)
-
-### 4.3 CI/CD
-- [ ] **GitHub Actions** : workflow déclenché à chaque push
-  - [ ] lance PHPStan
-  - [ ] lance PHPUnit
-  - [ ] lance ESLint
-  - [ ] construit l'image Docker (`docker build`)
-  - [ ] (bonus) déploie automatiquement sur la prod via SSH
-- [ ] Documenter le rapport CI et savoir l'expliquer en entretien
-
-### 4.4 Sauvegardes & résilience
-- [ ] Cron de sauvegarde `pg_dump` (vers un volume / S3)
-- [ ] Documenter la procédure de restauration
-
----
-
-## PHASE 5 — Compétences transversales ⚪ **À FAIRE**
-
-### 5.1 Gestion de projet (compétence n°4)
-- [ ] Outil collaboratif : **GitHub Projects**, Trello ou Jira
-- [ ] Découpage en sprints (Agile / Scrum simplifié)
-- [ ] **Comptes rendus** de 3-4 sessions de travail documentés
-- [ ] **Planning** (Gantt ou roadmap visuelle) avec planifié vs réalisé
-
-### 5.2 Anglais B1
-- [ ] Préparer 2 questions ouvertes type : description du projet en anglais, choix techniques en anglais
-- [ ] S'entraîner sur de la doc technique anglaise (PHP.net, OWASP)
-- [ ] Annexe README ou section archi en anglais (plus)
-
-### 5.3 Veille technologique
-- [ ] Tenir un journal de veille (Feedly, RSS) sur PHP, sécurité, OWASP, PostgreSQL
-- [ ] Documenter : sources suivies + vulnérabilités détectées sur le projet (XSS, IDOR déjà documentés dans `Probleme-Solution.md` → exploiter en veille)
-
-### 5.4 Démarche de résolution de problèmes
-- [x] Documentation initiée : `documents/Probleme-Solution.md` (XSS, IDOR, Logger PSR-3, Migrations, Authn vs Authz, découplage validator, audit MVC + finitions, suppression `DynamicMessageController`)
-- [x] `documents/Workflow.md` : schéma ASCII du cycle AJAX login/register (browser → validator → response → session)
-- [ ] Compléter avec 1-2 bugs supplémentaires diagnostiqués + résolus en détail
-
-### 5.5 Accessibilité (RGAA) & RGPD & éco-conception
-- [ ] Audit RGAA basique : contraste, `alt`, `aria-label`, navigation clavier
-- [ ] Mentions légales + politique de cookies + page de confidentialité (RGPD)
-- [ ] Section éco-conception : minification (✅ déjà en place), lazy-load images, poids des assets
-
----
-
-## PHASE 6 — Livrables d'examen ⚪ **À FAIRE**
-
-### 6.1 Dossier de projet (papier, imprimé)
-- [ ] **40 à 60 pages** (hors page de garde, sommaire et annexes), schémas inclus
-- [ ] **40 pages d'annexes max**
-- [ ] Plan exigé :
-  1. Liste des compétences mises en œuvre
-  2. Expression des besoins (objectifs, limites)
-  3. Environnement technique
-  4. Réalisations couvrant les compétences
-- [ ] Enrichir avec les éléments du plan « projet en entreprise » (cahier des charges, archi, MCD/MPD, maquettes, UML, sécurité, plan de tests, jeu d'essai, veille)
-
-### 6.2 Diaporama de soutenance (≈ 40 min, 30-35 slides)
-- [ ] 1. Présentation perso + projet
-- [ ] 2. Expression du besoin
-- [ ] 3. Environnement technique + architecture
-- [ ] 4. Maquettes + enchaînement
-- [ ] 5. MCD/MPD + script création BDD
-- [ ] 6. Diagrammes cas d'usage + séquence
-- [ ] 7. Captures d'écran + extraits de code (interfaces, métier, accès données)
-- [ ] 8. Sécurité (XSS, CSRF, SQLi, IDOR… ce qui a été corrigé)
-- [ ] 9. Plan de tests + jeu d'essai
-- [ ] 10. Veille techno + vulnérabilités trouvées
-- [ ] 11. Synthèse / difficultés / perspectives
-
-### 6.3 Dossier professionnel (DP)
-- [ ] Remplir le `Template - vierge - TITRE6.docx` (présentation, parcours, expérience)
-
-### 6.4 Préparation entretien technique (45 min)
-- [ ] Anticiper les questions du jury sur chaque compétence non couverte par le projet (NoSQL, microservices, mocking…)
-- [ ] Préparer une question fil rouge : « pourquoi avoir fait X plutôt que Y ? » (puiser dans `Probleme-Solution.md`)
-
-### 6.5 Préparation questionnaire pro (30 min)
-- [ ] 4 questions : 2 fermées (français), 2 ouvertes (anglais) sur de la doc technique anglaise
-- [ ] S'entraîner sur PHP.net en VO
-
----
-
-## Priorité conseillée
-
-| Ordre | Bloc | État | Effort restant | Risque si non fait |
-|---|---|---|---|---|
-| 🔴 1 | Phase 0 (hygiène) | ✅ | — | — |
-| 🔴 2 | Phase 1 (sécurité) | 🟠 ~60% | 2-3 j (CSRF, headers, upload, brute-force, validation, PHPDoc) | Échec CCP1 |
-| 🟠 3 | Phase 2 (conception/UML) | ⚪ | 3-5 j | Échec CCP2 |
-| 🟠 4 | Phase 3 (tests) | ⚪ | 3-4 j | Échec CCP3 (compétence 9) |
-| 🟡 5 | Phase 4 (DevOps) | 🟠 ~30% | 2-3 j (CI/CD, backups, doc déploiement) | Échec compétences 10-11 |
-| 🟡 6 | Phase 5 (transversal) | ⚪ | en parallèle | Pénalité entretien |
-| 🔴 7 | Phase 6 (livrables) | ⚪ | 5-7 j | Pas d'examen possible |
-
-**Reste estimé : 3-4 semaines à temps plein** (4.1 + Phase 0 + IDOR/XSS/AdminMiddleware déjà acquis).
-
----
-
-## Mapping compétences / phases
-
-| # | Compétence professionnelle | CCP | Phases couvrant |
+| CCP | Intitulé | Compétences | État |
 |---|---|---|---|
-| 1 | Installer et configurer son environnement de travail | 1 | 4.1 ✅ (Docker), 5.1 (outils collab) |
-| 2 | Développer des interfaces utilisateur | 1 | 1.1 ✅, 1.2, 5.5 (RGAA) |
-| 3 | Développer des composants métier | 1 | 1.1 ✅ (IDOR), 1.4, 3.1 |
-| 4 | Contribuer à la gestion d'un projet informatique | 1 | 5.1 |
-| 5 | Analyser les besoins et maquetter une application | 2 | 2.1, 2.2 |
-| 6 | Définir l'architecture logicielle d'une application | 2 | 2.3, 2.4 |
-| 7 | Concevoir et mettre en place une BDD relationnelle | 2 | 2.3 (MCD/MPD), 2.5 (migrations ✅, jeu d'essai à faire) |
-| 8 | Développer des composants d'accès aux données SQL/NoSQL | 2 | 1.1 ✅, 1.4, 3.1 |
-| 9 | Préparer et exécuter les plans de tests | 3 | 3.1, 3.2, 3.3, 3.4 |
-| 10 | Préparer et documenter le déploiement | 3 | 4.2 |
-| 11 | Contribuer à la mise en production DevOps | 3 | 4.1 ✅, 4.3, 4.4 |
-| T1 | Communiquer en français et en anglais | — | 5.2, 6.2, 6.4 |
-| T2 | Démarche de résolution de problème | — | 5.4 🟠 (initié) |
-| T3 | Apprendre en continu | — | 5.3 |
+| **CCP1** | Développer une application sécurisée | C1, C2, C3, C4 | ✅ **validé** (4/4 OK) |
+| **CCP2** | Concevoir et développer une application en couches | C5, C6, C7, C8 | ✅ **validé** (4/4 OK) |
+| **CCP3** | Préparer le déploiement d'une application sécurisée | C9, C10, C11 | 🔴 **EN PÉRIL** : C9 à développer, C10 partiel, C11 partiel |
+
+> **Conséquence directe** : CCP1 et CCP2 sont acquis. **Tout le risque restant est concentré sur le
+> CCP3.** Sans CCP3 validé, on n'obtient **pas le titre complet** — seulement deux blocs sur trois.
+> **C9 (tests) est la seule compétence classée « à développer » : c'est la priorité absolue.**
+
+La quasi-totalité du travail technique restant (sections 4 et 5) sert à **boucler le CCP3**.
+
+---
+
+## 1. État des lieux (2026-06-16)
+
+### Stack technique
+- **PHP 8.3** (image `dunglas/frankenphp:1.4-php8.3` ; PHP 8.2 en local) · **PostgreSQL 16** via PDO
+  (prepared statements, `ATTR_EMULATE_PREPARES=false`).
+- **MVC maison** : `Router` (routes → `Controller#method`), `Autoloader` par chemins (espace de noms
+  global, choix assumé), `Migrations` idempotentes, middlewares (`Auth`, `Admin`, `Csrf`).
+- Couche `modules/validators/` parallèle à `controllers/ models/ views/`.
+- Composer : `matthiasmullie/minify`, `vlucas/phpdotenv`, `psr/log` ; dev : `squizlabs/php_codesniffer`.
+- Logger PSR-3 maison (`src/Logger.php`) → JSON-line sur stdout/stderr.
+- **Dockerisé** : FrankenPHP + Caddy + Traefik + Postgres. `docker-compose.yml` (dev, HTTP) /
+  `docker-compose.prod.yml` (prod, HTTPS Let's Encrypt + HSTS). Image multi-étapes (vendor `--no-dev`
+  + runtime). Service `migrate` one-shot ordonnancé **avant** l'app.
+
+### Fonctionnalités
+Auth (login/register/logout) · posts CRUD + upload image · réponses imbriquées
+(`reply_to`/`reply_to_parent`) · likes · favoris · profil + édition · recherche (users/posts) · page
+admin · minification d'assets (prod) · messages dynamiques (toasts AJAX).
+
+### Historique Git (deux phases nettes)
+- **Phase étudiante** : 2024-09-25 → 2024-11-12 (routeur, users, likes, réponses, posts imbriqués).
+- **~18 mois de pause.**
+- **Reprise (sécurisation & industrialisation)** : 2026-05-06 → 2026-06-15 (Docker + migration
+  PostgreSQL, sécurité XSS/IDOR/CSRF/headers, refonte MVC, validateurs, PSR-12, CSS, dossier CDA).
+- HEAD = `ad92fac` (2026-06-15), branche `main`.
+- ⚠️ **Travail non commité au 2026-06-16** : tout le `documents/dossier-latex/` (chapitres + PDF), les
+  3 guides récents (`DEPLOYMENT.md`, `guide-C11-CI-devops.md`, `plan-de-tests-guide.md`) et le dossier
+  `maquettes/` (non suivi). → voir section 9 (hygiène Git).
+
+---
+
+## 2. Statut des 11 compétences (source : `01-competences.tex`)
+
+| # | Compétence | CCP | Statut | Preuve principale | Ce qui reste |
+|---|---|---|---|---|---|
+| C1 | Installer/configurer l'environnement | 1 | ✅ | Docker dev=prod (FrankenPHP/Caddy/Traefik/PG), Git, Composer | — |
+| C2 | Développer des interfaces | 1 | ✅ | `modules/views/`, JS vanilla/AJAX, anti-XSS, CSP | 1-2 **captures d'écran** réelles en regard du code (§6) |
+| C3 | Développer des composants métier | 1 | ✅ | Contrôleurs, authz, contrôle IDOR, CSRF, validateur pur | (dette sécu §5 : à annoncer, ne change pas le statut) |
+| C4 | Gestion de projet | 1 | ✅ | Git, feuille de route, journal de décisions, CR de session | Aisance **orale** (assumer le solo / l'absence d'outil type Jira) |
+| C5 | Besoins & maquettes | 2 | ✅ | Expression des besoins, 10 maquettes Penpot | **Storyboard/enchaînement** + maquettes **desktop** manquantes (§7) |
+| C6 | Architecture logicielle | 2 | ✅ | MVC multicouche, Router, middlewares, DICP, UML TikZ | — |
+| C7 | Base de données relationnelle | 2 | ✅ | `solage.pg.sql`, migrations idempotentes, `seed.sql`, MCD/MLD/MPD | FK+index `reply_to` manquants (§7) ; pg_dump déjà dans `DEPLOYMENT.md` §7 |
+| C8 | Accès aux données SQL/NoSQL | 2 | ✅ | `modules/models/`, PDO préparé, fix N+1 | Savoir **parler NoSQL** (non utilisé) ; tests (C9) |
+| **C9** | **Préparer/exécuter les plans de tests** | **3** | 🔴 **À développer** | Plan + jeu d'essai **rédigés** dans le dossier | **TOUT l'implémenté** : PHPUnit + tests + exécution + capture (§4.1) |
+| **C10** | **Préparer/documenter le déploiement** | **3** | 🟠 **Partiel** | `docker-compose.prod.yml`, Traefik HTTPS, **`DEPLOYMENT.md` écrit** | **Ancrer** `DEPLOYMENT.md` dans le dossier + flip statut (§4.3) |
+| **C11** | **Mise en production (DevOps)** | **3** | 🟠 **Partiel** | Conteneurs, migrations idempotentes, PSR-12 outillé | **Pipeline CI** (GitHub Actions) + rapport interprété (§4.2) |
+| T1 | Communiquer FR/EN (B1) | — | 🟠 | Dossier structuré, vocabulaire EN, fiche FR/EN | **Entraînement questionnaire anglais** (§8) |
+| T2 | Résolution de problème | — | ✅ | `05-bilan.tex` (STDOUT CLI, headers already sent, N+1) | — |
+| T3 | Apprendre en continu (veille) | — | ✅ | Veille → fix IDOR (URSSAF), sources OWASP/ANSSI/CVE | Dater les entrées de veille |
+
+---
+
+## 3. ⭐ Ordre d'exécution recommandé — les 3 guides
+
+> C'est le plan de bataille pour boucler le CCP3. Trois guides pas-à-pas existent
+> (`plan-de-tests-guide.md` = C9, `guide-C11-CI-devops.md` = C11, `DEPLOYMENT.md` = C10). Ils se
+> **chevauchent sur PHPUnit** — l'ordre ci-dessous évite le doublon.
+
+| # | Quoi | Guide | Durée | Pourquoi à ce moment |
+|---|---|---|---|---|
+| **1** | **CI Niveau 1** (`phpcs` + `docker build`) | `guide-C11-CI-devops.md` | ~15 min | Indépendant ; **fait basculer le cœur de C11** ; crée le pipeline vert où tout se branche |
+| **2** | **Plan de tests complet** (PHPUnit + tous les tests) | `plan-de-tests-guide.md` | ~3-4 h | C'est **C9** (le seul 🔴) ; installe la **plomberie PHPUnit de référence** |
+| **3** | **CI Niveau 2** = ajouter `vendor/bin/phpunit` au pipeline | `guide-C11-CI-devops.md` | ~2 min | Les tests existent (étape 2) → coche « tests automatisés » de C11 |
+| **4** | **CI Niveau 3** (PHPStan) + **capture + interprétation** du run vert | `guide-C11-CI-devops.md` | ~30 min | 2ᵉ outil qualité + critère C11 « rapports CI interprétés » |
+| **5** | **Déploiement** : ancrer `DEPLOYMENT.md` dans le dossier + flip statut | `DEPLOYMENT.md` | ~20 min | Livrable déjà écrit ; purement éditorial ; aucune dépendance |
+
+### ⚠️ Le piège à éviter (chevauchement C9 ↔ C11)
+Les deux guides créent `phpunit.xml` + `tests/bootstrap.php`. **Ne les crée qu'une fois.**
+- Le **guide C9 est la référence** : son `bootstrap.php` inclut `includes/database.php` (indispensable
+  aux tests d'intégration), contrairement au bootstrap réduit du guide C11.
+- À l'**étape 3 (CI Niveau 2)**, **saute** la partie « installer PHPUnit / créer phpunit.xml » du
+  guide C11 → ajoute seulement l'étape `vendor/bin/phpunit`.
+- **Règle dure unique : C9 (étape 2) avant CI-Niveau-2 (étape 3).** Et « jamais un pipeline rouge » :
+  un outil n'entre dans la CI qu'une fois vert en local.
+
+---
+
+## 4. Travail technique restant — CCP3 (priorité maximale)
+
+### 4.1 — C9 · Tests (PHPUnit) · 🔴 priorité absolue
+> Guide : `documents/plan-de-tests-guide.md`. Seule compétence « à développer ». **Aucun `tests/`,
+> PHPUnit pas installé** à ce jour.
+
+- [x] Installer `phpunit/phpunit ^11` (require-dev) + `phpunit.xml` + `tests/bootstrap.php` (celui du
+      guide C9, qui inclut `database.php`) ; `.phpunit.cache/` dans `.gitignore` ; smoke test vert.
+- [x] **Unitaires purs (sans BDD)** : `UtilsTest` (anti-XSS `Utils::e`), `CsrfHelperTest`
+      (token 64 hex, `verifyToken` bon/mauvais/vide/null), `isAjax`/`sendResponse`.
+- [x] **Unitaire au mock** : `SessionManagerTest` (`UserModel` mocké → DI, zéro BDD).
+- [ ] **Intégration (vraie Postgres, transaction + rollback)** : `UserModel` + `UserValidator`
+      (login/register, mot de passe hashé), **injection SQL** sur `SearchModel` (charge inerte).
+- [ ] **Fonctionnel (curl, app lancée)** : CSRF POST sans token → **403** + log ; IDOR Bob→Alice → **403** + log.
+- [ ] **Cahier de tests** T01-T14 (fonctionnalité → cas → entrée/attendu/**obtenu**/écart) + **jeu
+      d'essai** « Publier un message » → reprendre dans le dossier (`04e-tests.tex`, annexes).
+- [ ] Capturer la suite verte (`--testdox`) + les 2 démos 403.
+
+### 4.2 — C11 · Intégration continue (GitHub Actions) · 🟠
+> Guide : `documents/guide-C11-CI-devops.md`. Briques DevOps faites ; **aucune CI** (`.github/workflows/` vide).
+
+- [ ] **Niveau 1** : `.github/workflows/ci.yml` — job `qualite` (setup-php 8.3 + `composer install` +
+      `vendor/bin/phpcs`) + job `image` (`docker build`). → vert dans l'onglet Actions.
+- [ ] **Niveau 2** (après §5.1) : ajouter l'étape `vendor/bin/phpunit` au job `qualite`.
+- [ ] **Niveau 3** : PHPStan (`phpstan.neon` level 1, baseline si besoin) branché dans la CI.
+- [ ] **Obligatoire** : capturer un run vert + **rédiger 3-4 phrases d'interprétation** (critère
+      « rapports CI interprétés ») dans `04e-tests.tex`.
+- [ ] (Bonus, oral) savoir décrire le **CD** cible (job SSH sur `main` verte) sans l'implémenter.
+
+### 4.3 — C10 · Déploiement · 🟠 (livrable écrit, à ancrer)
+> `DEPLOYMENT.md` **existe et couvre les 8 axes** (pré-requis, `.env`, procédure, smoke test, mise à
+> jour, rollback code+données, sauvegarde/restauration `pg_dump`, tableau 3 environnements).
+
+- [ ] Remplacer le bloc `\begin{todo}{Procédure de déploiement (DEPLOYMENT.md)}` (`04e-tests.tex:100`)
+      par une vraie sous-section **citant** `DEPLOYMENT.md`.
+- [ ] **Flipper le statut** `01-competences.tex:30` : `todoOrange` Partiel → `juryGreen` OK ; aligner
+      les MD `examen-cda/` (🟠 → ✅).
+- [ ] (Optionnel) déploiement **live** sur un VPS (serveur + DNS A + ports 80/443) + captures
+      `docker compose ps` / `curl` HTTPS. **N'affecte pas la note** « préparer et documenter ».
+
+---
+
+## 5. Dette de sécurité assumée — à corriger OU à défendre (§ jury)
+
+> CCP1 est validé et la **sécurité de base est solide et vérifiée** (voir §10). Mais l'audit du code a
+> confirmé des **manques réels**. La posture senior : **les nommer soi-même** au jury et présenter le
+> correctif. Les corriger maintenant est rapide et renforce le dossier (chapitre « renforcements »).
+
+- [ ] **`APP_ENV` codé en dur** à `'development'` (`public/index.php:12`) → le flag cookie **`Secure`
+      n'est JAMAIS posé** et tout le branchement prod est mort. **Le point le plus facilement
+      attaquable à l'oral.** Correctif : lire `APP_ENV` depuis l'environnement (déjà géré côté Docker).
+- [ ] **`session_regenerate_id(true)`** absent après login/logout (`SessionManager`) → **fixation de
+      session**. Correctif trivial.
+- [ ] **Anti-brute-force** sur `/login` absent (aucun compteur/temporisation). Au minimum un délai
+      progressif ou un compteur d'échecs.
+- [ ] **Validation serveur** dans `UserValidator` incomplète : `register()`/`login()` ne vérifient que
+      le non-vide + l'unicité de l'email. Ajouter `filter_var(FILTER_VALIDATE_EMAIL)` + robustesse mot
+      de passe (longueur/complexité).
+- [ ] **Validation MIME des uploads** absente (`PostController` ne vérifie que l'extension) → un `.php`
+      renommé `.png` passe. Ajouter `getimagesize()` / `finfo`. (Risque atténué par le renommage `uniqid`.)
+- [ ] **Anti-clickjacking** : `X-Frame-Options` / CSP `frame-ancestors` absents (`public/index.php`).
+      *(Note : HSTS, lui, est bien présent — posé par Traefik en prod, `docker-compose.prod.yml:72-74`.)*
+
+---
+
+## 6. Finalisation du dossier LaTeX (8 blocs `\begin{todo}` restants)
+
+> Chapitres **déjà rédigés intégralement** : `01-competences`, `02-besoins`, `03-environnement`,
+> `04a-architecture`, `05-bilan`. Restent 8 encadrés orange « À DÉVELOPPER », concentrés sur le CCP3.
+
+- [ ] **1.** Implémentation/exécution PHPUnit + capture du rapport — `04e-tests.tex:33` *(dépend §4.1)*.
+- [ ] **2.** Colonne « Obtenu » du jeu d'essai + **analyse des écarts** — `04e-tests.tex:77` *(§4.1)*.
+- [ ] **3.** Sous-section citant `DEPLOYMENT.md` — `04e-tests.tex:100` *(§4.3)*.
+- [ ] **4.** Pipeline CI réel + capture — `04e-tests.tex:120` *(§4.2)*.
+- [ ] **5.** Procédure `pg_dump`/`pg_restore` — `04b-conception.tex:184` *(déjà dans `DEPLOYMENT.md` §7
+      → y renvoyer)*.
+- [ ] **6.** 1-2 **captures d'écran** réelles des interfaces en regard du code — `04c-developpement.tex:42` *(C2)*.
+- [ ] **7.** Jeux de tests complets en annexe (code + sorties) — `annexes.tex` *(§4.1)*.
+- [ ] **8.** Garder le bloc « renforcements sécurité » comme **axes d'amélioration** — `04d-securite.tex:114` *(cf §5)*.
+
+> Les blocs 1-2-7 dépendent tous de la **création effective des tests** (§5.1) → c'est le verrou.
+
+---
+
+## 7. Compléments conception & conformité
+
+- [ ] **C5 — Storyboard / enchaînement des écrans** : le critère l'exige explicitement ; `maquettes/`
+      ne contient que des écrans isolés. À produire (schéma de navigation reliant les maquettes).
+- [ ] **C5 — Maquettes desktop incomplètes** : seules `connexion`, `inscription`, `admin` existent en
+      desktop ; `accueil`, `detail-post`, `profil`, `recherche` n'existent **qu'en mobile**. Compléter
+      ou assumer le choix « mobile-first » explicitement.
+- [ ] **Wording maquettes** : trancher **Penpot vs Figma** (le dossier dit Penpot, un guide dit Figma)
+      — aligner sur l'outil réellement utilisé avant l'oral (le jury demandera).
+- [ ] **C7 — BDD** : `posts.reply_to` et `posts.reply_to_parent` sont des `INT NULL` **sans FK ni
+      index** (auto-référence `posts`→`posts` non contrainte) alors que `responses.reply_to`, lui, a
+      FK + index. Ajouter FK `ON DELETE SET NULL` + index, ou documenter le choix.
+- [ ] **C7 — Migrations / question jury à préparer** : `migrate()` ajoute des colonnes (`reply_to`,
+      `reply_to_parent`, `image`) **déjà présentes** dans `solage.pg.sql` et supprime `username` (qui
+      n'existe pas) → sur base fraîche, c'est un quasi **no-op** (héritage du portage MariaDB→PG).
+      Idempotence réelle, mais système non exercé en install neuve. Réponse à préparer.
+- [ ] **RGPD** : emails + mots de passe = données personnelles. Ajouter mentions légales / politique de
+      confidentialité, base légale, durée de conservation, droit à l'effacement (lié à `ON DELETE`).
+- [ ] **RGAA** : documenter **2 mesures concrètes** (labels de formulaire, contraste, `alt`, navigation
+      clavier) — exigé par C5.
+- [ ] **Éco-conception** : relier explicitement aux preuves (minification ✅, fix N+1 réutilisé comme
+      argument, poids des assets).
+
+---
+
+## 8. Livrables d'examen (non techniques) — deadlines propres
+
+- [ ] **Diaporama de soutenance** (~30-35 slides, ≤ 40 min) : **seul le plan slide-par-slide existe**
+      (`02-ORAL-SOUTENANCE.md` §A) → produire les slides + **répéter chronométré ×3** + préparer la
+      **démo sécurité** (403 CSRF/IDOR live ou capture).
+- [ ] **Dossier Professionnel (DP)** : gabarit `Template - vierge - TITRE6.docx` **vierge** → à remplir
+      (parcours, expérience ; support de l'entretien final).
+- [ ] **Questionnaire professionnel anglais B1** (épreuve écrite **avant** l'oral, 30 min, sans
+      internet) : s'entraîner sur de la doc technique EN + rédiger 2 réponses ouvertes ; mémoriser la
+      fiche de vocabulaire FR/EN.
+- [x] Prépa entretien technique : banque de questions par compétence (`02-ORAL` §B, `trucs-a-dire-aux-jurys-oral.md`).
+
+---
+
+## 9. Hygiène Git (à faire rapidement)
+
+Du travail réel est sur le disque mais **absent de l'historique** (donc non daté, non sauvegardé) :
+
+- [ ] Commiter `documents/dossier-latex/maquettes/` (non suivi).
+- [ ] Commiter `DEPLOYMENT.md`, `documents/guide-C11-CI-devops.md`, `documents/plan-de-tests-guide.md` (non suivis).
+- [ ] Commiter les modifications du `documents/dossier-latex/` (chapitres + PDF) et des notes orales.
+
+---
+
+## 10. Ce qui est déjà fait (rappel — à valoriser au dossier/oral)
+
+> Acquis vérifiés par lecture du code et de l'infra. À ne pas refaire ; à **savoir présenter**.
+
+**Sécurité (CCP1)** — double échappement XSS (`Utils::e` serveur + `escapeHtml` client) · **CSRF
+Synchronizer Token appliqué structurellement à TOUT POST** par le `Router` (pas route par route) ·
+**contrôle IDOR « propriétaire-ou-admin » + 403 + log** sur `/edituser/{id}`, `/api/posts/delete`,
+`/api/users/delete` · `AuthMiddleware` / `AdminMiddleware` câblés · `bcrypt` · **prepared statements
+partout** · en-têtes CSP / `X-Content-Type-Options` / `Referrer-Policy` · cookies `HttpOnly`+`SameSite`
+· **HSTS via Traefik (prod)** · `declare(strict_types=1)` généralisé.
+
+**Architecture & qualité (CCP1/CCP2)** — MVC multicouche strict (SQL en modèles, échappement en vues,
+autorisation en contrôleurs/middlewares) · fix **N+1** (`getUsersByIds`) · validateur **pur** ·
+réponse JSON unifiée · **PSR-12 outillé** (`phpcs` vert 46/46).
+
+**BDD & infra (CCP2/CCP3 partiel)** — schéma PG normalisé (FK, `ON DELETE`, index sur les FK) ·
+`seed.sql` (dev only) · **migrations idempotentes** (`information_schema`) · Docker dev+prod · image
+**multi-étapes** · service `migrate` one-shot **bloquant** (`service_completed_successfully`) ·
+healthcheck Postgres · secrets `.env`/phpdotenv + garde-fous `${VAR:?}` · prod durcie (HTTPS auto,
+Postgres non exposé) · **`DEPLOYMENT.md`** complet.
+
+**Dossier & oral** — 5 chapitres rédigés sans todo · UML + MCD/MLD/MPD en TikZ · 10 maquettes Penpot ·
+veille IDOR documentée · plan de diaporama · banque de questions jury · fiche anglais B1.
+
+---
+
+## 11. Priorité globale & estimation
+
+| Ordre | Bloc | Réf. | État | Effort | Risque si non fait |
+|---|---|---|---|---|---|
+| 🔴 1 | CI Niveau 1 (phpcs + build) | §3 étape 1, §4.2 | ⚪ | ~15 min | — (quick win, sécurise le cœur C11) |
+| 🔴 2 | **C9 — Tests PHPUnit + plan exécuté** | §3 étape 2, §4.1 | 🔴 | ~3-4 h | **Échec CCP3 → pas de titre complet** |
+| 🔴 3 | CI Niveaux 2-3 + interprétation | §3 étapes 3-4, §4.2 | ⚪ | ~35 min | C11 reste partiel |
+| 🟠 4 | C10 — ancrer `DEPLOYMENT.md` + flip statut | §3 étape 5, §4.3 | 🟠 | ~20 min | C10 reste partiel |
+| 🟠 5 | Finaliser les 8 blocs dossier | §6 | 🟠 | 1-2 j | Dossier incomplet |
+| 🟠 6 | Diaporama + DP + anglais B1 | §8 | ⚪ | 2-3 j | Pas de soutenance / entretien |
+| 🟡 7 | Dette sécurité (correctifs) | §5 | ⚪ | ~½ j | Points perdus à l'oral (sinon à défendre) |
+| 🟡 8 | Compléments C5/C7, RGPD/RGAA | §7 | 🟠 | 1 j | Challenges jury sur C5/C7 |
+| 🟢 9 | Hygiène Git | §9 | ⚪ | 15 min | Travail non sauvegardé |
+
+**Chemin critique = ordre 1 → 4** (boucler le CCP3), puis dossier + livrables oraux en parallèle.
+
+---
+
+## 12. Points jury à préparer (consolidés)
+
+- **C8** (quasi-certain) : pourquoi une requête préparée empêche l'injection SQL ? → séparation
+  code/données ; démo `SearchModel`.
+- **C2** : XSS — pourquoi échapper à la **sortie** et pas à l'entrée ? → ne pas perdre l'info d'origine.
+- **C3/C6** : authentification vs autorisation ? CSRF (Synchronizer Token, `hash_equals`, armé par le
+  Router) ? un IDOR concret ?
+- **C6** : c'est quoi le **DICP** ? où vit la sécurité couche par couche ?
+- **C7** : MCD vs MPD ? pourquoi `user_id` ? **pourquoi migrer des colonnes déjà dans le schéma** (no-op
+  sur base fraîche → héritage MariaDB→PG) ? sauvegarde/restauration ?
+- **C1/C11** : image vs conteneur ? rôle du `migrate` one-shot ? **DevOps en une phrase ? CI vs CD ?
+  ton pipeline ? idempotence ?**
+- **C9** : test unitaire vs intégration ? non-régression ? comment tester une faille ? (savoir en
+  parler même si l'implémentation est récente).
+- **C10** : étapes du déploiement ? rollback ? environnements dev/staging/prod ? *(limite assumée :
+  images mutables sans registry, staging non matérialisé).*
+- **C5** : besoin ≠ fonctionnalité ? quel outil de maquette ? RGAA (2 mesures) ? RGPD sur Solage ?
+- **Dette à annoncer soi-même** (§5) : `APP_ENV` codé en dur, pas de `session_regenerate_id`, pas
+  d'anti-brute-force, validation serveur partielle, MIME upload, clickjacking → « voici le manque,
+  voici le correctif ».
+- **Questions ouvertes de fin** : si tu refaisais le projet ? point faible de l'app ? ce qui t'a le
+  plus appris ? (cycle veille → audit → fix IDOR).

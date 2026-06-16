@@ -7,7 +7,7 @@ tests d'\textbf{intégration} (parcours traversant plusieurs couches), tests de
 tableau~\ref{tab:plantests} présente le plan, dérivé des fonctionnalités et des \emph{user
 stories} de la section~\ref{sec:acteurs}.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \small
@@ -15,36 +15,101 @@ stories} de la section~\ref{sec:acteurs}.
 \toprule
 \textbf{Fonctionnalité} & \textbf{Type de test} & \textbf{Objet du test} \\
 \midrule
-Connexion & Unitaire & \texttt{UserValidator::login} (champs vides, email inconnu, mauvais mot de passe) \\
-Échappement & Unitaire & \texttt{Utils::e()} neutralise \texttt{<script>} \\
-Accès données & Unitaire & \texttt{PostModel} : création, lecture, suppression \\
-Routage & Unitaire & \texttt{Router} : correspondance d'URL et paramètres \\
-Publier un message & Intégration & Parcours complet : \texttt{fetch} $\to$ contrôleur $\to$ modèle $\to$ base \\
-Injection SQL & Sécurité & Recherche avec charge utile : la requête préparée neutralise \\
-XSS & Sécurité & Message \texttt{<script>} : rendu échappé, non exécuté \\
-CSRF & Sécurité & POST sans jeton $\to$ \texttt{403} \\
-IDOR & Sécurité & Suppression d'un message d'autrui $\to$ \texttt{403} \\
+Échappement (XSS) & Unitaire & \texttt{Utils::e()} : balise, guillemets, apostrophe, esperluette, \texttt{null} \\
+Transport JSON & Unitaire & \texttt{Utils::sendResponse} (forme \texttt{success}/\texttt{message}), \texttt{Utils::isAjax} \\
+Jeton CSRF & Unitaire & \texttt{CsrfHelper} : génération (64 hex, stable), vérification (bon / mauvais / vide / nul) \\
+Session, autorisation & Unitaire (mock) & \texttt{SessionManager::login} / \texttt{isAdmin} — \texttt{UserModel} mocké, sans BDD \\
+Connexion, inscription & Intégration & \texttt{UserValidator} + \texttt{UserModel} : login, register, mot de passe haché \\
+Accès données & Intégration & \texttt{PostModel} : création, lecture, suppression \\
+Injection SQL & Sécurité (intég.) & \texttt{SearchModel} : charge \texttt{' OR '1'='1} rendue inerte \\
+CSRF (bout-en-bout) & Fonctionnel & \texttt{POST} sans jeton $\to$ \texttt{403} + journal \\
+IDOR (bout-en-bout) & Fonctionnel & Suppression du message d'autrui $\to$ \texttt{403} + journal \\
+XSS (bout-en-bout) & Fonctionnel & Message \texttt{<script>} stocké brut, rendu échappé \\
+Routage & Non automatisé & \texttt{Router::match} lit \texttt{\$\_SERVER} / \texttt{exit} ; refactor \texttt{resolve()} identifié \\
 \bottomrule
 \end{tabularx}
 \caption{Plan de tests de \projet{}.}
 \label{tab:plantests}
 \end{table}
 
-\begin{todo}{Implémentation et exécution des tests (PHPUnit)}
-Cette section doit être complétée par l'implémentation réelle — c'est la priorité du projet, la
-compétence C9 étant \textbf{obligatoire}. À produire :
-\begin{enumerate}
-  \item installer \textbf{PHPUnit} (dépendance de développement Composer) ;
-  \item créer un \textbf{environnement de test} : conteneur PostgreSQL dédié (ou SQLite en
-        mémoire via un adaptateur) ;
-  \item écrire les \textbf{tests unitaires} listés ci-dessus et capturer la sortie verte ;
-  \item écrire les \textbf{quatre tests de sécurité} (injection SQL, XSS, CSRF, IDOR) ;
-  \item insérer une \textbf{capture du rapport d'exécution} (nombre de tests, assertions,
-        verts / rouges) ;
-  \item renseigner la colonne « résultat obtenu » du jeu d'essai (section suivante).
-\end{enumerate}
-Code de test, sorties complètes et jeux de données iront en annexe~\ref{ann:tests}.
-\end{todo}
+\paragraph{Environnement de test.} La compétence C9 est implémentée avec \textbf{PHPUnit~11}
+(dépendance de développement Composer). Le \emph{bootstrap} \file{tests/bootstrap.php} réutilise
+l'\textbf{autoloader maison} de production (\file{includes/autoload.php}) : les classes de
+l'application sont chargées exactement comme par \file{public/index.php}, sans autoloader de test
+parallèle. Les tests purs et au \emph{mock} s'exécutent sans base ; les tests d'intégration
+visent la \textbf{vraie base PostgreSQL}, chaque test tournant dans une \textbf{transaction
+annulée} au \emph{teardown} : la base est jetable, son état identique avant et après la suite.
+
+\paragraph{La testabilité découle du design.} Un composant n'est testable unitairement que si
+ses dépendances sont substituables. \code{SessionManager} reçoit son \code{UserModel} \textbf{par
+injection} : en test on lui passe un \emph{mock}, donc \code{login()} et \code{isAdmin()} se
+vérifient \textbf{sans base}. À l'inverse, \code{UserValidator} instancie son modèle en dur
+(\code{new UserModel()}) : non \emph{mockable}, il est testé \textbf{en intégration} contre la
+base réelle. Ce contraste est un choix assumé.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.4cm} X C{1.2cm}@{}}
+\toprule
+\textbf{Niveau} & \textbf{Composants couverts} & \textbf{Cas} \\
+\midrule
+Unitaire pur & \code{Utils} (échappement, AJAX, réponse JSON), \code{CsrfHelper} (jeton, vérification) & 19 \\
+Unitaire au mock & \code{SessionManager} (\code{login}, \code{isAdmin}) — injection de dépendance & 3 \\
+Intégration & \code{UserModel} + \code{UserValidator} (lecture, hachage, connexion, inscription) ; \code{PostModel} (création, lecture, suppression) & 16 \\
+Sécurité (intég.) & Injection SQL sur \code{SearchModel} : charge inerte / terme normal & 2 \\
+\bottomrule
+\end{tabularx}
+\caption{Familles de tests automatisés (40 cas, 62 assertions).}
+\label{tab:familles-tests}
+\end{table}
+
+\paragraph{Résultats d'exécution.} La suite complète passe au vert en une commande :
+
+\begin{lstlisting}[style=text, caption={Résumé d'exécution de la suite PHPUnit (\code{--testdox})}]
+PHPUnit 11.0.0 by Sebastian Bergmann and contributors.
+Runtime: PHP 8.2.0
+
+........................................  40 / 40 (100%)
+
+Csrf Helper   8    Post Model   6    Session Manager  3
+Sql Injection 2    User Model  10    Utils           11
+
+OK (40 tests, 62 assertions)
+\end{lstlisting}
+
+\paragraph{Tests de sécurité fonctionnels (CSRF, IDOR).} Certaines protections vivent au niveau
+HTTP (lecture de \code{\$\_SERVER}, \code{php://input}, \code{exit}) et ne s'automatisent pas
+proprement en PHPUnit ; elles sont validées \textbf{fonctionnellement}, application lancée, la
+preuve étant le \textbf{statut HTTP} et la \textbf{ligne de journal} :
+\begin{itemize}
+  \item \textbf{CSRF} — un \code{POST /login} sans jeton renvoie \code{403} (« Token CSRF
+        refusé. ») et journalise \code{csrf.token.rejected} ;
+  \item \textbf{IDOR} — connecté en \emph{Bob} (modérateur), une tentative de suppression d'un
+        message d'\emph{Alice} renvoie \code{403} et journalise \code{post.delete.forbidden}
+        (\code{current\_user\_id=2}, \code{post\_owner\_id=1}).
+\end{itemize}
+Code des tests, sortie complète et démonstrations figurent en annexe~\ref{ann:tests}.
+
+\paragraph{Anomalies relevées et traitement.} La campagne n'a pas seulement validé l'existant :
+elle a mis au jour trois anomalies latentes, consignées et assorties d'un correctif identifié.
+\begin{itemize}
+  \item \code{UserModel::createUser()} charge \code{assets/emojiList.php} par un \code{include}
+        \textbf{relatif au répertoire courant} : il échoue hors du contexte web. Contourné en
+        test, correctif identifié (chemin absolu).
+  \item \code{UserModel::getNameFromId()} retourne \code{\$row->name} \textbf{sans vérifier} la
+        ligne : erreur fatale sur identifiant inconnu. Correctif trivial (\code{\$row ? \dots{} : null}).
+  \item \code{Utils::sendResponse()} omet la clé \code{data} lorsqu'elle est \emph{falsy}
+        (\code{if (\$data)}) : comportement révélé par le test du transport JSON, documenté.
+\end{itemize}
+
+\begin{jury}
+Mon plan distingue ce qui s'automatise de ce qui se démontre. La logique pure et la sécurité
+automatisable sont couvertes par 34 tests PHPUnit verts ; le CSRF et l'IDOR, qui dépendent de
+l'environnement HTTP, sont prouvés par une requête falsifiée rejouée — \code{403} plus une ligne
+de journal à chaque fois. La même suite me sert de non-régression.
+\end{jury}
 
 \section{Jeu d'essai de la fonctionnalité la plus représentative}
 \label{sec:jeuessai}
@@ -53,7 +118,7 @@ La fonctionnalité retenue est « \textbf{Publier un message} » : elle traverse
 (interface, contrôleur, validation, téléversement, modèle, SQL, réponse, rendu) et concentre les
 protections de sécurité. Le tableau~\ref{tab:jeuessai} en présente le jeu d'essai.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \small
@@ -61,24 +126,26 @@ protections de sécurité. Le tableau~\ref{tab:jeuessai} en présente le jeu d'e
 \toprule
 \textbf{Cas} & \textbf{Donnée d'entrée} & \textbf{Résultat attendu} & \textbf{Obtenu} \\
 \midrule
-Nominal & Contenu « Bonjour » & Message créé, \texttt{id} retourné, HTTP 200 & \textit{(à exécuter)} \\
-Contenu vide & \texttt{""} & Refus « contenu vide », pas d'insertion & \textit{(à exécuter)} \\
-Image trop lourde & Fichier > limite & Refus « image trop lourde » & \textit{(à exécuter)} \\
-Extension interdite & Fichier \texttt{.php} & Refus « type de fichier non autorisé » & \textit{(à exécuter)} \\
-Charge XSS & \texttt{<script>\dots} & Stocké brut, \textbf{rendu échappé} & \textit{(à exécuter)} \\
-Non authentifié & Aucune session & Redirection / \texttt{403} (AuthMiddleware) & \textit{(à exécuter)} \\
-Sans jeton CSRF & POST sans jeton & \texttt{403} (CsrfMiddleware) & \textit{(à exécuter)} \\
+Nominal & Contenu « Bonjour » & Message créé, \texttt{id} retourné, HTTP 200 & Conforme (\texttt{id}~53) \\
+Contenu vide & \texttt{""} & Refus « contenu vide », pas d'insertion & Conforme \\
+Image trop lourde & Fichier > limite & Refus « image trop lourde » & Conforme (max 2M) \\
+Extension interdite & Fichier \texttt{.php} & Refus « type de fichier non autorisé » & Conforme \\
+Charge XSS & \texttt{<script>\dots} & Stocké brut, \textbf{rendu échappé} & Conforme (échappé) \\
+Non authentifié & Aucune session & Redirection / \texttt{403} (AuthMiddleware) & Conforme (302) \\
+Sans jeton CSRF & POST sans jeton & \texttt{403} (CsrfMiddleware) & Conforme (403) \\
 \bottomrule
 \end{tabularx}
 \caption{Jeu d'essai de la fonctionnalité « Publier un message ».}
 \label{tab:jeuessai}
 \end{table}
 
-\begin{todo}{Colonne « résultat obtenu » et analyse des écarts}
-Après exécution, renseigner la colonne « Obtenu » pour chaque cas et ajouter, sous le tableau,
-l'\textbf{analyse des écarts} éventuels (cas où l'obtenu diffère de l'attendu, cause, correctif).
-Le référentiel exige cette analyse, même en l'absence d'écart (« analyse des écarts éventuels »).
-\end{todo}
+\paragraph{Analyse des écarts.} Les sept cas ont été exécutés le 16 juin 2026 (\code{curl},
+application lancée). Pour chacun, le résultat \textbf{obtenu est conforme} au résultat attendu :
+\textbf{aucun écart}. Le cas le plus sensible est la charge XSS : le contenu \code{<script>} est
+stocké \textbf{tel quel} en base, mais ressort \textbf{échappé} au rendu (\code{\&lt;script\&gt;},
+via \code{Utils::e}), donc inerte dans le navigateur — la séparation « stockage brut / sortie
+échappée » est ainsi vérifiée de bout en bout. Le détail des requêtes et des réponses obtenues
+figure en annexe~\ref{ann:tests}.
 
 \section{Préparation et documentation du déploiement}
 \label{sec:deploiement}
@@ -155,8 +222,23 @@ authentifié pouvait modifier ou supprimer le contenu d'autrui en changeant l'id
 correctif (contrôle « propriétaire ou administrateur » + \texttt{403} + journalisation) est
 décrit en section~\ref{sec:metier}.
 
-\begin{todo}{Journal de veille}
-Compléter par un \textbf{journal de veille} daté : pour chaque entrée, la source, la date, ce qui
-a été appris, la vulnérabilité éventuellement détectée dans \projet{} et le correctif apporté.
-Viser au moins deux à trois entrées en plus de l'IDOR.
-\end{todo}
+\paragraph{Journal de veille.} Chaque élément de veille marquant est consigné avec sa source, ce
+qu'il m'a appris et son impact concret sur \projet{} (tableau~\ref{tab:veille}). La veille n'est
+pas un exercice séparé du code : elle déclenche des audits et des correctifs.
+
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\small
+\begin{tabularx}{\textwidth}{@{}L{1.5cm} L{3cm} X X@{}}
+\toprule
+\textbf{Date} & \textbf{Source} & \textbf{Apprentissage} & \textbf{Impact sur \projet{}} \\
+\midrule
+Mai 2026 & Article sur la fuite de données à l'URSSAF (faille IDOR) & Une ressource accessible par identifiant sans contrôle de propriété = IDOR (OWASP A01, \emph{Broken Access Control}) & Audit des routes \texttt{/edituser/\{id\}}, \texttt{/api/users/delete}, \texttt{/api/posts/delete} : contrôle « propriétaire ou administrateur », \texttt{403} + journalisation \\
+Mai 2026 & OWASP Top~10 (2021), OWASP Secure Headers, recommandations ANSSI & Les en-têtes HTTP de sécurité (CSP, HSTS, \texttt{nosniff}) forment une défense en profondeur côté navigateur & Ajout des en-têtes au \emph{bootstrap} ; HSTS posé par Traefik en production \\
+Juin 2026 & OWASP — \emph{CSRF Prevention Cheat Sheet} (\emph{Synchronizer Token Pattern}) & L'attribut \texttt{SameSite} seul ne suffit pas ; un jeton applicatif protège indépendamment du navigateur & Jeton CSRF armé par le routeur sur tout \texttt{POST} \\
+\bottomrule
+\end{tabularx}
+\caption{Journal de veille de sécurité et son impact sur \projet{}.}
+\label{tab:veille}
+\end{table}

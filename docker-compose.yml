@@ -75,7 +75,10 @@ services:
       POSTGRES_USER: ${DB_USER:-solage}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-solage}
     ports:
-      - "5432:5432"   # exposed for local tools (psql, TablePlus); not for Traefik
+      # host 5434 -> container 5432 : le port hôte 5432 est pris par un PostgreSQL
+      # natif Windows, et 5433 par un autre projet ; on publie sur 5434 pour les
+      # outils/tests locaux (psql, PHPUnit).
+      - "5434:5432"   # exposed for local tools (psql, TablePlus); not for Traefik
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./solage.pg.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro

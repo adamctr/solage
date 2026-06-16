@@ -13,7 +13,7 @@ sécurité, puis les tests et la veille.
 responsabilité unique \emph{et} un rôle de sécurité. La figure~\ref{fig:archi} en donne la vue
 d'ensemble.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \input{figures/architecture}
 \caption{Architecture multicouche de \projet{} : du navigateur au SGBD.}
@@ -45,7 +45,7 @@ un marqueur d'architecture mûre.
 La stratégie de sécurité se lit couche par couche selon les quatre indicateurs de l'ANSSI :
 \textbf{D}isponibilité, \textbf{I}ntégrité, \textbf{C}onfidentialité, \textbf{P}reuve.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \small
@@ -102,12 +102,28 @@ respecter en me relisant à chaque fonctionnalité, comme une revue de code à u
 les options envisagées, la solution retenue et sa justification. Il me tient lieu de comptes
 rendus de session.
 
-\begin{todo}{Gestion de projet — artefacts à joindre}
-Pour étayer la compétence C4, joindre :
-\begin{itemize}
-  \item un \textbf{extrait du fichier de suivi} (liste de tâches cochées au fil du projet) ;
-  \item \textbf{trois à quatre entrées} de comptes rendus de session (date, objectif, réalisé,
-        reste à faire), tirées du fichier de suivi et de l'historique Git.
-\end{itemize}
-\end{todo}
+\paragraph{Comptes rendus de session.} À partir de l'historique Git et du journal de décisions,
+j'ai reconstitué les comptes rendus de mes principales sessions de travail. Chacun consigne
+l'\textbf{objectif} visé, le \textbf{réalisé} — rattaché à des commits datés — et le \textbf{reste
+à faire} identifié en fin de session, ce dernier alimentant en retour la feuille de route. Le
+tableau~\ref{tab:cr} en donne la synthèse ; les comptes rendus détaillés et un extrait du fichier
+de suivi figurent en annexe~\ref{ann:gestion}.
+
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.1cm} X X@{}}
+\toprule
+\textbf{Date} & \textbf{Objectif de la session} & \textbf{Reste à faire identifié} \\
+\midrule
+6 mai 2026  & Industrialiser l'environnement : conteneurisation et migration PostgreSQL & Validation du type MIME des téléversements ; régénération d'ID de session \\
+12 mai 2026 & Auditer l'architecture MVC et corriger les failles applicatives (XSS, IDOR) & Validation serveur systématique ; tests automatisés \\
+13 mai 2026 & Fiabiliser le jeu d'essai et la charte graphique & Procédure de sauvegarde / restauration \\
+15 juin 2026 & Durcir la sécurité (CSRF, en-têtes) et outiller la qualité (PSR-12) & Intégration continue ; couverture de tests \\
+\bottomrule
+\end{tabularx}
+\caption{Synthèse des comptes rendus de session (détail en annexe~\ref{ann:gestion}).}
+\label{tab:cr}
+\end{table}
 

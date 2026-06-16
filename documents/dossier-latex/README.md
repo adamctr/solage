@@ -68,7 +68,7 @@ dossier-latex/
 
 ## Zones « À DÉVELOPPER »
 
-Les parties qui restent à produire (tests PHPUnit, CI/CD, maquettes Figma, captures d'écran,
+Les parties qui restent à produire (tests PHPUnit, CI/CD, captures d'écran,
 procédures de déploiement et de sauvegarde, journal de veille) sont signalées par des **encadrés
 orange « À DÉVELOPPER »** précisant exactement quoi y mettre. Elles correspondent aux points
 encore ouverts du projet — à compléter avant de figer le dossier.

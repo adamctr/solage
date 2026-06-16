@@ -21,7 +21,8 @@ Notes pour la soutenance. Anecdotes, déclics, et points à glisser dans le disc
 ---
 
 
-## Projections pour la suite :
+## Projections d'évolution pour la suite (après oral diplome) :
 
 Factoriser/Séparés les css et js 
-Loader le js dynamiquement en fonction du layout
+Loader le js dynamiquement en fonction du layout$
+Eslint
