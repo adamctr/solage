@@ -49,7 +49,7 @@ class PostToolHeartView
      */
     public function isActive($post, $user)
     {
-        $likeModel = new LikeModel(null, $user, $post->getId(), null, null);
+        $likeModel = new LikeModel(null, $user, $post->getId(), null);
         return $likeModel->likeAlreadyExist();
     }
 }

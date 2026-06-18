@@ -19,7 +19,6 @@
 \node[assoc] (appart) at (2.6,0) {appartient};
 \node[assoc] (publie) at (8.1,2.1) {publie};
 \node[assoc] (aime)   at (8.1,-2.6) {aime\\{\scriptsize\underline{created\_at}}};
-\node[assoc] (favori) at (8.1,-4.6) {met en\\ favori};
 \node[assoc] (repond) at (12.6,3) {répond à};
 
 % --- Liens + cardinalités ---
@@ -36,11 +35,6 @@
 \draw[link] (user.south) |- (aime)
   node[card,pos=0.85,below]{0,n};
 \draw[link] (aime) -| (post.south)
-  node[card,pos=0.2,below]{0,n};
-
-\draw[link] (user.south) |- (favori)
-  node[card,pos=0.9,below]{0,n};
-\draw[link] (favori) -| ([xshift=-4mm]post.south)
   node[card,pos=0.2,below]{0,n};
 
 \draw[link] (post.north) to[out=110,in=20] (repond)

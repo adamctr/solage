@@ -32,7 +32,7 @@ class LikeController
 
         try {
             // Création de l'objet LikeModel
-            $this->like = new LikeModel(null, $user, $post, null, date('Y-m-d H:i:s'));
+            $this->like = new LikeModel(null, $user, $post, date('Y-m-d H:i:s'));
 
             if ($this->like->likeAlreadyExist()) {
                 $this->deleteLike();

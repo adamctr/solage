@@ -10,7 +10,6 @@ class LikeModel
     protected $id;
     protected $user;
     protected $post;
-    protected $response;
     protected $created_at;
     protected $db;
 
@@ -18,16 +17,14 @@ class LikeModel
      * @param int|null    $id         Identifiant du like (null tant qu'il n'est pas enregistré).
      * @param int         $user       Identifiant de l'utilisateur qui like.
      * @param int         $post       Identifiant du post liké.
-     * @param int|null    $response   Identifiant de la réponse likée, ou null.
      * @param string|null $created_at Date de création (format SQL), ou null.
      */
-    public function __construct($id, $user, $post, $response, $created_at)
+    public function __construct($id, $user, $post, $created_at)
     {
         $this->db = Database::getConnection();
         $this->id = $id;
         $this->user = $user;
         $this->post = $post;
-        $this->response = $response;
         $this->created_at = $created_at;
     }
 
@@ -40,12 +37,11 @@ class LikeModel
     {
         try {
             $statement = $this->db->prepare(
-                'INSERT INTO likes (user_id, post, response, created_at)
-                 VALUES (:user_id, :post, :response, :created_at)'
+                'INSERT INTO likes (user_id, post, created_at)
+                 VALUES (:user_id, :post, :created_at)'
             );
             $statement->bindValue(':user_id', $this->user);
             $statement->bindValue(':post', $this->post);
-            $statement->bindValue(':response', $this->response);
             $statement->bindValue(':created_at', $this->created_at);
             $statement->execute();
 
@@ -134,14 +130,6 @@ class LikeModel
     public function getPost()
     {
         return $this->post;
-    }
-
-    /**
-     * @return int|null Identifiant de la réponse likée.
-     */
-    public function getResponse()
-    {
-        return $this->response;
     }
 
     /**

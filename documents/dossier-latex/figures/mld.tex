@@ -12,23 +12,12 @@
   {\textbf{users}\\ \underline{id}\\ name\\ firstname\\ email\\ password\\ \#\,role\\ image};
 \node[table] (posts) at (6,1.6)
   {\textbf{posts}\\ \underline{id}\\ \#\,user\_id\\ date\\ content\\ reply\_to\\ reply\_to\_parent\\ image};
-\node[table] (responses) at (12,2.2)
-  {\textbf{responses}\\ \underline{id}\\ \#\,post\\ \#\,user\_id\\ date\\ content\\ \#\,reply\_to};
 \node[table] (likes) at (6,-3.4)
-  {\textbf{likes}\\ \underline{id}\\ \#\,user\_id\\ \#\,post\\ \#\,response\\ created\_at};
-\node[table] (favs) at (0,-4.6)
-  {\textbf{users\_favorites\_posts}\\ \underline{\#\,user\_id}\\ \underline{\#\,post}};
+  {\textbf{likes}\\ \underline{id}\\ \#\,user\_id\\ \#\,post\\ created\_at};
 
 % --- Clés étrangères ---
 \draw[fk] (users.north) -- (roles.south) node[fklab,midway]{role};
 \draw[fk] (posts.west) -- (users.east) node[fklab,pos=0.5]{user\_id};
-\draw[fk] (responses.south) to[out=-90,in=0] (posts.east) node[fklab,pos=0.6]{post};
-\draw[fk] (responses) to[out=160,in=70] (users.north east) node[fklab,pos=0.85]{user\_id};
-\draw[fk] (responses.north) to[out=120,in=60,looseness=6] (responses.east)
-  node[fklab,pos=0.5,above]{reply\_to};
 \draw[fk] (likes.west) to[out=180,in=-90] (users.south) node[fklab,pos=0.7]{user\_id};
 \draw[fk] (likes.north) -- (posts.south) node[fklab,midway]{post};
-\draw[fk] (likes.east) to[out=0,in=-90] (responses.south) node[fklab,pos=0.7]{response};
-\draw[fk] (favs.north) to[out=90,in=180] (users.west) node[fklab,pos=0.6]{user\_id};
-\draw[fk] (favs.east) to[out=0,in=-120] (posts.south west) node[fklab,pos=0.7]{post};
 \end{tikzpicture}
