@@ -1,0 +1,79 @@
+name: CI
+
+# Déclenché à chaque push, sur toutes les branches.
+on: [push]
+
+jobs:
+  # ---- Job 1 : qualité du code + tests -----------------------------------
+  qualite:
+    name: Qualité & tests (PHP 8.3)
+    runs-on: ubuntu-latest
+
+    # Base PostgreSQL jetable pour les tests d'intégration : créée au lancement
+    # du job, détruite à la fin. Le job attend qu'elle soit saine (healthcheck)
+    # avant de démarrer les étapes ; elle est joignable sur localhost:5432.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: solage
+          POSTGRES_USER: solage
+          POSTGRES_PASSWORD: solage
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U solage -d solage"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer PHP 8.3 + extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'        # même version qu'en production (FrankenPHP php8.3)
+          extensions: mbstring, pdo_pgsql
+          tools: composer:v2
+          coverage: none
+
+      - name: Mettre en cache les dépendances Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --no-progress
+
+      - name: Style PSR-12 (PHP_CodeSniffer)
+        run: vendor/bin/phpcs --report=full
+
+      - name: Analyse statique (PHPStan)
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+      - name: Charger le schéma dans PostgreSQL
+        env:
+          PGPASSWORD: solage
+        run: psql -h localhost -U solage -d solage -f solage.pg.sql
+
+      - name: Tests unitaires + intégration (PHPUnit)
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: solage
+          DB_USER: solage
+          DB_PASSWORD: solage
+        run: vendor/bin/phpunit
+
+  # ---- Job 2 : construction du livrable ----------------------------------
+  image:
+    name: Build de l'image Docker (livrable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construire l'image
+        run: docker build -t solage-app .

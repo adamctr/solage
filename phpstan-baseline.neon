@@ -1,0 +1,25 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Variable \$postId on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: modules/controllers/PostController.php
+
+		-
+			message: '#^Path in include\(\) "assets/emojiList\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: modules/models/UserModel.php
+
+		-
+			message: '#^Variable \$emojiList might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: modules/models/UserModel.php
+
+		-
+			message: '#^Constant APP_ENV not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: src/Config.php
