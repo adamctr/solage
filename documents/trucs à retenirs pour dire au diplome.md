@@ -26,3 +26,4 @@ Notes pour la soutenance. Anecdotes, déclics, et points à glisser dans le disc
 Factoriser/Séparés les css et js 
 Loader le js dynamiquement en fonction du layout$
 Eslint
+pour invalider la connexion des utilisateurs (après un certain temps par ex)
