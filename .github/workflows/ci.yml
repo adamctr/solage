@@ -10,15 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     # Base PostgreSQL jetable pour les tests d'intégration : créée au lancement
-    # du job, détruite à la fin. Le job attend qu'elle soit saine (healthcheck)
-    # avant de démarrer les étapes ; elle est joignable sur localhost:5432.
+    # du job, détruite à la fin, joignable seulement depuis le runner. Elle
+    # utilise l'authentification "trust" (aucun mot de passe) : rien à coder en
+    # dur ni à divulguer. Le job attend qu'elle soit saine (healthcheck).
     services:
       postgres:
         image: postgres:16-alpine
         env:
           POSTGRES_DB: solage
           POSTGRES_USER: solage
-          POSTGRES_PASSWORD: solage
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -48,15 +49,15 @@ jobs:
       - name: Installer les dépendances
         run: composer install --no-interaction --no-progress
 
+      # Les binaires sont invoqués via "php" : insensible au bit exécutable, que
+      # Windows (où vendor/ est versionné) ne préserve pas sur les fichiers Git.
       - name: Style PSR-12 (PHP_CodeSniffer)
-        run: vendor/bin/phpcs --report=full
+        run: php vendor/bin/phpcs --report=full
 
       - name: Analyse statique (PHPStan)
-        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+        run: php vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
       - name: Charger le schéma dans PostgreSQL
-        env:
-          PGPASSWORD: solage
         run: psql -h localhost -U solage -d solage -f solage.pg.sql
 
       - name: Tests unitaires + intégration (PHPUnit)
@@ -65,8 +66,8 @@ jobs:
           DB_PORT: 5432
           DB_NAME: solage
           DB_USER: solage
-          DB_PASSWORD: solage
-        run: vendor/bin/phpunit
+          DB_PASSWORD: ""   # base "trust" : valeur ignorée par Postgres, mais requise par le contrôle de includes/database.php
+        run: php vendor/bin/phpunit
 
   # ---- Job 2 : construction du livrable ----------------------------------
   image:
