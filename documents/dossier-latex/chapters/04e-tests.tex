@@ -164,17 +164,62 @@ labels:
   - traefik.http.routers.solage.middlewares=solage-hsts
 \end{lstlisting}
 
-\begin{todo}{Procédure de déploiement (\file{DEPLOYMENT.md})}
-Rédiger une procédure de déploiement documentée (critère C10) :
+\paragraph{Procédure documentée.} La procédure complète est consignée dans \file{DEPLOYMENT.md},
+à la racine du dépôt. Elle couvre, étape par étape :
 \begin{itemize}
-  \item \textbf{pré-requis} (serveur, Docker, variables d'environnement, nom de domaine, DNS) ;
-  \item \textbf{étapes} de mise en production (build de l'image, \texttt{docker compose up},
-        migrations, vérification) ;
-  \item procédure de \textbf{retour arrière} (\emph{rollback}) en cas d'incident ;
-  \item description des \textbf{environnements} (développement local, pré-production, production)
-        et de leurs différences.
+  \item les \textbf{pré-requis} : serveur Linux avec Docker, nom de domaine dont l'enregistrement
+        DNS~\texttt{A} pointe vers le serveur (indispensable au challenge \texttt{TLS-ALPN-01} de
+        Let's Encrypt), ports~80 et~443 ouverts ;
+  \item les \textbf{variables d'environnement} (\file{.env}), avec le garde-fou
+        \texttt{\$\{VAR:?\}} qui \textbf{fait échouer le démarrage} si une valeur manque ;
+  \item les \textbf{étapes} de mise en production : \texttt{git pull} puis
+        \texttt{docker compose -f docker-compose.prod.yml up -d -{}-build} ; l'ordonnancement
+        (Postgres sain~$\to$ \texttt{migrate}~$\to$ application) est garanti par la pile ;
+  \item la \textbf{vérification} (\emph{smoke test}) : \texttt{docker compose ps} et deux
+        \texttt{curl} contrôlant la redirection \texttt{308} (HTTP~$\to$~HTTPS) et l'en-tête HSTS ;
+  \item le \textbf{retour arrière} (\emph{rollback}) : retour à un \emph{tag} Git et
+        reconstruction pour le code ; côté données, des migrations \textbf{additives et
+        idempotentes} (sans script \emph{down}) que l'ancien code reste capable de lire ;
+  \item la \textbf{sauvegarde / restauration} de la base par \texttt{pg\_dump}, prise avant chaque
+        déploiement.
 \end{itemize}
-\end{todo}
+
+\paragraph{Scripts de déploiement.} Le déploiement est \textbf{déclaratif} : les scripts sont les
+fichiers \file{docker-compose.yml} (développement) et \file{docker-compose.prod.yml} (production),
+complétés par \file{bin/migrate.php} qu'exécute le service \texttt{migrate}. Il n'y a pas de script
+impératif \file{deploy.sh} : le \texttt{docker compose up} \emph{est} le déploiement, ce qui le
+rend reproductible et versionné avec le code.
+
+\paragraph{Environnements.} Trois environnements sont définis ; ils se distinguent par la
+terminaison TLS, l'exposition de PostgreSQL et le mode de chargement du code
+(tableau~\ref{tab:environnements}).
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}L{2.6cm} X X X@{}}
+\toprule
+\textbf{Aspect} & \textbf{Développement} & \textbf{Pré-prod. (\emph{staging})} & \textbf{Production} \\
+\midrule
+Fichier \emph{compose} & \file{docker-compose.yml} & \file{docker-compose.prod.yml} + CA \emph{staging} & \file{docker-compose.prod.yml} \\
+TLS & aucun (HTTP) & Let's Encrypt \emph{staging} & Let's Encrypt (HTTPS, HSTS) \\
+Code & \emph{bind-mount} (rechargement à chaud) & image figée & image figée \\
+PostgreSQL & port exposé (outils locaux) & non exposé & non exposé \\
+Jeu de données & \file{seed.sql} chargé & aucun & aucun \\
+\bottomrule
+\end{tabularx}
+\caption{Les trois environnements de \projet{} et leurs différences.}
+\label{tab:environnements}
+\end{table}
+
+\begin{jury}
+Le déploiement est préparé et documenté de bout en bout dans \file{DEPLOYMENT.md} : pré-requis,
+étapes, vérification, rollback, sauvegarde et trois environnements. J'assume une limite : je
+construis l'image sur le serveur, sans \emph{registry}. En contexte professionnel je taguerais les
+images par SHA de commit et les pousserais sur un \emph{registry}, pour un rollback par simple
+repointage de tag plutôt que par reconstruction depuis Git.
+\end{jury}
 
 \section{Contribution à la mise en production (DevOps)}
 \label{sec:devops}

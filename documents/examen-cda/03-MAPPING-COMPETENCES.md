@@ -16,13 +16,13 @@
 | C1 | Installer/configurer l'environnement | 1 | ✅ | Docker, Git, Composer, conteneurs dev=prod | §3 |
 | C2 | Développer des interfaces utilisateur | 1 | ✅ | `modules/views/`, JS/AJAX, anti‑XSS, CSP | §4.6 |
 | C3 | Développer des composants métier | 1 | ✅ | `modules/controllers/`, IDOR, authz, CSRF | §4.7 |
-| C4 | Contribuer à la gestion de projet | 1 | 🟠 | Git, `ROADMAP`, journal décisions | §4.2 |
-| C5 | Analyser les besoins & maquetter | 2 | 🟠 | Expression besoins ✅ / maquettes à produire | §2, §4.3 |
+| C4 | Contribuer à la gestion de projet | 1 | ✅ | Git, `ROADMAP`, journal décisions | §4.2 |
+| C5 | Analyser les besoins & maquetter | 2 | ✅ | Expression besoins + maquettes Penpot + enchaînement | §2, §4.3 |
 | C6 | Définir l'architecture logicielle | 2 | ✅ | MVC multicouche, DICP, Router/Middlewares | §4.1, §4.9 |
 | C7 | Concevoir une BDD relationnelle | 2 | ✅ | `solage.pg.sql`, `Migrations.php`, `seed.sql` | §4.4 |
 | C8 | Développer l'accès aux données SQL/NoSQL | 2 | ✅ | `modules/models/`, PDO préparé, anti‑SQLi | §4.8 |
-| C9 | Préparer/exécuter les plans de tests | 3 | 🔴 | **À produire** (PHPUnit + tests sécurité) | §4.11‑4.12 |
-| C10 | Préparer/documenter le déploiement | 3 | 🟠 | `docker-compose.prod.yml` / `DEPLOYMENT.md` à écrire | §3.4, §4.9 |
+| C9 | Préparer/exécuter les plans de tests | 3 | ✅ | PHPUnit 40 tests (62 assertions) + tests sécurité | §4.11‑4.12 |
+| C10 | Préparer/documenter le déploiement | 3 | ✅ | `docker-compose.prod.yml` / `DEPLOYMENT.md` (ancré dans le dossier) | §3.4, §4.9 |
 | C11 | Contribuer à la mise en prod DevOps | 3 | 🟠 | Conteneurs, migrations / **CI/CD à ajouter** | §4.9 |
 
 **Obligatoires dans le projet** (titre complet) : **C2, C3, C4, C5, C6, C7, C8, C9**.
@@ -82,7 +82,7 @@ respectée · **tests des composants** · **validation systématique des entrée
 
 ---
 
-### C4 — Contribuer à la gestion d'un projet informatique · 🟠
+### C4 — Contribuer à la gestion d'un projet informatique · ✅
 **Critères** : tâches **planifiées** · **suivi** rapproché · procédures qualité · environnement de
 dev adéquat · **outils collaboratifs** · **comptes rendus** structurés.
 
@@ -91,22 +91,22 @@ dev adéquat · **outils collaboratifs** · **comptes rendus** structurés.
 | Planification | `ROADMAP_DETAILLEE.md` (phases 0→6, priorités, risques) |
 | Suivi | Git (commits par fonctionnalité), états ✅/🟠/⚪ |
 | Comptes rendus | `Probleme-Solution.md` (journal de décisions) |
-| **À produire** | outil collaboratif (GitHub Projects/Trello), planning visuel (Gantt), 3‑4 CR de réunion/session |
+| Limite assumée | projet solo : pas d'outil type Jira/Trello ni Gantt — suivi par Git + `ROADMAP` + journal `Probleme-Solution.md` ; à assumer à l'oral |
 
 **Question jury type** : comment planifies‑tu seul ? agile ou séquentiel ?
 
 ---
 
-### C5 — Analyser les besoins et maquetter · 🟠
+### C5 — Analyser les besoins et maquetter · ✅
 **Critères** : besoins couvrant les exigences · **maquettes** conformes · **enchaînement formalisé
 par un schéma** · dossier de conception structuré · RGAA · RGPD.
 
 | Critère | Preuve Solage |
 |---|---|
-| Besoins/objectifs/limites | dossier §2 (à rédiger) |
+| Besoins/objectifs/limites | dossier §2 (rédigé) |
 | User stories / acteurs | Visiteur / Utilisateur / Admin |
-| **Maquettes** | 🟠 **à produire** (Figma : login, register, feed, post, profil, edit, search, admin, 404) |
-| **Enchaînement** | 🟠 **à produire** (sitemap/storyboard) |
+| **Maquettes** | ✅ 10 maquettes **Penpot** (login, register, feed, post, profil, edit, search, admin, 404) |
+| **Enchaînement** | ✅ storyboard / plan de navigation (figure `enchainement.tex`) |
 | RGPD/RGAA | mentions légales, `alt`/contraste/clavier (à formaliser) |
 
 **Question jury type** : besoin ≠ fonctionnalité ? RGAA, deux mesures concrètes ?
@@ -162,32 +162,32 @@ et parades**, transactions/isolation, relationnel vs NoSQL.
 
 ---
 
-### C9 — Préparer et exécuter les plans de tests · 🔴 PRIORITÉ
+### C9 — Préparer et exécuter les plans de tests · ✅
 **Critères** : plan couvrant **toutes les fonctionnalités** · **environnement de test** · tests
 conformes au plan · résultats cohérents avec l'attendu. Types : unitaires, intégration, **sécurité**,
 non‑régression, charge, acceptation.
 
 | Critère | Preuve Solage |
 |---|---|
-| **À produire** | **PHPUnit** (dépendance dev) + conteneur Postgres de test |
+| Environnement de test | **PHPUnit 11** (dépendance dev) + vraie base Postgres, transaction annulée au teardown |
 | Plan de tests | tableau fonctionnalité → cas → entrée/attendu/obtenu/écart |
 | Unitaires | `UserValidator`, `Utils::e()`, `PostModel`/`LikeModel`, `Router` |
 | **Sécurité** | SQLi (recherche), XSS (post), CSRF (POST sans token → 403), IDOR (Bob→Alice → 403) |
 | Jeu d'essai | « Publier un message » (entrée/attendu/obtenu + écarts) |
 
-**⚠️ C9 est obligatoire dans le projet. C'est le trou n°1 à combler avant de figer le dossier.**
+**✅ C9 implémenté : 40 tests (62 assertions) verts — `tests/` (unitaires + intégration + sécurité), voir dossier §4.11.**
 
 ---
 
-### C10 — Préparer et documenter le déploiement · 🟠
+### C10 — Préparer et documenter le déploiement · ✅
 **Critères** : **procédure de déploiement rédigée** · **scripts de déploiement documentés** ·
 **environnements de tests définis** · veille déploiement.
 
 | Critère | Preuve Solage |
 |---|---|
 | Stack prod | `docker-compose.prod.yml` (Traefik HTTPS Let's Encrypt, FrankenPHP image, Postgres non exposé) |
-| Migrations | `bin/migrate.php` + service `migrate` |
-| **À produire** | **`DEPLOYMENT.md`** (pré‑requis, étapes, **rollback**), environnements dev/staging/prod |
+| Scripts de déploiement | les deux `docker-compose*.yml` + `bin/migrate.php` / service `migrate` (déploiement déclaratif, pas de `deploy.sh`) |
+| Procédure rédigée | **`DEPLOYMENT.md`** (pré‑requis, étapes, **rollback**), environnements dev/staging/prod |
 
 **Question jury type** : étapes de ton déploiement ? rollback ? environnements ?
 

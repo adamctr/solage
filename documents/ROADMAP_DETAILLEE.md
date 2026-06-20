@@ -7,7 +7,7 @@
 > **dossier de projet (40-60 p. + 40 p. d'annexes)**, un **diaporama (≈ 40 min)**, un **dossier
 > professionnel (DP)**, et passer **entretien technique + questionnaire (anglais B1)**.
 
-**Dernière mise à jour : 2026-06-16** (réécriture complète après audit du dépôt — code, dossier,
+**Dernière mise à jour : 2026-06-20** (réécriture complète après audit du dépôt — code, dossier,
 infra, git — et vérification croisée des statuts).
 
 > **Légende** : ✅ fait/validé · 🟠 partiel · 🔴 à développer · ⚪ non commencé.
@@ -25,11 +25,11 @@ Le titre se valide **par blocs de CCP**. Les 11 compétences se répartissent ai
 |---|---|---|---|
 | **CCP1** | Développer une application sécurisée | C1, C2, C3, C4 | ✅ **validé** (4/4 OK) |
 | **CCP2** | Concevoir et développer une application en couches | C5, C6, C7, C8 | ✅ **validé** (4/4 OK) |
-| **CCP3** | Préparer le déploiement d'une application sécurisée | C9, C10, C11 | 🔴 **EN PÉRIL** : C9 à développer, C10 partiel, C11 partiel |
+| **CCP3** | Préparer le déploiement d'une application sécurisée | C9, C10, C11 | 🟠 C9 ✅, C10 ✅, reste **C11** (CI) partiel |
 
 > **Conséquence directe** : CCP1 et CCP2 sont acquis. **Tout le risque restant est concentré sur le
 > CCP3.** Sans CCP3 validé, on n'obtient **pas le titre complet** — seulement deux blocs sur trois.
-> **C9 (tests) est la seule compétence classée « à développer » : c'est la priorité absolue.**
+> **C9 et C10 sont faits ; il ne reste que C11 (pipeline CI) en partiel sur le CCP3.**
 
 La quasi-totalité du travail technique restant (sections 4 et 5) sert à **boucler le CCP3**.
 
@@ -78,8 +78,8 @@ admin · minification d'assets (prod) · messages dynamiques (toasts AJAX).
 | C6 | Architecture logicielle | 2 | ✅ | MVC multicouche, Router, middlewares, DICP, UML TikZ | — |
 | C7 | Base de données relationnelle | 2 | ✅ | `solage.pg.sql`, migrations idempotentes, `seed.sql`, MCD/MLD/MPD | FK+index `reply_to` manquants (§7) ; pg_dump déjà dans `DEPLOYMENT.md` §7 |
 | C8 | Accès aux données SQL/NoSQL | 2 | ✅ | `modules/models/`, PDO préparé, fix N+1 | Savoir **parler NoSQL** (non utilisé) ; tests (C9) |
-| **C9** | **Préparer/exécuter les plans de tests** | **3** | 🔴 **À développer** | Plan + jeu d'essai **rédigés** dans le dossier | **TOUT l'implémenté** : PHPUnit + tests + exécution + capture (§4.1) |
-| **C10** | **Préparer/documenter le déploiement** | **3** | 🟠 **Partiel** | `docker-compose.prod.yml`, Traefik HTTPS, **`DEPLOYMENT.md` écrit** | **Ancrer** `DEPLOYMENT.md` dans le dossier + flip statut (§4.3) |
+| **C9** | **Préparer/exécuter les plans de tests** | **3** | ✅ | 40 tests PHPUnit (unit. + intégration + sécurité) verts, jeu d'essai exécuté | — |
+| **C10** | **Préparer/documenter le déploiement** | **3** | ✅ | `docker-compose.prod.yml`, Traefik HTTPS, `DEPLOYMENT.md` ancré (§4.13) | — |
 | **C11** | **Mise en production (DevOps)** | **3** | 🟠 **Partiel** | Conteneurs, migrations idempotentes, PSR-12 outillé | **Pipeline CI** (GitHub Actions) + rapport interprété (§4.2) |
 | T1 | Communiquer FR/EN (B1) | — | 🟠 | Dossier structuré, vocabulaire EN, fiche FR/EN | **Entraînement questionnaire anglais** (§8) |
 | T2 | Résolution de problème | — | ✅ | `05-bilan.tex` (STDOUT CLI, headers already sent, N+1) | — |
@@ -96,10 +96,10 @@ admin · minification d'assets (prod) · messages dynamiques (toasts AJAX).
 | # | Quoi | Guide | Durée | Pourquoi à ce moment |
 |---|---|---|---|---|
 | **1** | **CI Niveau 1** (`phpcs` + `docker build`) | `guide-C11-CI-devops.md` | ~15 min | Indépendant ; **fait basculer le cœur de C11** ; crée le pipeline vert où tout se branche |
-| **2** | **Plan de tests complet** (PHPUnit + tous les tests) | `plan-de-tests-guide.md` | ~3-4 h | C'est **C9** (le seul 🔴) ; installe la **plomberie PHPUnit de référence** |
+| **2 ✅** | **Plan de tests complet** (PHPUnit + tous les tests) | `plan-de-tests-guide.md` | ~3-4 h | **C9 — fait** ; plomberie PHPUnit de référence en place |
 | **3** | **CI Niveau 2** = ajouter `vendor/bin/phpunit` au pipeline | `guide-C11-CI-devops.md` | ~2 min | Les tests existent (étape 2) → coche « tests automatisés » de C11 |
 | **4** | **CI Niveau 3** (PHPStan) + **capture + interprétation** du run vert | `guide-C11-CI-devops.md` | ~30 min | 2ᵉ outil qualité + critère C11 « rapports CI interprétés » |
-| **5** | **Déploiement** : ancrer `DEPLOYMENT.md` dans le dossier + flip statut | `DEPLOYMENT.md` | ~20 min | Livrable déjà écrit ; purement éditorial ; aucune dépendance |
+| **5 ✅** | **Déploiement** : `DEPLOYMENT.md` ancré au dossier (§4.13) + statut flippé — **fait** | `DEPLOYMENT.md` | ~20 min | Livrable déjà écrit ; purement éditorial |
 
 ### ⚠️ Le piège à éviter (chevauchement C9 ↔ C11)
 Les deux guides créent `phpunit.xml` + `tests/bootstrap.php`. **Ne les crée qu'une fois.**
@@ -114,21 +114,21 @@ Les deux guides créent `phpunit.xml` + `tests/bootstrap.php`. **Ne les crée qu
 
 ## 4. Travail technique restant — CCP3 (priorité maximale)
 
-### 4.1 — C9 · Tests (PHPUnit) · 🔴 priorité absolue
-> Guide : `documents/plan-de-tests-guide.md`. Seule compétence « à développer ». **Aucun `tests/`,
-> PHPUnit pas installé** à ce jour.
+### 4.1 — C9 · Tests (PHPUnit) · ✅ fait
+> Guide : `documents/plan-de-tests-guide.md`. **Fait** : `tests/` + `phpunit.xml` en place,
+> 40 tests verts (unitaires, intégration Postgres, sécurité).
 
 - [x] Installer `phpunit/phpunit ^11` (require-dev) + `phpunit.xml` + `tests/bootstrap.php` (celui du
       guide C9, qui inclut `database.php`) ; `.phpunit.cache/` dans `.gitignore` ; smoke test vert.
 - [x] **Unitaires purs (sans BDD)** : `UtilsTest` (anti-XSS `Utils::e`), `CsrfHelperTest`
       (token 64 hex, `verifyToken` bon/mauvais/vide/null), `isAjax`/`sendResponse`.
 - [x] **Unitaire au mock** : `SessionManagerTest` (`UserModel` mocké → DI, zéro BDD).
-- [ ] **Intégration (vraie Postgres, transaction + rollback)** : `UserModel` + `UserValidator`
+- [x] **Intégration (vraie Postgres, transaction + rollback)** : `UserModel` + `UserValidator`
       (login/register, mot de passe hashé), **injection SQL** sur `SearchModel` (charge inerte).
-- [ ] **Fonctionnel (curl, app lancée)** : CSRF POST sans token → **403** + log ; IDOR Bob→Alice → **403** + log.
-- [ ] **Cahier de tests** T01-T14 (fonctionnalité → cas → entrée/attendu/**obtenu**/écart) + **jeu
+- [x] **Fonctionnel (curl, app lancée)** : CSRF POST sans token → **403** + log ; IDOR Bob→Alice → **403** + log.
+- [x] **Cahier de tests** T01-T14 (fonctionnalité → cas → entrée/attendu/**obtenu**/écart) + **jeu
       d'essai** « Publier un message » → reprendre dans le dossier (`04e-tests.tex`, annexes).
-- [ ] Capturer la suite verte (`--testdox`) + les 2 démos 403.
+- [x] Capturer la suite verte (`--testdox`) + les 2 démos 403.
 
 ### 4.2 — C11 · Intégration continue (GitHub Actions) · 🟠
 > Guide : `documents/guide-C11-CI-devops.md`. Briques DevOps faites ; **aucune CI** (`.github/workflows/` vide).
@@ -141,13 +141,13 @@ Les deux guides créent `phpunit.xml` + `tests/bootstrap.php`. **Ne les crée qu
       « rapports CI interprétés ») dans `04e-tests.tex`.
 - [ ] (Bonus, oral) savoir décrire le **CD** cible (job SSH sur `main` verte) sans l'implémenter.
 
-### 4.3 — C10 · Déploiement · 🟠 (livrable écrit, à ancrer)
+### 4.3 — C10 · Déploiement · ✅ (ancré au dossier)
 > `DEPLOYMENT.md` **existe et couvre les 8 axes** (pré-requis, `.env`, procédure, smoke test, mise à
 > jour, rollback code+données, sauvegarde/restauration `pg_dump`, tableau 3 environnements).
 
-- [ ] Remplacer le bloc `\begin{todo}{Procédure de déploiement (DEPLOYMENT.md)}` (`04e-tests.tex:100`)
+- [x] Remplacer le bloc `\begin{todo}{Procédure de déploiement (DEPLOYMENT.md)}` (`04e-tests.tex:100`)
       par une vraie sous-section **citant** `DEPLOYMENT.md`.
-- [ ] **Flipper le statut** `01-competences.tex:30` : `todoOrange` Partiel → `juryGreen` OK ; aligner
+- [x] **Flipper le statut** `01-competences.tex:30` : `todoOrange` Partiel → `juryGreen` OK ; aligner
       les MD `examen-cda/` (🟠 → ✅).
 - [ ] (Optionnel) déploiement **live** sur un VPS (serveur + DNS A + ports 80/443) + captures
       `docker compose ps` / `curl` HTTPS. **N'affecte pas la note** « préparer et documenter ».
@@ -182,14 +182,14 @@ Les deux guides créent `phpunit.xml` + `tests/bootstrap.php`. **Ne les crée qu
 > Chapitres **déjà rédigés intégralement** : `01-competences`, `02-besoins`, `03-environnement`,
 > `04a-architecture`, `05-bilan`. Restent 8 encadrés orange « À DÉVELOPPER », concentrés sur le CCP3.
 
-- [ ] **1.** Implémentation/exécution PHPUnit + capture du rapport — `04e-tests.tex:33` *(dépend §4.1)*.
-- [ ] **2.** Colonne « Obtenu » du jeu d'essai + **analyse des écarts** — `04e-tests.tex:77` *(§4.1)*.
-- [ ] **3.** Sous-section citant `DEPLOYMENT.md` — `04e-tests.tex:100` *(§4.3)*.
+- [x] **1.** Implémentation/exécution PHPUnit + capture du rapport — `04e-tests.tex:33` *(dépend §4.1)*.
+- [x] **2.** Colonne « Obtenu » du jeu d'essai + **analyse des écarts** — `04e-tests.tex:77` *(§4.1)*.
+- [x] **3.** Sous-section citant `DEPLOYMENT.md` — `04e-tests.tex:100` *(§4.3)*.
 - [ ] **4.** Pipeline CI réel + capture — `04e-tests.tex:120` *(§4.2)*.
 - [ ] **5.** Procédure `pg_dump`/`pg_restore` — `04b-conception.tex:184` *(déjà dans `DEPLOYMENT.md` §7
       → y renvoyer)*.
 - [ ] **6.** 1-2 **captures d'écran** réelles des interfaces en regard du code — `04c-developpement.tex:42` *(C2)*.
-- [ ] **7.** Jeux de tests complets en annexe (code + sorties) — `annexes.tex` *(§4.1)*.
+- [x] **7.** Jeux de tests complets en annexe (code + sorties) — `annexes.tex` *(§4.1)*.
 - [ ] **8.** Garder le bloc « renforcements sécurité » comme **axes d'amélioration** — `04d-securite.tex:114` *(cf §5)*.
 
 > Les blocs 1-2-7 dépendent tous de la **création effective des tests** (§5.1) → c'est le verrou.
@@ -239,9 +239,9 @@ Les deux guides créent `phpunit.xml` + `tests/bootstrap.php`. **Ne les crée qu
 
 Du travail réel est sur le disque mais **absent de l'historique** (donc non daté, non sauvegardé) :
 
-- [ ] Commiter `documents/dossier-latex/maquettes/` (non suivi).
-- [ ] Commiter `DEPLOYMENT.md`, `documents/guide-C11-CI-devops.md`, `documents/plan-de-tests-guide.md` (non suivis).
-- [ ] Commiter les modifications du `documents/dossier-latex/` (chapitres + PDF) et des notes orales.
+- [x] Commiter `documents/dossier-latex/maquettes/` (non suivi).
+- [x] Commiter `DEPLOYMENT.md`, `documents/guide-C11-CI-devops.md`, `documents/plan-de-tests-guide.md` (non suivis).
+- [x] Commiter les modifications du `documents/dossier-latex/` (chapitres + PDF) et des notes orales.
 
 ---
 
@@ -276,9 +276,9 @@ veille IDOR documentée · plan de diaporama · banque de questions jury · fich
 | Ordre | Bloc | Réf. | État | Effort | Risque si non fait |
 |---|---|---|---|---|---|
 | 🔴 1 | CI Niveau 1 (phpcs + build) | §3 étape 1, §4.2 | ⚪ | ~15 min | — (quick win, sécurise le cœur C11) |
-| 🔴 2 | **C9 — Tests PHPUnit + plan exécuté** | §3 étape 2, §4.1 | 🔴 | ~3-4 h | **Échec CCP3 → pas de titre complet** |
+| ✅ 2 | **C9 — Tests PHPUnit + plan exécuté** | §3 étape 2, §4.1 | ✅ | ~3-4 h | fait |
 | 🔴 3 | CI Niveaux 2-3 + interprétation | §3 étapes 3-4, §4.2 | ⚪ | ~35 min | C11 reste partiel |
-| 🟠 4 | C10 — ancrer `DEPLOYMENT.md` + flip statut | §3 étape 5, §4.3 | 🟠 | ~20 min | C10 reste partiel |
+| ✅ 4 | C10 — `DEPLOYMENT.md` ancré + statut flippé | §3 étape 5, §4.3 | ✅ | ~20 min | fait |
 | 🟠 5 | Finaliser les 8 blocs dossier | §6 | 🟠 | 1-2 j | Dossier incomplet |
 | 🟠 6 | Diaporama + DP + anglais B1 | §8 | ⚪ | 2-3 j | Pas de soutenance / entretien |
 | 🟡 7 | Dette sécurité (correctifs) | §5 | ⚪ | ~½ j | Points perdus à l'oral (sinon à défendre) |

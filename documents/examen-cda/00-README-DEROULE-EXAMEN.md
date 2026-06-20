@@ -152,13 +152,13 @@ Détail complet (critères + preuves + pages) dans **`03-MAPPING-COMPETENCES.md`
 | C1 | Environnement de travail | ✅ Solide | Docker (FrankenPHP+Caddy+Traefik+Postgres), Git, Composer, conteneurs |
 | C2 | Interfaces utilisateur | ✅ Solide | Vues `modules/views/`, JS vanilla, AJAX, escaping XSS, CSP |
 | C3 | Composants métier | ✅ Solide | Contrôleurs `modules/controllers/`, auth, IDOR, validation, CSRF |
-| C4 | Gestion de projet | 🟠 À documenter | Git, roadmap, journal Problème/Solution — **manque** outil collaboratif + comptes rendus |
-| C5 | Analyser besoins & maquetter | 🟠 À produire | Expression de besoins ✅ — **manque** maquettes Figma + enchaînement |
+| C4 | Gestion de projet | ✅ OK | Git, roadmap, journal Problème/Solution ; absence d'outil collaboratif assumée (projet solo) |
+| C5 | Analyser besoins & maquetter | ✅ OK | Expression de besoins + 10 maquettes Penpot + enchaînement (storyboard) |
 | C6 | Architecture logicielle | ✅ Solide | MVC multicouche, Router, Middlewares, schéma DICP |
 | C7 | Base de données relationnelle | ✅ Solide | `solage.pg.sql`, migrations idempotentes, FK, index, seed |
 | C8 | Composants d'accès aux données | ✅ Solide | `modules/models/`, PDO prepared statements, anti‑injection SQL |
-| C9 | **Plans de tests** | 🔴 **Gros trou** | **Aucun test aujourd'hui** — bloquant (cf. §6) |
-| C10 | Préparer/documenter déploiement | 🟠 À documenter | `docker-compose.prod.yml`, Traefik HTTPS — **manque** `DEPLOYMENT.md` |
+| C9 | **Plans de tests** | ✅ OK | 40 tests PHPUnit (unitaires + intégration + sécurité), suite verte |
+| C10 | Préparer/documenter déploiement | ✅ Documenté | `docker-compose.prod.yml`, Traefik HTTPS, `DEPLOYMENT.md` (ancré au dossier) |
 | C11 | Mise en production DevOps | 🟠 À compléter | Conteneurs ✅, `bin/migrate.php` — **manque** CI/CD (GitHub Actions) |
 
 **Compétences obligatoirement démontrées par le projet** (RC, titre complet) :
