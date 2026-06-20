@@ -112,24 +112,34 @@ sauvegarde prise **avant** le déploiement (section 7).
 
 ## 7. Sauvegarde et restauration
 
-Prendre un *dump* **avant chaque déploiement** :
+La sauvegarde est **automatisée** par le script `scripts/backup.sh` : il produit un *dump*
+compressé et horodaté dans `backups/` (`pg_dump` exécuté dans le conteneur, `--clean --if-exists`
+pour une restauration rejouable) puis **purge les dumps de plus de 14 jours** (rotation).
+
+Le rendre exécutable une fois, puis le planifier en **cron** (ici chaque jour à 3 h) :
 
 ```bash
-docker compose -f docker-compose.prod.yml exec -T postgres \
-  sh -c 'pg_dump --clean --if-exists -U "$POSTGRES_USER" "$POSTGRES_DB"' \
-  > solage-$(date +%F-%H%M).sql
+chmod +x scripts/backup.sh
+
+# crontab -e  (sur le serveur de production)
+0 3 * * * /chemin/vers/solage/scripts/backup.sh >> /var/log/solage-backup.log 2>&1
 ```
 
-Restauration :
+> Le script se replace seul à la racine du projet (`cd "$(dirname "$0")/.."`), donc le chemin du
+> dépôt dans la ligne cron suffit. Les identifiants ne transitent **jamais** par la ligne de
+> commande : `pg_dump` lit `POSTGRES_USER`/`POSTGRES_DB` dans l'environnement du conteneur.
+
+Lancer une sauvegarde à la demande (par exemple **avant un déploiement**) : `./scripts/backup.sh`.
+
+Restauration d'un *dump* (les fichiers sont gzippés) :
 
 ```bash
-cat solage-AAAA-MM-JJ-HHMM.sql | \
+gunzip -c backups/solage-AAAA-MM-JJ-HHMMSS.sql.gz | \
   docker compose -f docker-compose.prod.yml exec -T postgres \
   sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
 
-`--clean --if-exists` rend la restauration rejouable (les objets sont supprimés puis recréés).
-Stocker les *dumps* **hors du dépôt Git** : ils contiennent des données.
+Les *dumps* restent **hors du dépôt Git** (`backups/` est dans `.gitignore`) : ils contiennent des données.
 
 ## 8. Environnements
 

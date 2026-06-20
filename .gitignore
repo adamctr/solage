@@ -5,3 +5,4 @@ public/log.txt
 public/uploaded_files/*
 !public/uploaded_files/.gitkeep
 .phpunit.cache/
+backups/
