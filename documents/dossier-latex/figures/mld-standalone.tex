@@ -1,0 +1,24 @@
+% Wrapper autonome pour exporter le MLD en PNG (pdflatex + pdftoppm).
+% Réinjecte les couleurs et libs TikZ du dossier, puis inclut la figure d'origine.
+% La source figures/mld.tex n'est pas modifiée.
+\documentclass[border=8pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage{xcolor}
+\definecolor{solageBlue}{HTML}{1D4ED8}
+\definecolor{solageDark}{HTML}{0F172A}
+\definecolor{solageGray}{HTML}{475569}
+\definecolor{juryGreen}{HTML}{15803D}
+\definecolor{juryBg}{HTML}{F0FDF4}
+\definecolor{todoOrange}{HTML}{C2410C}
+\definecolor{todoBg}{HTML}{FFF7ED}
+\definecolor{infoBlue}{HTML}{1D4ED8}
+\definecolor{infoBg}{HTML}{EFF6FF}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.misc,shapes.multipart,arrows.meta,%
+                positioning,fit,calc,backgrounds,chains,decorations.pathreplacing}
+\begin{document}
+\input{mld.tex}
+\end{document}
