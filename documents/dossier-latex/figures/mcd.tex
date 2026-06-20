@@ -37,8 +37,8 @@
 \draw[link] (aime) -| (post.south)
   node[card,pos=0.2,below]{0,n};
 
-\draw[link] (post.north) to[out=110,in=20] (repond)
-  node[card,pos=0.85,right]{0,n};
-\draw[link] (repond) to[out=200,in=70] ([xshift=-6mm]post.north)
-  node[card,pos=0.15,left]{0,1};
+\draw[link] (post.north) to[out=110,in=20]
+  node[card,pos=0.85,right]{0,n} (repond);
+\draw[link] (repond) to[out=200,in=70]
+  node[card,pos=0.15,left]{0,1} ([xshift=-6mm]post.north);
 \end{tikzpicture}

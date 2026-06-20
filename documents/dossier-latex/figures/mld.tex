@@ -18,6 +18,6 @@
 % --- Clés étrangères ---
 \draw[fk] (users.north) -- (roles.south) node[fklab,midway]{role};
 \draw[fk] (posts.west) -- (users.east) node[fklab,pos=0.5]{user\_id};
-\draw[fk] (likes.west) to[out=180,in=-90] (users.south) node[fklab,pos=0.7]{user\_id};
+\draw[fk] (likes.west) to[out=180,in=-90] node[fklab,pos=0.7]{user\_id} (users.south);
 \draw[fk] (likes.north) -- (posts.south) node[fklab,midway]{post};
 \end{tikzpicture}
