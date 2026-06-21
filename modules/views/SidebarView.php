@@ -26,7 +26,7 @@ class SidebarView
                 <div class="sidebarFixed">
                     <div class="sidebarFixedContainer">
                         <div class="menuLink">
-                            <?php echo file_get_contents('assets/y.svg'); ?>
+                            <img src="/<?= Utils::e("assets/solage.png") ?>" alt="Post Image" class="logoImage" />
                         </div>
                         <a href="/" aria-label="Accueil" class="menuLink"> <?php echo file_get_contents('assets/home.svg'); ?>
                             <span class="menuTxt">Accueil</span></a>

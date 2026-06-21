@@ -28,7 +28,7 @@ class LoginRegisterLayoutView
         $jsPath = $config->getJsPath();
         ?>
         <!doctype html>
-        <html lang="en">
+        <html lang="fr">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +36,7 @@ class LoginRegisterLayoutView
             <meta name="description" content="<?=$this->description?>">
             <meta name="csrf-token" content="<?= CsrfHelper::getToken() ?>">
             <link href="/<?=$cssPath?>" rel="stylesheet" />
-            <link rel="shortcut icon" href="/assets/yfavicon.ico" type="image/x-icon"/>
+            <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon"/>
             <title><?= $this->title ?></title>
         </head>
         <body>
