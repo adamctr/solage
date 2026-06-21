@@ -116,20 +116,25 @@ La sauvegarde est **automatisée** par le script `scripts/backup.sh` : il produi
 compressé et horodaté dans `backups/` (`pg_dump` exécuté dans le conteneur, `--clean --if-exists`
 pour une restauration rejouable) puis **purge les dumps de plus de 14 jours** (rotation).
 
+> Le script cible **par défaut la stack Dokploy** (`docker-compose.dokploy.yml`, service
+> `solage-db`). Pour ce déploiement « VPS nu », surcharger via
+> `COMPOSE_FILE=docker-compose.prod.yml DB_SERVICE=postgres` (cf. `DEPLOY-DOKPLOY.md`).
+
 Le rendre exécutable une fois, puis le planifier en **cron** (ici chaque jour à 3 h) :
 
 ```bash
 chmod +x scripts/backup.sh
 
 # crontab -e  (sur le serveur de production)
-0 3 * * * /chemin/vers/solage/scripts/backup.sh >> /var/log/solage-backup.log 2>&1
+0 3 * * * COMPOSE_FILE=docker-compose.prod.yml DB_SERVICE=postgres /chemin/vers/solage/scripts/backup.sh >> /var/log/solage-backup.log 2>&1
 ```
 
 > Le script se replace seul à la racine du projet (`cd "$(dirname "$0")/.."`), donc le chemin du
 > dépôt dans la ligne cron suffit. Les identifiants ne transitent **jamais** par la ligne de
 > commande : `pg_dump` lit `POSTGRES_USER`/`POSTGRES_DB` dans l'environnement du conteneur.
 
-Lancer une sauvegarde à la demande (par exemple **avant un déploiement**) : `./scripts/backup.sh`.
+Lancer une sauvegarde à la demande (par exemple **avant un déploiement**) :
+`COMPOSE_FILE=docker-compose.prod.yml DB_SERVICE=postgres ./scripts/backup.sh`.
 
 Restauration d'un *dump* (les fichiers sont gzippés) :
 

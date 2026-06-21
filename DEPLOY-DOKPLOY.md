@@ -144,3 +144,32 @@ Les écarts avec `docker-compose.prod.yml`, et leur justification :
 
 Mêmes contrôles que `DEPLOYMENT.md` §4 : `https://$APP_DOMAIN` répond en 200, le certificat est
 délivré. En cas d'échec ACME, vérifier en priorité que le DNS pointe vers le VPS.
+
+## 6. Sauvegarde et restauration
+
+Le script `scripts/backup.sh` cible **par défaut** cette stack Dokploy
+(`docker-compose.dokploy.yml`, service `solage-db`) : `pg_dump` dans le conteneur → dump gzippé
+horodaté dans `backups/`, **rotation à 14 jours**, renommage atomique (jamais de dump partiel).
+
+Le planifier sur le VPS (cron quotidien à 3 h) :
+
+```bash
+chmod +x scripts/backup.sh
+
+# crontab -e  (sur le VPS)
+0 3 * * * /chemin/deploiement/dokploy/scripts/backup.sh >> /var/log/solage-backup.log 2>&1
+```
+
+> Le fichier compose fixe `name: solage`, donc `docker compose -f docker-compose.dokploy.yml exec`
+> vise la stack `solage`. Lancer le cron **depuis le répertoire où Dokploy a déployé le dépôt**
+> assure le bon contexte. *Variante :* piloter la tâche via l'onglet **Schedules** de Dokploy.
+
+Restauration d'un *dump* (gzippé) :
+
+```bash
+gunzip -c backups/solage-AAAA-MM-JJ-HHMMSS.sql.gz | \
+  docker compose -f docker-compose.dokploy.yml exec -T solage-db \
+  sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Les *dumps* restent **hors du dépôt Git** (`backups/` est dans `.gitignore`) : ils contiennent des données.
