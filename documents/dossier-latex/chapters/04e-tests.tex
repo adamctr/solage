@@ -104,12 +104,11 @@ elle a mis au jour trois anomalies latentes, consignées et assorties d'un corre
         (\code{if (\$data)}) : comportement révélé par le test du transport JSON, documenté.
 \end{itemize}
 
-\begin{jury}
-Mon plan distingue ce qui s'automatise de ce qui se démontre. La logique pure et la sécurité
-automatisable sont couvertes par 40 tests PHPUnit verts ; le CSRF et l'IDOR, qui dépendent de
-l'environnement HTTP, sont prouvés par une requête falsifiée rejouée — \code{403} plus une ligne
-de journal à chaque fois. La même suite me sert de non-régression.
-\end{jury}
+\paragraph{Ce que cette stratégie démontre.} Mon plan distingue ce qui s'automatise de ce qui se
+démontre. La logique pure et la sécurité automatisable sont couvertes par 40 tests PHPUnit verts ;
+le CSRF et l'IDOR, qui dépendent de l'environnement HTTP, sont prouvés par une requête falsifiée
+rejouée — \code{403} plus une ligne de journal à chaque fois. La même suite me sert de
+non-régression.
 
 \section{Jeu d'essai de la fonctionnalité la plus représentative}
 \label{sec:jeuessai}
@@ -213,13 +212,12 @@ Jeu de données & \file{seed.sql} chargé & aucun & aucun \\
 \label{tab:environnements}
 \end{table}
 
-\begin{jury}
-Le déploiement est préparé et documenté de bout en bout dans \file{DEPLOYMENT.md} : pré-requis,
-étapes, vérification, rollback, sauvegarde et trois environnements. J'assume une limite : je
-construis l'image sur le serveur, sans \emph{registry}. En contexte professionnel je taguerais les
-images par SHA de commit et les pousserais sur un \emph{registry}, pour un rollback par simple
-repointage de tag plutôt que par reconstruction depuis Git.
-\end{jury}
+\paragraph{Limite assumée du déploiement.} Le déploiement est préparé et documenté de bout en bout
+dans \file{DEPLOYMENT.md} : pré-requis, étapes, vérification, rollback, sauvegarde et trois
+environnements. J'assume une limite : je construis l'image sur le serveur, sans \emph{registry}.
+En contexte professionnel je taguerais les images par SHA de commit et les pousserais sur un
+\emph{registry}, pour un rollback par simple repointage de tag plutôt que par reconstruction
+depuis Git.
 
 \section{Contribution à la mise en production (DevOps)}
 \label{sec:devops}
@@ -320,15 +318,13 @@ aboutissent.}
 \label{fig:ci-vert}
 \end{figure}
 
-\begin{jury}
-Mon pipeline fait l'\textbf{intégration} continue : à chaque \emph{push}, qualité, analyse
-statique, tests et construction du livrable sont rejoués automatiquement, en quelques minutes. Le
-\textbf{déploiement} continu serait l'étape suivante --- un \emph{job} qui, sur \texttt{main}
-verte, se connecterait en SSH au serveur pour \texttt{git pull} puis \texttt{docker compose up -d}
-(migrations comprises). Je ne l'ai pas activé, faute de serveur permanent : savoir distinguer CI et
-CD et décrire ce CD cible me paraît plus honnête qu'un faux \emph{job} de déploiement qui ne
-tournerait jamais.
-\end{jury}
+\paragraph{Intégration continue, pas (encore) déploiement continu.} Mon pipeline fait
+l'\textbf{intégration} continue : à chaque \emph{push}, qualité, analyse statique, tests et
+construction du livrable sont rejoués automatiquement, en quelques minutes. Le \textbf{déploiement}
+continu serait l'étape suivante --- un \emph{job} qui, sur \texttt{main} verte, se connecterait en
+SSH au serveur pour \texttt{git pull} puis \texttt{docker compose up -d} (migrations comprises). Je
+ne l'ai pas activé, faute de serveur permanent : savoir distinguer CI et CD et décrire ce CD cible
+me paraît plus honnête qu'un faux \emph{job} de déploiement qui ne tournerait jamais.
 
 \section{Veille de sécurité}
 \label{sec:veille}

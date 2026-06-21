@@ -37,7 +37,7 @@ Le résultat est `main.pdf`.
 ```
 dossier-latex/
 ├── main.tex                 ← racine : à compiler
-├── preamble.tex             ← packages, styles, couleurs, boîtes (jury / à développer / note)
+├── preamble.tex             ← packages, styles, couleurs, commandes
 ├── titlepage.tex            ← page de garde
 ├── chapters/
 │   ├── 01-competences.tex   ← liste des compétences mises en œuvre
@@ -66,17 +66,10 @@ dossier-latex/
 - Toujours compiler **deux à trois fois** pour stabiliser la table des matières et les
   références croisées.
 
-## Zones « À DÉVELOPPER »
-
-Les parties qui restent à produire (tests PHPUnit, CI/CD, captures d'écran,
-procédures de déploiement et de sauvegarde, journal de veille) sont signalées par des **encadrés
-orange « À DÉVELOPPER »** précisant exactement quoi y mettre. Elles correspondent aux points
-encore ouverts du projet — à compléter avant de figer le dossier.
-
 ## Couverture des contraintes du référentiel
 
-- **40 à 60 pages** hors page de garde, sommaire et annexes (schémas compris) : le squelette est
-  dimensionné pour ~50 pages une fois les zones « à développer » remplies.
+- **40 à 60 pages** hors page de garde, sommaire et annexes (schémas compris) : le dossier complet
+  compile à 51 pages (annexes et schémas compris).
 - **Annexes ≤ 40 pages.**
 - Plan « projet de formation » (4 parties) enrichi des livrables de conception attendus
   (architecture, MCD/MPD, UML, sécurité, tests, jeu d'essai, veille).

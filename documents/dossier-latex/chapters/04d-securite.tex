@@ -77,11 +77,9 @@ window.fetch = function (resource, options = {}) {
 };
 \end{lstlisting}
 
-\begin{info}
-La protection est de la \emph{défense en profondeur} : le cookie de session est déjà en
-\texttt{SameSite=Lax} (protection \emph{navigateur}), et le jeton de synchronisation ajoute une
-protection \emph{applicative}, indépendante du navigateur. On garde les deux.
-\end{info}
+\paragraph{Une défense en profondeur.} Le cookie de session est déjà en \texttt{SameSite=Lax}
+(protection \emph{navigateur}), et le jeton de synchronisation ajoute une protection
+\emph{applicative}, indépendante du navigateur. On garde les deux.
 
 \subsection{En-têtes de sécurité et cookie de session}
 
@@ -111,17 +109,20 @@ section~\ref{sec:metier} : un utilisateur ne peut modifier ou supprimer que ses 
 ressources. Cette faille — et le cheminement qui a conduit à la corriger — est documentée dans la
 veille de sécurité (section~\ref{sec:veille}).
 
-\begin{todo}{Renforcements de sécurité planifiés}
-Honnêteté assumée : trois renforcements restent à mettre en œuvre et seront présentés comme axes
-d'amélioration.
+\subsection{Axes d'amélioration identifiés}
+\label{sec:secu-axes}
+
+L'analyse de sécurité serait incomplète sans nommer ses propres limites. Trois renforcements ont
+été identifiés et sont assumés comme axes d'amélioration : aucun n'est bloquant pour l'usage visé,
+mais chacun élèverait le niveau de défense.
 \begin{itemize}
   \item \textbf{Validation serveur systématique} : durcir \texttt{UserValidator} (format de
-        l'email, robustesse du mot de passe : longueur, majuscule, chiffre) — aujourd'hui
-        partielle.
-  \item \textbf{Anti-fixation de session} : appeler \texttt{session\_regenerate\_id(true)} après
-        la connexion.
+        l'email, robustesse du mot de passe : longueur, majuscule, chiffre). La validation porte
+        aujourd'hui sur la présence des champs et l'unicité de l'email, pas sur leur forme.
+  \item \textbf{Anti-fixation de session} : appeler \texttt{session\_regenerate\_id(true)} juste
+        après une connexion réussie, pour qu'un identifiant de session capté avant
+        l'authentification cesse d'être valable.
   \item \textbf{Validation d'upload par type MIME réel} (\texttt{finfo} + \texttt{getimagesize})
-        en complément de l'extension, et limitation de la taille.
+        en complément de l'extension, et limitation de la taille des fichiers.
 \end{itemize}
-\end{todo}
 

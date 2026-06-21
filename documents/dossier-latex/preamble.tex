@@ -67,32 +67,6 @@
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0pt}
 
-% --- Boîtes (réponse jury, à développer, info) -------------------------------
-% Le libellé est inséré via « before upper » (robuste) plutôt que par la clé
-% « title » + « attach title », plus capricieuse.
-\usepackage[most]{tcolorbox}
-
-% Réponse défendable devant le jury
-\newtcolorbox{jury}{%
-  enhanced, breakable, colback=juryBg, colframe=juryGreen,
-  boxrule=0.6pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  before upper={\textbf{\textcolor{juryGreen}{Réponse jury.}}\ }
-}
-
-% Zone à compléter (parties manquantes : tests, CI/CD, maquettes…)
-\newtcolorbox{todo}[1]{%
-  enhanced, breakable, colback=todoBg, colframe=todoOrange,
-  boxrule=0.8pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  before upper={\textbf{\textcolor{todoOrange}{À DÉVELOPPER — #1}}\par\smallskip}
-}
-
-% Note / information
-\newtcolorbox{info}{%
-  enhanced, breakable, colback=infoBg, colframe=infoBlue,
-  boxrule=0.6pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
-  before upper={\textbf{\textcolor{infoBlue}{Note.}}\ }
-}
-
 % --- Code source (listings) --------------------------------------------------
 \usepackage{listings}
 

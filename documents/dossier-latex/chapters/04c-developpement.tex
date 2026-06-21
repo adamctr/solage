@@ -39,12 +39,17 @@ fetch("/api/post", { method: "POST", body: formData })  // le jeton CSRF est inj
   .then(data => { if (data.success) { /* rendu optimiste via escapeHtml */ } });
 \end{lstlisting}
 
-\begin{todo}{Captures d'écran des interfaces}
-Insérer ici une à deux \textbf{captures d'écran} des interfaces réelles (le fil d'actualité et
-le formulaire de publication), mises en regard du code de la vue correspondante. Le référentiel
-(C2) attend explicitement « les captures d'écran d'interfaces utilisateur et le code
-correspondant ». Les autres captures iront en annexe.
-\end{todo}
+La figure~\ref{fig:feed} montre l'interface correspondante : le fil d'actualité et, en tête, le
+formulaire de publication d'un message (« Que vous arrive-t-il ? »), dont le code JavaScript
+ci-dessus assure l'envoi asynchrone.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.42\textwidth]{mobile-accueil.png}
+\caption{Fil d'actualité et formulaire de publication (vue mobile). Le bouton « Publier »
+déclenche le \texttt{fetch} \code{POST /api/post} détaillé ci-dessus.}
+\label{fig:feed}
+\end{figure}
 
 \section{Composants métier}
 \label{sec:metier}

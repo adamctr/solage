@@ -89,12 +89,11 @@ qui en référence un autre. Les « j'aime » et les favoris sont des associatio
 \label{fig:mcd}
 \end{figure}
 
-\begin{info}
-Le schéma physique conserve une table \texttt{responses} héritée d'une première version, alors
-que le mécanisme de réponse effectivement utilisé par l'application repose sur les colonnes
-\texttt{reply\_to} / \texttt{reply\_to\_parent} de la table \texttt{posts}. Cette redondance est
-identifiée comme une dette à résorber : c'est un point que je signale plutôt que de le masquer.
-\end{info}
+\paragraph{Une dette technique assumée.} Le schéma physique conserve une table \texttt{responses}
+héritée d'une première version, alors que le mécanisme de réponse effectivement utilisé par
+l'application repose sur les colonnes \texttt{reply\_to} / \texttt{reply\_to\_parent} de la table
+\texttt{posts}. Cette redondance est identifiée comme une dette à résorber : c'est un point que je
+signale plutôt que de le masquer.
 
 \subsection{Modèle logique / physique (MLD, MPD)}
 
@@ -181,12 +180,25 @@ public function migrate(): void {
 \paragraph{Jeu d'essai et restauration.} Un jeu d'essai reproductible
 (\file{seed.sql}) peuple une base de test (utilisateurs, messages, « j'aime », réponses).
 
-\begin{todo}{Procédure de sauvegarde / restauration}
-Documenter et illustrer la procédure de sauvegarde et de restauration de la base
-(\texttt{pg\_dump} / \texttt{pg\_restore}), exigée par le critère C7 (« la base de test peut
-être restaurée en cas d'incident ») : commande de \emph{dump}, emplacement de stockage,
-commande de restauration, et test de restauration sur une base vierge.
-\end{todo}
+\paragraph{Sauvegarde et restauration de la base.} La sauvegarde de la base de production est
+automatisée par le script \file{scripts/backup.sh}, planifié en \emph{cron} (une fois par jour).
+Il exécute \texttt{pg\_dump} \emph{à l'intérieur} du conteneur PostgreSQL — les identifiants ne
+transitent jamais par la ligne de commande, ils sont lus dans l'environnement du conteneur — et
+écrit un \emph{dump} compressé et horodaté dans \file{backups/}. L'option
+\texttt{-{}-clean -{}-if-exists} rend la restauration rejouable (suppression puis recréation des
+objets), un renommage atomique garantit qu'un \emph{dump} partiel n'est jamais conservé sous le
+nom final, et les sauvegardes de plus de 14 jours sont purgées (rotation). Les \emph{dumps}
+restent hors du dépôt Git (\file{backups/} est dans \file{.gitignore}) : ils contiennent des
+données.
+
+La restauration sur une base vierge — exigée par le critère C7 (« la base de test peut être
+restaurée en cas d'incident ») — réinjecte le \emph{dump} décompressé dans \texttt{psql} :
+
+\begin{lstlisting}[style=bash, caption={Restauration d'un \emph{dump} compressé dans le conteneur}]
+gunzip -c backups/solage-AAAA-MM-JJ-HHMMSS.sql.gz | \
+  docker compose -f docker-compose.prod.yml exec -T postgres \
+  sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+\end{lstlisting}
 
 \section{Diagrammes UML}
 \label{sec:uml}
