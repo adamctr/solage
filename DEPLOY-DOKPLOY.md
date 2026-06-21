@@ -44,13 +44,13 @@ services:
     image: solage-app:prod
     command: ["php", "/app/bin/migrate.php"]
     environment:
-      DB_HOST: postgres
+      DB_HOST: solage-db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      postgres: { condition: service_healthy }
+      solage-db: { condition: service_healthy }
     restart: "no"
     networks: [solage]
 
@@ -59,13 +59,13 @@ services:
     image: solage-app:prod
     restart: unless-stopped
     environment:
-      DB_HOST: postgres
+      DB_HOST: solage-db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      postgres: { condition: service_healthy }
+      solage-db: { condition: service_healthy }
       migrate: { condition: service_completed_successfully }
     labels:
       - traefik.enable=true
@@ -75,7 +75,7 @@ services:
       - traefik.http.services.solage.loadbalancer.server.port=80
     networks: [solage, dokploy-network]
 
-  postgres:
+  solage-db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -106,7 +106,10 @@ Les écarts avec `docker-compose.prod.yml`, et leur justification :
 
 - **Plus de service `traefik`** → le Traefik de Dokploy termine le TLS. Une seule instance sur le VPS.
 - **`dokploy-network` (externe)** sur `app` uniquement → c'est par ce réseau que le Traefik de
-  Dokploy voit l'application. Postgres reste sur le réseau privé `solage`, donc **jamais exposé**.
+  Dokploy voit l'application. La base reste sur le réseau privé `solage`, donc **jamais exposée**.
+- **Service base nommé `solage-db`, pas `postgres`** → `dokploy-network` est partagé par toutes les
+  stacks ; un nom générique comme `postgres` y entre en collision et l'app résout vers la mauvaise
+  base. Un nom unique garantit que `DB_HOST=solage-db` pointe sur la bonne base, via le réseau privé.
 - **`certresolver=letsencrypt`** → nom du resolver configuré dans le Traefik de Dokploy
   (le resolver local s'appelait `le`).
 - **Plus de `ports: 80/443`** → ces ports appartiennent à Dokploy.

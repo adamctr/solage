@@ -6,13 +6,13 @@ services:
     image: solage-app:prod
     command: ["php", "/app/bin/migrate.php"]
     environment:
-      DB_HOST: postgres
+      DB_HOST: solage-db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:?DB_NAME is required}
       DB_USER: ${DB_USER:?DB_USER is required}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     depends_on:
-      postgres:
+      solage-db:
         condition: service_healthy
     restart: "no"
     networks:
@@ -23,18 +23,18 @@ services:
     image: solage-app:prod
     restart: unless-stopped
     environment:
-      DB_HOST: postgres
+      DB_HOST: solage-db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:?DB_NAME is required}
       DB_USER: ${DB_USER:?DB_USER is required}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     depends_on:
-      postgres:
+      solage-db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
     # Pas de service Traefik ici : c'est le Traefik de Dokploy qui termine le TLS.
-    # Seul `app` rejoint `dokploy-network` pour être routé ; Postgres reste privé.
+    # Seul `app` rejoint `dokploy-network` pour être routé ; la base reste privée.
     labels:
       - traefik.enable=true
       - traefik.http.routers.solage.rule=Host(`${APP_DOMAIN:?APP_DOMAIN is required}`)
@@ -45,7 +45,10 @@ services:
       - solage
       - dokploy-network
 
-  postgres:
+  # Nom de service unique (`solage-db`, pas `postgres`) : sur le `dokploy-network`
+  # partagé entre toutes les stacks, un nom générique comme `postgres` entre en
+  # collision et l'app résout vers la mauvaise base. Un nom unique lève l'ambiguïté.
+  solage-db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
