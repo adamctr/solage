@@ -159,7 +159,7 @@ Détail complet (critères + preuves + pages) dans **`03-MAPPING-COMPETENCES.md`
 | C8 | Composants d'accès aux données | ✅ Solide | `modules/models/`, PDO prepared statements, anti‑injection SQL |
 | C9 | **Plans de tests** | ✅ OK | 40 tests PHPUnit (unitaires + intégration + sécurité), suite verte |
 | C10 | Préparer/documenter déploiement | ✅ Documenté | `docker-compose.prod.yml`, Traefik HTTPS, `DEPLOYMENT.md` (ancré au dossier) |
-| C11 | Mise en production DevOps | 🟠 À compléter | Conteneurs ✅, `bin/migrate.php` — **manque** CI/CD (GitHub Actions) |
+| C11 | Mise en production DevOps | ✅ OK | Conteneurs ✅, migrations ✅, **CI GitHub Actions** (PSR-12 + PHPStan + PHPUnit + build), run vert |
 
 **Compétences obligatoirement démontrées par le projet** (RC, titre complet) :
 **C2, C3, C4, C5, C6, C7, C8, C9.** Les compétences **C1, C10, C11** sont surtout vérifiées à

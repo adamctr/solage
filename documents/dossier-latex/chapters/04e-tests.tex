@@ -106,7 +106,7 @@ elle a mis au jour trois anomalies latentes, consignées et assorties d'un corre
 
 \begin{jury}
 Mon plan distingue ce qui s'automatise de ce qui se démontre. La logique pure et la sécurité
-automatisable sont couvertes par 34 tests PHPUnit verts ; le CSRF et l'IDOR, qui dépendent de
+automatisable sont couvertes par 40 tests PHPUnit verts ; le CSRF et l'IDOR, qui dépendent de
 l'environnement HTTP, sont prouvés par une requête falsifiée rejouée — \code{403} plus une ligne
 de journal à chaque fois. La même suite me sert de non-régression.
 \end{jury}
@@ -224,33 +224,111 @@ repointage de tag plutôt que par reconstruction depuis Git.
 \section{Contribution à la mise en production (DevOps)}
 \label{sec:devops}
 
-Plusieurs briques DevOps sont déjà en place : conteneurisation complète (\texttt{docker
+Plusieurs briques DevOps étaient déjà en place : conteneurisation complète (\texttt{docker
 compose}), images reproductibles, migrations \textbf{idempotentes} rejouables sans risque, et
-journalisation structurée adaptée à une collecte par l'orchestrateur. Il manque l'automatisation
-par intégration continue.
+journalisation structurée adaptée à une collecte par l'orchestrateur. Il manquait
+l'\textbf{automatisation} de la vérification : elle est désormais assurée par un pipeline
+d'\textbf{intégration continue} GitHub Actions, déclenché à chaque \emph{push}.
 
-\begin{todo}{Pipeline d'intégration continue (CI/CD)}
-Mettre en place un pipeline \textbf{GitHub Actions} déclenché à chaque \emph{push}, et y joindre
-une capture d'un rapport d'exécution. Étapes cibles : analyse statique (PHPStan), tests
-(PHPUnit), \emph{lint} JavaScript (ESLint), construction de l'image Docker. Squelette de départ à
-adapter :
-\end{todo}
+\paragraph{Le pipeline.} Le dépôt étant hébergé sur GitHub, le serveur d'automatisation est
+\textbf{GitHub Actions} (hébergé, gratuit, rien à installer). Le fichier
+\file{.github/workflows/ci.yml} décrit \textbf{deux \emph{jobs} parallèles}, soit deux signaux
+lisibles à chaque \emph{push} :
+\begin{itemize}
+  \item \texttt{qualite} --- sur \textbf{PHP~8.3} (la version de production) : installe les
+        dépendances, vérifie le style \textbf{PSR-12} (PHP\_CodeSniffer), lance l'\textbf{analyse
+        statique} (PHPStan), puis exécute la \textbf{suite PHPUnit} (40~tests) contre une base
+        PostgreSQL ;
+  \item \texttt{image} --- \textbf{construit l'image Docker} (le livrable), pour qu'une image qui
+        ne se construit plus soit détectée immédiatement, et non le jour du déploiement.
+\end{itemize}
 
-\begin{lstlisting}[style=yaml, caption={Squelette de pipeline CI proposé — \file{.github/workflows/ci.yml} (à implémenter)}]
+\begin{lstlisting}[style=yaml, caption={Pipeline d'intégration continue --- extrait de \file{.github/workflows/ci.yml}}]
 name: CI
 on: [push]
+
 jobs:
-  build-and-test:
+  qualite:
     runs-on: ubuntu-latest
+    services:
+      postgres:                       # base PostgreSQL jetable (auth trust)
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: solage
+          POSTGRES_USER: solage
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U solage -d solage"
+          --health-interval 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3' }
-      - run: composer install --no-interaction
-      - run: vendor/bin/phpstan analyse src modules   # analyse statique
-      - run: vendor/bin/phpunit                        # tests unitaires + securite
-      - run: docker build -t solage-app .              # construction du livrable
+        with:
+          php-version: '8.3'          # version de production
+          extensions: mbstring, pdo_pgsql
+      - run: composer install --no-interaction --no-progress
+      - run: php vendor/bin/phpcs --report=full
+      - run: php vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+      - run: psql -h localhost -U solage -d solage -f solage.pg.sql
+      - run: php vendor/bin/phpunit
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: solage
+          DB_USER: solage
+          DB_PASSWORD: ""           # trust : ignore par Postgres
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t solage-app .
 \end{lstlisting}
+
+\paragraph{Une base de test éphémère, sans secret.} Mes tests d'intégration visent une vraie
+PostgreSQL (section~\ref{ch:tests}). Le pipeline démarre donc un conteneur \texttt{postgres:16}
+déclaré comme \emph{service}, attend qu'il soit sain (\emph{healthcheck}) et y charge le schéma
+\file{solage.pg.sql}. La base est \textbf{jetable} et joignable seulement depuis le \emph{runner} :
+elle utilise l'authentification \texttt{trust}, donc \textbf{aucun mot de passe n'est codé en dur}
+dans le pipeline. Les véritables identifiants vivent dans \file{.env} (hors dépôt) --- même
+philosophie « base jetable » que les tests, portée en intégration continue.
+
+\paragraph{Analyse statique introduite avec une baseline.} PHPStan est branché au
+\textbf{niveau~1}. Introduit sur du code existant, il a relevé cinq alertes héritées --- dont le
+couplage, déjà documenté, de \code{createUser} au \emph{docroot}. Je les ai \textbf{gelées dans une
+\emph{baseline}} versionnée (\file{phpstan-baseline.neon}) : la CI reste verte, la dette héritée
+est \textbf{visible et datée}, et \textbf{tout nouveau code est analysé strictement}. La baseline
+dégonfle à chaque correction --- c'est la pratique courante pour introduire l'analyse statique sur
+un projet existant.
+
+\paragraph{Interprétation du rapport.} À chaque \emph{push}, le pipeline installe PHP~8.3, vérifie
+PSR-12, lance PHPStan, exécute les 40~tests PHPUnit contre une PostgreSQL éphémère, et construit
+l'image Docker. La figure~\ref{fig:ci-vert} montre un run \textbf{vert} : les deux \emph{jobs}
+aboutissent --- le code respecte PSR-12, l'analyse statique ne relève rien au-delà de la baseline,
+les 40~tests passent et le livrable se construit. Un run \textbf{rouge} bloquerait l'intégration et
+désignerait l'étape fautive (un test cassé par une régression, une image qui ne se construit plus)
+que je corrige en local avant de re-pousser. C'est cette boucle \textbf{automatique} --- et non
+l'exécution manuelle des outils --- qui garantit qu'aucune modification non vérifiée n'entre dans
+la branche.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{ci-run-vert.png}
+\caption{Run d'intégration continue au vert : les \emph{jobs} \texttt{qualite} et \texttt{image}
+aboutissent.}
+\label{fig:ci-vert}
+\end{figure}
+
+\begin{jury}
+Mon pipeline fait l'\textbf{intégration} continue : à chaque \emph{push}, qualité, analyse
+statique, tests et construction du livrable sont rejoués automatiquement, en quelques minutes. Le
+\textbf{déploiement} continu serait l'étape suivante --- un \emph{job} qui, sur \texttt{main}
+verte, se connecterait en SSH au serveur pour \texttt{git pull} puis \texttt{docker compose up -d}
+(migrations comprises). Je ne l'ai pas activé, faute de serveur permanent : savoir distinguer CI et
+CD et décrire ce CD cible me paraît plus honnête qu'un faux \emph{job} de déploiement qui ne
+tournerait jamais.
+\end{jury}
 
 \section{Veille de sécurité}
 \label{sec:veille}

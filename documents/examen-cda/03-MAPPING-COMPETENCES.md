@@ -23,7 +23,7 @@
 | C8 | Développer l'accès aux données SQL/NoSQL | 2 | ✅ | `modules/models/`, PDO préparé, anti‑SQLi | §4.8 |
 | C9 | Préparer/exécuter les plans de tests | 3 | ✅ | PHPUnit 40 tests (62 assertions) + tests sécurité | §4.11‑4.12 |
 | C10 | Préparer/documenter le déploiement | 3 | ✅ | `docker-compose.prod.yml` / `DEPLOYMENT.md` (ancré dans le dossier) | §3.4, §4.9 |
-| C11 | Contribuer à la mise en prod DevOps | 3 | 🟠 | Conteneurs, migrations / **CI/CD à ajouter** | §4.9 |
+| C11 | Contribuer à la mise en prod DevOps | 3 | ✅ | Conteneurs, migrations, **CI GitHub Actions** (PSR-12, PHPStan, PHPUnit, build image) | §4.9 |
 
 **Obligatoires dans le projet** (titre complet) : **C2, C3, C4, C5, C6, C7, C8, C9**.
 **Surtout entretien/questionnaire** : **C1, C10, C11** (mais Solage les couvre → bonus).
@@ -193,7 +193,7 @@ non‑régression, charge, acceptation.
 
 ---
 
-### C11 — Contribuer à la mise en production DevOps · 🟠
+### C11 — Contribuer à la mise en production DevOps · ✅
 **Critères** : **outils de qualité de code** · **automatisation des tests** · **scripts d'intégration
 continue sans erreur** · serveur d'automatisation paramétré · rapports CI interprétés. Savoir :
 conteneurs, `docker compose`, **git server**, scripts CI (YAML), Linux.
