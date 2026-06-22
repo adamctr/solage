@@ -44,7 +44,8 @@ class EditUserView
 
                 <div class="form-group">
                     <label for="password">Mot de passe :</label>
-                    <input type="password" name="password" value="">
+                    <input type="password" name="password" value="" autocomplete="new-password"
+                           placeholder="Laisser vide pour ne pas changer">
                 </div>
 
                 <!-- Conteneur pour les boutons -->

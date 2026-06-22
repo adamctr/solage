@@ -193,15 +193,24 @@ class UserModel
     }
 
     /**
-     * Met à jour le nom et le mot de passe d'un utilisateur.
+     * Met à jour le nom d'un utilisateur, et son mot de passe uniquement si un
+     * nouveau est fourni (un mot de passe vide signifie « conserver l'actuel »).
      *
      * @param int    $userId   Identifiant de l'utilisateur.
      * @param string $name     Nouveau nom d'affichage.
-     * @param string $password Nouveau mot de passe en clair (hashé avant écriture).
+     * @param string $password Nouveau mot de passe en clair, ou chaîne vide pour conserver l'actuel.
      * @return bool true si la mise à jour a réussi.
      */
     public function updateUser($userId, $name, $password)
     {
+        if ($password === null || $password === '') {
+            $sql = "UPDATE users SET name = :name WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+            $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+            return $stmt->execute();
+        }
+
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         $sql = "UPDATE users SET name = :name, password = :password WHERE id = :id";
         $stmt = $this->db->prepare($sql);
