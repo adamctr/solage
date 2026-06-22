@@ -59,6 +59,17 @@ class SessionManager
         return $_SESSION['image'] ?? null;
     }
 
+    /**
+     * Resynchronise le pseudo mis en cache dans la session après modification.
+     *
+     * @param string $name Nouveau pseudo.
+     * @return void
+     */
+    public function refreshName($name)
+    {
+        $_SESSION['name'] = $name;
+    }
+
     public function logout()
     {
         $this->user = null;

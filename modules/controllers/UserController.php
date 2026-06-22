@@ -172,6 +172,12 @@ class UserController
         $userModel = new UserModel();
         $userModel->updateUser($this->user->getId(), $name, $password);
 
+        // Resynchronise le pseudo en session (uniquement si on édite son propre profil)
+        $session = new SessionManager($userModel);
+        if ($session->getUserId() === $this->user->getId()) {
+            $session->refreshName($name);
+        }
+
         // Redirection après la mise à jour
         header('Location: /user/' . $this->user->getId());
         exit();
