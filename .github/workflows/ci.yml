@@ -78,3 +78,17 @@ jobs:
 
       - name: Construire l'image
         run: docker build -t solage-app .
+
+  # ---- Job 3 : déploiement (main uniquement) -----------------------------
+  # Ne tape le webhook Dokploy que si la qualité, les tests et le build sont
+  # verts, et seulement sur main : un push de branche fait la CI sans déployer.
+  deploiement:
+    name: Déploiement Dokploy
+    needs: [qualite, image]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déclencher le redéploiement Dokploy
+        # -f : un webhook en erreur HTTP fait échouer le job (visible en rouge).
+        # Le jeton vit dans l'URL (secret GitHub) — rien en clair dans les logs.
+        run: curl -fsSL -X POST "${{ secrets.DOKPLOY_WEBHOOK }}"
