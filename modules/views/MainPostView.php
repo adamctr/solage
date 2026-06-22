@@ -27,7 +27,6 @@ class MainPostView
      */
     public function show()
     {
-        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
 
@@ -52,7 +51,7 @@ class MainPostView
                         <div class="postTool response">
                             <?= PostToolResponseView::show($this->post); ?>
                         </div>
-                        <?= PostToolHeartView::show($this->post, $sessionUserId); ?>
+                        <?= PostToolHeartView::show($this->post); ?>
                     </div>
                 </div>
             </div>

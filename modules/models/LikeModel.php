@@ -109,6 +109,32 @@ class LikeModel
     }
 
     /**
+     * Récupère, parmi un ensemble de posts, ceux likés par un utilisateur.
+     * Requête groupée pour éviter un N+1 lors du rendu des boutons cœur.
+     *
+     * @param int|string|null $userId  Identifiant de l'utilisateur courant.
+     * @param int[]           $postIds Identifiants des posts affichés.
+     * @return int[] Identifiants des posts likés par l'utilisateur.
+     */
+    public static function getLikedPostIds($userId, array $postIds): array
+    {
+        if ($userId === null || empty($postIds)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($postIds), '?'));
+        $statement = Database::getConnection()->prepare(
+            "SELECT post FROM likes WHERE user_id = ? AND post IN ($placeholders)"
+        );
+        $statement->execute(array_merge([$userId], array_values($postIds)));
+
+        $likedPostIds = [];
+        while ($row = $statement->fetch(PDO::FETCH_OBJ)) {
+            $likedPostIds[] = (int) $row->post;
+        }
+        return $likedPostIds;
+    }
+
+    /**
      * @return int|null Identifiant du like.
      */
     public function getId()

@@ -33,6 +33,9 @@ class UserController
         $posts = PostModel::getAllPostsByUserId($this->user->getId());
         $users = [$this->user->getId() => $this->user];
 
+        $currentUserId = (new SessionManager(new UserModel()))->getUserId();
+        PostModel::attachLikedState($posts, $currentUserId);
+
         $view = new UserView($this->user, $posts, $users);
         $view->show();
     }

@@ -16,6 +16,7 @@ class PostModel
     protected $replyTo;
     protected $image;
     protected $reply_to_parent;
+    protected $liked = false;
 
 
 
@@ -399,5 +400,44 @@ class PostModel
     public function getReplyTo(): ?int
     {
         return $this->replyTo === null ? null : (int) $this->replyTo;
+    }
+
+    /**
+     * Indique si le post est liké par l'utilisateur courant.
+     * État transitoire renseigné par le contrôleur via attachLikedState().
+     *
+     * @return bool
+     */
+    public function isLiked(): bool
+    {
+        return $this->liked;
+    }
+
+    /**
+     * Renseigne l'état « liké » du post.
+     *
+     * @param bool $liked
+     * @return void
+     */
+    public function setLiked(bool $liked): void
+    {
+        $this->liked = $liked;
+    }
+
+    /**
+     * Marque en une seule requête les posts likés par l'utilisateur courant,
+     * pour éviter une requête par bouton cœur dans les vues de liste (N+1).
+     *
+     * @param PostModel[]     $posts  Posts affichés.
+     * @param int|string|null $userId Identifiant de l'utilisateur courant.
+     * @return void
+     */
+    public static function attachLikedState(array $posts, $userId): void
+    {
+        $postIds = array_map(fn($post) => $post->getId(), $posts);
+        $likedPostIds = LikeModel::getLikedPostIds($userId, $postIds);
+        foreach ($posts as $post) {
+            $post->setLiked(in_array($post->getId(), $likedPostIds, true));
+        }
     }
 }

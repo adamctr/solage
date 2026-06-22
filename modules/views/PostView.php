@@ -27,7 +27,6 @@ class PostView
      */
     public function show()
     {
-        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
         <?php foreach ($this->posts as $post) :
@@ -54,7 +53,7 @@ class PostView
                                 <div class="postTool response">
                                     <?= PostToolResponseView::show($post); ?>
                                 </div>
-                                <?= PostToolHeartView::show($post, $sessionUserId); ?>
+                                <?= PostToolHeartView::show($post); ?>
                             </div>
                         </div>
                     </div>
@@ -72,7 +71,6 @@ class PostView
      */
     public function showAdminPost()
     {
-        $sessionUserId = (new SessionManager(new UserModel()))->getUserId();
         ob_start();
         ?>
         <?php foreach ($this->posts as $post) :
@@ -101,7 +99,7 @@ class PostView
                                     <button type="submit">Supprimer</button>
                                 </form>
                             </div>
-                            <?= PostToolHeartView::show($post, $sessionUserId); ?>
+                            <?= PostToolHeartView::show($post); ?>
                         </div>
                     </div>
                 </div>

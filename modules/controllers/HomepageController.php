@@ -18,6 +18,9 @@ class HomepageController
         $userIds = array_map(fn($p) => $p->getUserId(), $posts);
         $users = UserModel::getUsersByIds($userIds);
 
+        $currentUserId = (new SessionManager(new UserModel()))->getUserId();
+        PostModel::attachLikedState($posts, $currentUserId);
+
         $view = new HomepageView($posts, $users);
         $view->show();
     }

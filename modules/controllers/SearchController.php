@@ -34,6 +34,9 @@ class SearchController
         $userIds = array_map(fn($p) => $p->getUserId(), $results);
         $users = UserModel::getUsersByIds($userIds);
 
+        $currentUserId = (new SessionManager(new UserModel()))->getUserId();
+        PostModel::attachLikedState($results, $currentUserId);
+
         $searchView = new SearchView();
         $searchView->renderResults($results, $users);
     }

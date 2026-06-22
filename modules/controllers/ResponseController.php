@@ -34,6 +34,9 @@ class ResponseController
         }
         $users = UserModel::getUsersByIds($userIds);
 
+        $currentUserId = (new SessionManager(new UserModel()))->getUserId();
+        PostModel::attachLikedState(array_merge([$post], $responses), $currentUserId);
+
         ResponseView::show($post, $responses, $users);
     }
 }
