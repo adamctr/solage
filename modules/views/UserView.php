@@ -93,6 +93,8 @@ class UserView
 
             <button type="submit">Connexion</button>
 
+            <p class="formSwitch">Pas encore de compte ? <a href="/register">S'inscrire</a></p>
+
         </form>
 
         <?php
@@ -130,6 +132,8 @@ class UserView
             </div>
 
             <button type="submit">Inscription</button>
+
+            <p class="formSwitch">Déjà un compte ? <a href="/login">Se connecter</a></p>
         </form>
 
 

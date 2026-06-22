@@ -699,6 +699,12 @@ input[type="file"] { font-family: inherit; }
     border-color: var(--accent-dark);
 }
 
+.formSwitch {
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--muted);
+}
+
 .formBlock {
     display: flex;
     flex-direction: column;

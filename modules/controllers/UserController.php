@@ -97,7 +97,13 @@ class UserController
         Utils::sendResponse($result['ok'], $result['message']);
 
         if ($result['ok']) {
-            (new UserModel())->createUser($name, $email, $password);
+            $userModel = new UserModel();
+            $userModel->createUser($name, $email, $password);
+
+            // Ouvre directement la session du nouveau compte (même mécanisme que
+            // login) pour qu'il arrive connecté sur le fil après l'inscription.
+            $newUser = $userModel->getUserByEmail($email);
+            (new SessionManager($userModel))->login($newUser->getId());
         }
     }
 
