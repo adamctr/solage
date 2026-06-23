@@ -9,13 +9,10 @@ require '../vendor/autoload.php';
 require_once '../includes/autoload.php';
 Autoloader::register();
 
-define('APP_ENV', 'development');
-
-if (APP_ENV === 'production') {
-    $minificationController = new MinificationController();
-
-    $minificationController->minifyAssets();
-}
+// Mode d'exécution piloté par l'environnement (conteneur), 'development' par défaut.
+// Les assets minifiés sont générés une fois au build de l'image (bin/minify.php),
+// pas à chaque requête : Config se contente de servir le bon chemin selon ce mode.
+define('APP_ENV', getenv('APP_ENV') ?: 'development');
 
 session_set_cookie_params([
     'httponly' => true,                       // inaccessible au JS (anti vol de session XSS)

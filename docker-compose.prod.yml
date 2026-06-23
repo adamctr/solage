@@ -53,6 +53,7 @@ services:
     image: solage-app:prod
     restart: unless-stopped
     environment:
+      APP_ENV: production       # sert les assets minifiés + cookie Secure (HTTPS)
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:?DB_NAME is required}

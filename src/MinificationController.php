@@ -16,7 +16,7 @@ class MinificationController
     {
       // Définissez les fichiers CSS à minifier
         $cssFiles = [
-        __DIR__ . '/../../public/style/style.css',
+        __DIR__ . '/../public/style/style.css',
         ];
         $minifiedCss = new Minify\CSS();
 
@@ -26,14 +26,14 @@ class MinificationController
         }
 
       // Enregistrez le fichier minifié
-        $minifiedCss->minify(__DIR__ . '/../../public/assets/minified/style.min.css');
+        $minifiedCss->minify(__DIR__ . '/../public/assets/minified/style.min.css');
     }
 
     private function minifyJs()
     {
       // Définissez les fichiers JS à minifier
         $jsFiles = [
-        __DIR__ . '/../../public/scripts/index.js',
+        __DIR__ . '/../public/scripts/index.js',
         ];
         $minifiedJs = new Minify\JS();
 
@@ -43,6 +43,6 @@ class MinificationController
         }
 
       // Enregistrez le fichier minifié
-        $minifiedJs->minify(__DIR__ . '/../../public/assets/minified/index.min.js');
+        $minifiedJs->minify(__DIR__ . '/../public/assets/minified/index.min.js');
     }
 }

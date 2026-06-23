@@ -28,6 +28,9 @@ WORKDIR /app
 COPY . /app
 COPY --from=vendor /app/vendor /app/vendor
 
+# Generate minified CSS/JS once, baked into the image (served when APP_ENV=production).
+RUN php bin/minify.php
+
 # FrankenPHP's default entrypoint reads /etc/caddy/Caddyfile.
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 

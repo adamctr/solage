@@ -6,3 +6,5 @@ public/uploaded_files/*
 !public/uploaded_files/.gitkeep
 .phpunit.cache/
 backups/
+# Assets minifiés : générés au build de l'image (bin/minify.php), non versionnés
+public/assets/minified/

@@ -44,6 +44,7 @@ services:
       dockerfile: Dockerfile
     image: solage-app
     environment:
+      APP_ENV: development      # sert les assets non minifiés (rechargement à chaud)
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-solage}
