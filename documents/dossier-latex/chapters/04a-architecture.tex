@@ -77,16 +77,16 @@ son \texttt{UserModel} par constructeur, ce qui le rend testable).
 \section{Gestion de projet}
 \label{sec:gestion}
 
-J'ai réalisé l'essentiel de ce projet — un binôme a contribué ponctuellement à l'amorçage, en
-2024. Je l'ai mené selon une démarche \textbf{itérative légère} (proche de Kanban), en deux
-temps : une \textbf{construction initiale} (2024), puis une \textbf{reprise} dédiée à la
-sécurisation et à l'industrialisation (2026 : conteneurisation, migration PostgreSQL, sécurité,
-refonte MVC). Sur un projet de cette taille, j'ai assumé l'ensemble des rôles : planification,
-suivi et qualité.
+J'ai réalisé \textbf{seul} l'intégralité de ce projet. Je l'ai mené selon une démarche
+\textbf{itérative légère} (proche de Kanban), en deux temps : une \textbf{construction initiale}
+(2024), puis une \textbf{reprise} dédiée à la sécurisation et à l'industrialisation (2026 :
+conteneurisation, migration PostgreSQL, sécurité, refonte MVC). Sur un projet de cette taille,
+j'ai assumé l'ensemble des rôles : planification, suivi et qualité.
 
-\paragraph{Planification.} Ma feuille de route (\file{ROADMAP\_DETAILLEE.md}) découpe le travail
-en phases, fixe leurs priorités au regard du risque par bloc de compétences, et me sert de
-\emph{backlog} de référence.
+\paragraph{Planification.} J'utilise le \file{README.md} du dépôt comme \textbf{tableau Kanban}
+(colonnes \emph{À faire}, \emph{En cours}, \emph{À finaliser}, \emph{Terminé}) : il me sert de
+\emph{backlog} de référence et hiérarchise les priorités au regard du risque par bloc de
+compétences.
 
 \paragraph{Suivi des tâches.} J'ai suivi mes tâches au fil des commits \textbf{Git} — chaque
 tâche correspond à un ou plusieurs commits datés — et j'en ai consolidé la trace dans un fichier
@@ -98,32 +98,8 @@ requêtes préparées systématiques, échappement systématique des sorties —
 respecter en me relisant à chaque fonctionnalité, comme une revue de code à une personne.
 
 \paragraph{Journal de décisions.} Un journal des décisions techniques
-(\file{Probleme-Solution.md}) consigne, pour chaque choix structurant, le contexte, le problème,
-les options envisagées, la solution retenue et sa justification. Il me tient lieu de comptes
-rendus de session.
-
-\paragraph{Comptes rendus de session.} À partir de l'historique Git et du journal de décisions,
-j'ai reconstitué les comptes rendus de mes principales sessions de travail. Chacun consigne
-l'\textbf{objectif} visé, le \textbf{réalisé} — rattaché à des commits datés — et le \textbf{reste
-à faire} identifié en fin de session, ce dernier alimentant en retour la feuille de route. Le
-tableau~\ref{tab:cr} en donne la synthèse ; les comptes rendus détaillés et un extrait du fichier
-de suivi figurent en annexe~\ref{ann:gestion}.
-
-\begin{table}[ht]
-\centering
-\renewcommand{\arraystretch}{1.3}
-\small
-\begin{tabularx}{\textwidth}{@{}L{2.1cm} X X@{}}
-\toprule
-\textbf{Date} & \textbf{Objectif de la session} & \textbf{Reste à faire identifié} \\
-\midrule
-6 mai 2026  & Industrialiser l'environnement : conteneurisation et migration PostgreSQL & Validation du type MIME des téléversements ; régénération d'ID de session \\
-12 mai 2026 & Auditer l'architecture MVC et corriger les failles applicatives (XSS, IDOR) & Validation serveur systématique ; tests automatisés \\
-13 mai 2026 & Fiabiliser le jeu d'essai et la charte graphique & Procédure de sauvegarde / restauration \\
-15 juin 2026 & Durcir la sécurité (CSRF, en-têtes) et outiller la qualité (PSR-12) & Intégration continue ; couverture de tests \\
-\bottomrule
-\end{tabularx}
-\caption{Synthèse des comptes rendus de session (détail en annexe~\ref{ann:gestion}).}
-\label{tab:cr}
-\end{table}
+(\file{Probleme-Solution.md}) note, en quelques phrases courtes, chaque problème rencontré et la
+solution retenue. Par exemple : « \emph{Migrations.php relançait les migrations à chaque requête
+$\rightarrow$ cycle de requêtes inutile ; passage à un script \texttt{bin/migrate.php} lancé une
+seule fois au démarrage.} » Le détail du suivi par phases figure en annexe~\ref{ann:gestion}.
 

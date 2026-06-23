@@ -7,9 +7,8 @@ Le projet a permis de construire et de \emph{posséder} une application web mult
 un socle « framework » écrit à la main (routeur, middlewares, logger PSR-3, utilitaires), une
 sécurité pensée couche par couche (XSS, CSRF, injection SQL, IDOR), une base PostgreSQL conçue
 proprement avec migrations idempotentes, et une chaîne Docker reproductible du développement à la
-production. La migration de MariaDB vers PostgreSQL et l'audit d'architecture (découplage des
-couches, suppression d'une requête N+1) ont particulièrement consolidé la compréhension du
-fonctionnement interne de l'application.
+production. La migration de MariaDB vers PostgreSQL et l'audit d'architecture ont particulièrement
+consolidé la compréhension du fonctionnement interne de l'application.
 
 \section{Difficultés rencontrées et résolues}
 
@@ -17,12 +16,6 @@ Ces difficultés démontrent la \textbf{démarche structurée de résolution de 
 transversale T2) : chacune suit le schéma symptôme $\to$ diagnostic $\to$ correctif.
 
 \begin{description}
-  \item[Constantes \texttt{STDOUT} / \texttt{STDERR} absentes en HTTP.] Le logger écrivait via
-        \texttt{fwrite(STDOUT, \dots)} : les tests en ligne de commande passaient, mais toute requête
-        HTTP renvoyait une erreur 500 (« \emph{Undefined constant STDOUT} »). \emph{Diagnostic} :
-        ces constantes n'existent que dans le SAPI CLI de PHP. \emph{Correctif} : utilisation des
-        flux \texttt{php://stdout} / \texttt{php://stderr}, qui fonctionnent dans tous les SAPI.
-        \emph{Leçon} : tester en CLI ne garantit pas le bon fonctionnement en HTTP.
   \item[\emph{Headers already sent} à la connexion.] La réponse JSON était émise \emph{avant}
         \texttt{session\_start()}, empêchant la pose du cookie \texttt{PHPSESSID}.
         \emph{Correctif} : démarrer la session dans le \emph{bootstrap}
@@ -37,16 +30,14 @@ transversale T2) : chacune suit le schéma symptôme $\to$ diagnostic $\to$ corr
 Les axes d'amélioration, déjà identifiés dans le dossier, sont :
 
 \begin{itemize}
-  \item la \textbf{couverture de tests} automatisés (PHPUnit) et un pipeline d'\textbf{intégration
-        continue} (chapitre~\ref{ch:realisations}) ;
-  \item le \textbf{durcissement de la validation serveur} et du téléversement (contrôle MIME
-        réel), ainsi que l'anti-fixation de session ;
+  \item le \textbf{durcissement de la validation serveur} (format de l'email, robustesse du mot de
+        passe) et l'\textbf{anti-fixation de session} (\texttt{session\_regenerate\_id}) ;
+  \item la \textbf{validation du téléversement par type MIME réel} (\texttt{finfo} /
+        \texttt{getimagesize}) en complément de l'extension ;
   \item une passe d'\textbf{accessibilité} (RGAA) plus poussée ;
   \item la \textbf{maintenabilité du front-end} : séparation et factorisation des feuilles de
         style et des scripts, \textbf{chargement conditionnel du JavaScript} selon le gabarit
         (\emph{layout}) plutôt qu'un script global, et mise en place d'un \emph{lint} JavaScript
-        (ESLint) ;
-  \item la résorption de la \textbf{dette de schéma} (table \texttt{responses} héritée
-        \emph{vs} mécanisme \texttt{reply\_to}).
+        (ESLint).
 \end{itemize}
 

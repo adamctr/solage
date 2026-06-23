@@ -89,11 +89,11 @@ qui en référence un autre. Les « j'aime » et les favoris sont des associatio
 \label{fig:mcd}
 \end{figure}
 
-\paragraph{Une dette technique assumée.} Le schéma physique conserve une table \texttt{responses}
-héritée d'une première version, alors que le mécanisme de réponse effectivement utilisé par
-l'application repose sur les colonnes \texttt{reply\_to} / \texttt{reply\_to\_parent} de la table
-\texttt{posts}. Cette redondance est identifiée comme une dette à résorber : c'est un point que je
-signale plutôt que de le masquer.
+\paragraph{Les réponses, sans table dédiée.} Une réponse n'est pas un type d'objet distinct :
+c'est un \texttt{post} qui en référence un autre via \texttt{reply\_to} (le message auquel on
+répond) et \texttt{reply\_to\_parent} (la racine du fil). Ce choix évite une table \texttt{responses}
+séparée qui dupliquerait la structure d'un message, et permet de traiter messages et réponses avec
+le même modèle et les mêmes requêtes.
 
 \subsection{Modèle logique / physique (MLD, MPD)}
 
@@ -144,7 +144,6 @@ CREATE TABLE likes (
     id         SERIAL PRIMARY KEY,
     user_id    INT NULL REFERENCES users(id) ON DELETE CASCADE,
     post       INT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    response   INT NULL REFERENCES responses(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL
 );
 \end{lstlisting}

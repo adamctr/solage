@@ -21,7 +21,7 @@ où elle est développée.
 C1 & Installer et configurer son environnement de travail & 1 & Docker (FrankenPHP, Caddy, Traefik, PostgreSQL), Git, Composer, conteneurs dev = prod & \textcolor{juryGreen}{\textbf{OK}} \\
 C2 & Développer des interfaces utilisateur & 1 & Vues \file{modules/views/}, JS vanilla, AJAX, échappement XSS, CSP & \textcolor{juryGreen}{\textbf{OK}} \\
 C3 & Développer des composants métier & 1 & Contrôleurs \file{modules/controllers/}, autorisation, contrôle IDOR, CSRF & \textcolor{juryGreen}{\textbf{OK}} \\
-C4 & Contribuer à la gestion d'un projet informatique & 1 & Git, feuille de route, journal de décisions, comptes rendus de session & \textcolor{juryGreen}{\textbf{OK}} \\
+C4 & Contribuer à la gestion d'un projet informatique & 1 & Git (commits conventionnels), \file{README.md} en tableau Kanban, journal de décisions technique & \textcolor{juryGreen}{\textbf{OK}} \\
 C5 & Analyser les besoins et maquetter une application & 2 & Expression des besoins (ch.~\ref{ch:besoins}), maquettes (Penpot) \& enchaînement & \textcolor{juryGreen}{\textbf{OK}} \\
 C6 & Définir l'architecture logicielle d'une application & 2 & MVC multicouche, Router, middlewares, schéma DICP & \textcolor{juryGreen}{\textbf{OK}} \\
 C7 & Concevoir et mettre en place une base de données relationnelle & 2 & \file{solage.pg.sql}, migrations idempotentes, \file{seed.sql} & \textcolor{juryGreen}{\textbf{OK}} \\
@@ -38,11 +38,13 @@ C11 & Contribuer à la mise en production (DevOps) & 3 & Conteneurs, migrations,
 \paragraph{Compétences transversales.} Elles sont évaluées \emph{à travers} les compétences
 professionnelles :
 \begin{itemize}
-  \item \textbf{Communiquer en français et en anglais} : dossier et présentation structurés,
-        commentaires de code et vocabulaire technique en anglais (niveau B1) ;
+  \item \textbf{Communiquer en français et en anglais} : dossier et présentation structurés en
+        français ; lecture de documentation technique en anglais (OWASP, manuel PHP) et
+        \emph{nommage du code en anglais} — identifiants, méthodes, messages de \emph{commit}
+        (niveau B1) ;
   \item \textbf{Mettre en œuvre une démarche de résolution de problème} : voir le
-        chapitre~\ref{ch:bilan} (bugs diagnostiqués et résolus : \texttt{STDOUT} CLI,
-        \emph{headers already sent}, requête N+1) ;
+        chapitre~\ref{ch:bilan} (bugs diagnostiqués et résolus : \emph{headers already sent},
+        requête N+1) ;
   \item \textbf{Apprendre en continu} : veille de sécurité ayant conduit à la correction
         d'une faille IDOR (section~\ref{sec:veille}).
 \end{itemize}

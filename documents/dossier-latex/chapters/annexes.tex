@@ -5,10 +5,8 @@ Les annexes (40 pages maximum) rassemblent les éléments de la fonctionnalité 
 représentative : maquettes, captures et code, code des composants métier et d'accès aux données,
 code des autres composants, et jeux de tests complets.
 
-\section{Gestion de projet : suivi et comptes rendus}
+\section{Gestion de projet : suivi des tâches}
 \label{ann:gestion}
-
-\subsection{Extrait du fichier de suivi}
 
 Le fichier \file{SUIVI.md}, consolidé depuis l'historique Git, recense les tâches du projet par
 phase (tâche, phase, date). Le projet s'est déroulé en deux temps : une construction initiale
@@ -18,8 +16,7 @@ phase (tâche, phase, date). Le projet s'est déroulé en deux temps : une const
 \begin{itemize}\setlength{\itemsep}{0pt}
   \item page d'accueil et fil d'actualité (front) ;
   \item « j'aime » (likes) et appels AJAX ;
-  \item routeur et gestion des utilisateurs \emph{(amorce contribuée par un binôme, depuis
-        entièrement reprise)} ;
+  \item routeur maison et gestion des utilisateurs ;
   \item module de réponses imbriquées, navigation et routes ;
   \item minification des assets, comptage récursif des réponses.
 \end{itemize}
@@ -35,44 +32,6 @@ phase (tâche, phase, date). Le projet s'est déroulé en deux temps : une const
   \item jeu d'essai (\file{seed.sql}), PHP\_CodeSniffer (PSR-12), refonte de la feuille de style.
 \end{itemize}
 
-\subsection{Comptes rendus de session}
-
-Reconstitués depuis l'historique Git et le journal de décisions (\file{Probleme-Solution.md}).
-Chaque session est rattachée à un ensemble de commits datés.
-
-\paragraph{6 mai 2026 — Industrialisation de l'environnement.}
-\textbf{Objectif} : rendre l'environnement reproductible et conforme à la production.
-\textbf{Réalisé} : conteneurisation (FrankenPHP, Caddy, Traefik) ; migration de MariaDB vers
-PostgreSQL ; sortie des identifiants de connexion vers \file{.env} (phpdotenv) ; logger PSR-3 ;
-ajout d'\texttt{AdminMiddleware} et durcissement de la gestion d'erreurs.
-\textbf{Reste à faire} : valider le type MIME réel des téléversements ; régénérer l'identifiant
-de session après connexion (anti-fixation).
-
-\paragraph{12 mai 2026 — Audit MVC et failles applicatives.}
-\textbf{Objectif} : remettre la couche présentation à sa place et corriger les failles
-identifiées. \textbf{Réalisé} : échappement systématique du contenu utilisateur (anti-XSS) ;
-contrôle d'accès « propriétaire ou administrateur » sur la suppression (anti-IDOR) ; préchargement
-des auteurs en une requête (correction du N+1, 21 requêtes ramenées à 2 sur le fil) ; extraction
-du validateur dans \file{modules/validators/} ; suppression de \texttt{DynamicMessageController}
-et unification du format de réponse JSON ; correction de quatre bugs préexistants.
-\textbf{Reste à faire} : doubler systématiquement la validation côté serveur (format e-mail,
-robustesse du mot de passe) ; mettre en place des tests automatisés.
-
-\paragraph{13 mai 2026 — Jeu d'essai et charte graphique.}
-\textbf{Objectif} : disposer d'un jeu de données reproductible et d'une interface cohérente.
-\textbf{Réalisé} : extraction des données de démonstration dans \file{seed.sql} (utilisateurs,
-messages, « j'aime », réponses) ; refonte de la feuille de style.
-\textbf{Reste à faire} : documenter et tester la procédure de sauvegarde / restauration de la base
-(\texttt{pg\_dump} / \texttt{pg\_restore}).
-
-\paragraph{15 juin 2026 — Durcissement de la sécurité et outillage qualité.}
-\textbf{Objectif} : compléter la défense en profondeur et industrialiser le contrôle de qualité.
-\textbf{Réalisé} : protection CSRF par jeton de synchronisation armé sur tout POST ; en-têtes de
-sécurité (CSP, \texttt{nosniff}, HSTS) ; injection de dépendance du gestionnaire de session ; mise
-en place de PHP\_CodeSniffer (PSR-12) et reformatage de la base de code.
-\textbf{Reste à faire} : automatiser l'analyse statique et les tests via une chaîne d'intégration
-continue ; constituer une couverture de tests (PHPUnit).
-
 \section{Script de création de la base de données}
 \label{ann:sql}
 
@@ -85,7 +44,9 @@ CREATE TABLE roles (
     id   SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
-INSERT INTO roles (id, name) VALUES (1,'Admin'), (2,'Utilisateur'), (3,'Moderateur');
+INSERT INTO roles (id, name) VALUES (1,'Admin'), (2,'Utilisateur'), (3,'Modérateur');
+SELECT setval(pg_get_serial_sequence('roles', 'id'),
+              (SELECT COALESCE(MAX(id), 1) FROM roles));
 
 CREATE TABLE users (
     id        SERIAL PRIMARY KEY,
@@ -104,42 +65,20 @@ CREATE TABLE posts (
     date            TIMESTAMP NOT NULL,
     likes           INT DEFAULT 0,
     content         TEXT NULL,
-    reply_to        INT NULL,
-    reply_to_parent INT NULL,
+    reply_to        INT NULL,           -- message auquel on répond (NULL = post racine)
+    reply_to_parent INT NULL,           -- racine du fil de discussion
     image           TEXT NULL
 );
 CREATE INDEX posts_user_idx ON posts(user_id);
-
-CREATE TABLE responses (
-    id       SERIAL PRIMARY KEY,
-    post     INT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    user_id  INT NULL REFERENCES users(id) ON DELETE CASCADE,
-    date     TIMESTAMP NOT NULL,
-    likes    INT DEFAULT 0,
-    content  TEXT NULL,
-    reply_to INT NULL REFERENCES responses(id) ON DELETE SET NULL
-);
-CREATE INDEX responses_post_idx     ON responses(post);
-CREATE INDEX responses_user_idx     ON responses(user_id);
-CREATE INDEX responses_reply_to_idx ON responses(reply_to);
 
 CREATE TABLE likes (
     id         SERIAL PRIMARY KEY,
     user_id    INT NULL REFERENCES users(id) ON DELETE CASCADE,
     post       INT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    response   INT NULL REFERENCES responses(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL
 );
-CREATE INDEX likes_user_idx     ON likes(user_id);
-CREATE INDEX likes_post_idx     ON likes(post);
-CREATE INDEX likes_response_idx ON likes(response);
-
-CREATE TABLE users_favorites_posts (
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    post    INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, post)
-);
-CREATE INDEX users_favorites_posts_post_idx ON users_favorites_posts(post);
+CREATE INDEX likes_user_idx ON likes(user_id);
+CREATE INDEX likes_post_idx ON likes(post);
 
 COMMIT;
 \end{lstlisting}

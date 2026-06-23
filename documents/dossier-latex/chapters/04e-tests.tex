@@ -92,24 +92,6 @@ preuve étant le \textbf{statut HTTP} et la \textbf{ligne de journal} :
 \end{itemize}
 Code des tests, sortie complète et démonstrations figurent en annexe~\ref{ann:tests}.
 
-\paragraph{Anomalies relevées et traitement.} La campagne n'a pas seulement validé l'existant :
-elle a mis au jour trois anomalies latentes, consignées et assorties d'un correctif identifié.
-\begin{itemize}
-  \item \code{UserModel::createUser()} charge \code{assets/emojiList.php} par un \code{include}
-        \textbf{relatif au répertoire courant} : il échoue hors du contexte web. Contourné en
-        test, correctif identifié (chemin absolu).
-  \item \code{UserModel::getNameFromId()} retourne \code{\$row->name} \textbf{sans vérifier} la
-        ligne : erreur fatale sur identifiant inconnu. Correctif trivial (\code{\$row ? \dots{} : null}).
-  \item \code{Utils::sendResponse()} omet la clé \code{data} lorsqu'elle est \emph{falsy}
-        (\code{if (\$data)}) : comportement révélé par le test du transport JSON, documenté.
-\end{itemize}
-
-\paragraph{Ce que cette stratégie démontre.} Mon plan distingue ce qui s'automatise de ce qui se
-démontre. La logique pure et la sécurité automatisable sont couvertes par 40 tests PHPUnit verts ;
-le CSRF et l'IDOR, qui dépendent de l'environnement HTTP, sont prouvés par une requête falsifiée
-rejouée — \code{403} plus une ligne de journal à chaque fois. La même suite me sert de
-non-régression.
-
 \section{Jeu d'essai de la fonctionnalité la plus représentative}
 \label{sec:jeuessai}
 
@@ -149,10 +131,15 @@ figure en annexe~\ref{ann:tests}.
 \section{Préparation et documentation du déploiement}
 \label{sec:deploiement}
 
-La mise en production s'appuie sur la pile \file{docker-compose.prod.yml} : Traefik termine le
-HTTPS (Let's Encrypt), redirige HTTP vers HTTPS et pose l'en-tête HSTS ; le service
-\texttt{migrate} applique les migrations \emph{avant} le démarrage de l'application ; PostgreSQL
-n'est pas exposé hors du réseau interne.
+La mise en production est assurée par \textbf{Dokploy}, une plateforme (PaaS) auto-hébergée sur un
+VPS : c'est elle qui fournit le Traefik terminant le HTTPS (Let's Encrypt), redirigeant HTTP vers
+HTTPS et posant l'en-tête HSTS. L'application est décrite par une pile dédiée
+\file{docker-compose.dokploy.yml} --- variante de \file{docker-compose.prod.yml} \emph{sans}
+Traefik, pour ne pas entrer en conflit avec celui de Dokploy (deux Traefik se battant pour les
+ports~80/443 seraient une faute de conception). Le service \texttt{migrate} applique les migrations
+\emph{avant} le démarrage de l'application, et PostgreSQL n'est exposé que sur le réseau interne.
+La pile autonome \file{docker-compose.prod.yml} (Traefik embarqué) reste l'alternative « VPS nu »,
+documentée dans \file{DEPLOYMENT.md} ; ses \emph{labels} HSTS sont reproduits ci-dessous.
 
 \begin{lstlisting}[style=yaml, caption={Routage HTTPS et HSTS en production — \file{docker-compose.prod.yml}}]
 labels:
@@ -212,12 +199,10 @@ Jeu de données & \file{seed.sql} chargé & aucun & aucun \\
 \label{tab:environnements}
 \end{table}
 
-\paragraph{Limite assumée du déploiement.} Le déploiement est préparé et documenté de bout en bout
-dans \file{DEPLOYMENT.md} : pré-requis, étapes, vérification, rollback, sauvegarde et trois
-environnements. J'assume une limite : je construis l'image sur le serveur, sans \emph{registry}.
-En contexte professionnel je taguerais les images par SHA de commit et les pousserais sur un
-\emph{registry}, pour un rollback par simple repointage de tag plutôt que par reconstruction
-depuis Git.
+\paragraph{Limite assumée du déploiement.} Dokploy construit l'image \emph{sur le VPS} à partir du
+dépôt Git, sans \emph{registry} d'images. En contexte professionnel, je publierais l'image sur un
+\emph{registry} en la taguant par l'empreinte du \emph{commit} (SHA) : le retour arrière se ferait
+alors par simple repointage de \emph{tag}, plutôt que par reconstruction depuis Git.
 
 \section{Contribution à la mise en production (DevOps)}
 \label{sec:devops}
@@ -225,20 +210,22 @@ depuis Git.
 Plusieurs briques DevOps étaient déjà en place : conteneurisation complète (\texttt{docker
 compose}), images reproductibles, migrations \textbf{idempotentes} rejouables sans risque, et
 journalisation structurée adaptée à une collecte par l'orchestrateur. Il manquait
-l'\textbf{automatisation} de la vérification : elle est désormais assurée par un pipeline
-d'\textbf{intégration continue} GitHub Actions, déclenché à chaque \emph{push}.
+l'\textbf{automatisation} : elle est désormais assurée par un pipeline GitHub Actions
+d'\textbf{intégration} \emph{et} de \textbf{déploiement} continus, déclenché à chaque \emph{push}.
 
 \paragraph{Le pipeline.} Le dépôt étant hébergé sur GitHub, le serveur d'automatisation est
 \textbf{GitHub Actions} (hébergé, gratuit, rien à installer). Le fichier
-\file{.github/workflows/ci.yml} décrit \textbf{deux \emph{jobs} parallèles}, soit deux signaux
-lisibles à chaque \emph{push} :
+\file{.github/workflows/ci.yml} décrit \textbf{trois \emph{jobs}} : deux contrôles en parallèle
+(\texttt{qualite}, \texttt{image}), puis un déploiement conditionnel (\texttt{deploiement}) :
 \begin{itemize}
   \item \texttt{qualite} --- sur \textbf{PHP~8.3} (la version de production) : installe les
         dépendances, vérifie le style \textbf{PSR-12} (PHP\_CodeSniffer), lance l'\textbf{analyse
         statique} (PHPStan), puis exécute la \textbf{suite PHPUnit} (40~tests) contre une base
         PostgreSQL ;
   \item \texttt{image} --- \textbf{construit l'image Docker} (le livrable), pour qu'une image qui
-        ne se construit plus soit détectée immédiatement, et non le jour du déploiement.
+        ne se construit plus soit détectée immédiatement, et non le jour du déploiement ;
+  \item \texttt{deploiement} --- sur \texttt{main} uniquement et \textbf{seulement si les deux
+        précédents sont verts}, appelle le \emph{webhook} de redéploiement de Dokploy.
 \end{itemize}
 
 \begin{lstlisting}[style=yaml, caption={Pipeline d'intégration continue --- extrait de \file{.github/workflows/ci.yml}}]
@@ -282,6 +269,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t solage-app .
+
+  deploiement:                          # déploiement continu, main uniquement
+    needs: [qualite, image]             # seulement si qualité ET build sont verts
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL -X POST "${{ secrets.DOKPLOY_WEBHOOK }}"  # jeton = secret GitHub
 \end{lstlisting}
 
 \paragraph{Une base de test éphémère, sans secret.} Mes tests d'intégration visent une vraie
@@ -294,7 +288,7 @@ philosophie « base jetable » que les tests, portée en intégration continue.
 
 \paragraph{Analyse statique introduite avec une baseline.} PHPStan est branché au
 \textbf{niveau~1}. Introduit sur du code existant, il a relevé cinq alertes héritées --- dont le
-couplage, déjà documenté, de \code{createUser} au \emph{docroot}. Je les ai \textbf{gelées dans une
+couplage de \code{createUser} au \emph{docroot} (un \code{include} relatif). Je les ai \textbf{gelées dans une
 \emph{baseline}} versionnée (\file{phpstan-baseline.neon}) : la CI reste verte, la dette héritée
 est \textbf{visible et datée}, et \textbf{tout nouveau code est analysé strictement}. La baseline
 dégonfle à chaque correction --- c'est la pratique courante pour introduire l'analyse statique sur
@@ -313,18 +307,21 @@ la branche.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\textwidth]{ci-run-vert.png}
-\caption{Run d'intégration continue au vert : les \emph{jobs} \texttt{qualite} et \texttt{image}
-aboutissent.}
+\caption{Run d'intégration continue au vert : les contrôles de qualité et la construction du
+livrable aboutissent.}
 \label{fig:ci-vert}
 \end{figure}
 
-\paragraph{Intégration continue, pas (encore) déploiement continu.} Mon pipeline fait
-l'\textbf{intégration} continue : à chaque \emph{push}, qualité, analyse statique, tests et
-construction du livrable sont rejoués automatiquement, en quelques minutes. Le \textbf{déploiement}
-continu serait l'étape suivante --- un \emph{job} qui, sur \texttt{main} verte, se connecterait en
-SSH au serveur pour \texttt{git pull} puis \texttt{docker compose up -d} (migrations comprises). Je
-ne l'ai pas activé, faute de serveur permanent : savoir distinguer CI et CD et décrire ce CD cible
-me paraît plus honnête qu'un faux \emph{job} de déploiement qui ne tournerait jamais.
+\paragraph{De l'intégration au déploiement continu.} À chaque \emph{push}, qualité, analyse
+statique, tests et construction du livrable sont rejoués automatiquement, en quelques minutes :
+c'est l'\textbf{intégration continue}. Sur \texttt{main} et \emph{seulement} si ces contrôles sont
+verts, le \emph{job} \texttt{deploiement} appelle le \emph{webhook} de \textbf{Dokploy}, qui
+reconstruit et redéploie l'application sur le VPS : c'est le \textbf{déploiement continu}. Un
+\texttt{push} sur \texttt{main} qui passe la CI part donc en production sans intervention manuelle,
+tandis qu'un \texttt{push} sur une branche de travail exécute les contrôles \emph{sans} déployer
+(condition \code{if: github.ref == 'refs/heads/main'}). Le jeton du \emph{webhook} vit dans un
+secret GitHub, jamais en clair dans le dépôt. Distinguer ainsi les deux étapes --- vérifier, puis
+livrer seulement ce qui est vérifié --- est le cœur de la démarche DevOps.
 
 \section{Veille de sécurité}
 \label{sec:veille}

@@ -8,7 +8,7 @@
 
 - [x] Mise en place du dépôt et de la page d'accueil (front) — *2024-09*
 - [x] Système de « j'aime » (likes) + appels AJAX — *2024-09*
-- [x] Routeur et gestion des utilisateurs — *2024-09* *(amorce contribuée par un binôme, depuis entièrement reprise)*
+- [x] Routeur maison et gestion des utilisateurs — *2024-09*
 - [x] Module de réponses (réponses imbriquées aux messages) — *2024-10*
 - [x] Navigation et routes — *2024-10*
 - [x] Minification des assets — *2024-11*
@@ -36,5 +36,5 @@
 - [x] Refonte de la feuille de style (style minimaliste moderne) — *2026-05 / 06*
 
 ### Documentation
-- [x] Feuille de route (`ROADMAP_DETAILLEE.md`) + journal de décisions (`Probleme-Solution.md`) — *2026-05*
+- [x] Suivi des tâches (`README.md` en Kanban) + journal de décisions (`Probleme-Solution.md`) — *2026-05*
 - [x] Dossier de projet + notes de soutenance — *2026-06*
