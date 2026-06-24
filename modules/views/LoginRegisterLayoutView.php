@@ -43,7 +43,7 @@ class LoginRegisterLayoutView
         <div class="loginRegisterContainer">
             <h1>Votre réseau social préféré</h1>
             <div class="homepagelogo">
-                <?php echo file_get_contents('assets/y.svg'); ?>
+                <img src="/<?= Utils::e("assets/solage.png") ?>" alt="Post Image" class="logoImageLoginRegister" />
             </div>
 
 
