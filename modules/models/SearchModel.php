@@ -31,7 +31,7 @@ class SearchModel
             SELECT p.id, p.user_id, p.date, p.likes, p.content, p.reply_to, p.image, p.reply_to_parent, u.name
             FROM posts p
             JOIN users u ON p.user_id = u.id
-            WHERE u.name LIKE ? OR p.content LIKE ?
+            WHERE u.name ILIKE ? OR p.content ILIKE ?
             ORDER BY p.date DESC
         ';
 
@@ -77,7 +77,7 @@ class SearchModel
             SELECT p.id, p.user_id, p.date, p.likes, p.content, p.reply_to, p.image, p.reply_to_parent, u.name
             FROM posts p
             JOIN users u ON p.user_id = u.id
-            WHERE p.content LIKE ?
+            WHERE p.content ILIKE ?
             ORDER BY p.date DESC
         ';
 
@@ -122,7 +122,7 @@ class SearchModel
         $sql = '
             SELECT id, name, email, password, role, image
             FROM users
-            WHERE name LIKE ?
+            WHERE name ILIKE ?
             ORDER BY name ASC
         ';
 
