@@ -364,29 +364,6 @@ class PostModel
     }
 
     /**
-     * Compte toutes les réponses du fil (via reply_to_parent).
-     *
-     * @return int Nombre total de réponses du fil.
-     */
-    public function getAllResponsesCount(): int
-    {
-        // Préparer la requête pour compter les réponses liées au post en utilisant reply_to_parent
-        $statement = $this->db->prepare('
-        SELECT COUNT(*) AS response_count
-        FROM posts
-        WHERE reply_to_parent = :post_id
-    ');
-
-        // Lier l'identifiant du post
-        $statement->bindParam(':post_id', $this->id, PDO::PARAM_INT);
-        $statement->execute();
-
-        // Récupérer le résultat
-        $row = $statement->fetch(PDO::FETCH_OBJ);
-        return $row ? (int)$row->response_count : 0; // Retourner 0 si aucune réponse n'est trouvée
-    }
-
-    /**
      * @return int|null Identifiant du post racine du fil, ou null.
      */
     public function getPostParentId(): ?int
