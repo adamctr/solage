@@ -3,17 +3,16 @@
 Tableau de suivi des tâches du projet. Statuts : **À faire → En cours → À finaliser → Terminé**, plus les éléments écartés du périmètre.
 
 ## À faire
-
-- Intégration continue (GitHub Actions) : automatiser `phpcs` + PHPUnit + build Docker à chaque push
 - Validation du **type MIME réel** des images uploadées (aujourd'hui : contrôle de l'extension uniquement)
 - Anti-fixation de session : régénérer l'identifiant de session à la connexion
 - Accessibilité **RGAA** (contrastes, libellés de formulaires, navigation clavier)
 - Étendre la couverture de tests : autorisations (ownership / IDOR) et échappement des vues
+- Généralisation de la validation côté serveur : validateur dédié aux **posts** (celui des utilisateurs existe déjà)
+- Formulaires : validation « à la volée » avec messages d'information dynamiques côté client
 
 ## En cours
 
-- Généralisation de la validation côté serveur : validateur dédié aux **posts** (celui des utilisateurs existe déjà)
-- Formulaires : validation « à la volée » avec messages d'information dynamiques côté client
+
 
 ## À finaliser
 
@@ -63,6 +62,8 @@ Tableau de suivi des tâches du projet. Statuts : **À faire → En cours → À
 - Environnement Docker de production (`docker-compose.prod.yml` : HTTPS Let's Encrypt, HSTS, PostgreSQL non exposé)
 - Linting `phpcs` PSR-12 (exclusions documentées et justifiées)
 - `.env.example` versionné, secrets chargés via phpdotenv
+
+- Intégration continue (GitHub Actions) : automatiser `phpcs` + PHPUnit + build Docker à chaque push
 
 ## On ne fera pas
 
