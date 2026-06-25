@@ -38,6 +38,8 @@ header("X-Content-Type-Options: nosniff");
 // tout en permettant au site de connaître le referer complet pour les liens internes.
 header("Referrer-Policy: strict-origin-when-cross-origin");
 
+// commentaire
+
 // Content-Security-Policy: default-src 'self'
 // Définit les sources de contenu autorisées pour tous les types de ressources.
 // Valeur: default-src 'self' = autorise UNIQUEMENT les ressources du même domaine.
